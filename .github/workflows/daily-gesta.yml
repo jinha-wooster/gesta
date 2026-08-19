@@ -38,10 +38,10 @@ jobs:
                catalogue count. Resolve any label collisions on the map.
             5. Run bash pipeline/validate.sh and fix everything until it exits 0.
             6. In queue.yaml set the entry to status: built and add built: <today's date>.
-            7. Create branch gesta/daily-<slug>, commit all changes with message
-               "GESTA daily: <Title>", push it, and open a pull request with
-               gh pr create --fill. Do NOT push to main directly.
+            7. Commit all changes directly to main with message "GESTA daily: <Title>" and push to origin main.
           claude_args: |
             --model claude-sonnet-4-6
             --max-turns 60
             --allowedTools "Bash,Read,Write,Edit,Glob,Grep"
+
+            
