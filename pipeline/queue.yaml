@@ -17,7 +17,8 @@
   lon: 125.7
   brief: Goguryeo's Eulji Mundeok lures a vast Sui host deep, then breaks the river on it. Korea's other great water battle, and a poem sent as a taunt.
   type: battle
-  status: pending
+  status: built
+  built: 2026-08-19
 - slug: battle-of-gaugamela
   title: Gaugamela
   year: "1 October 331 BC"

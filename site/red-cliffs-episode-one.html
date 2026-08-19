@@ -704,6 +704,7 @@ function fireArrowPt(fx,fy,tx,ty){
   S.arrows.push({fx:wfx,fy:2.2,fz:wfz,tx:wtx,ty:0.5,tz:wtz,t:0,dur:rnd(0.7,1.0),arc:rnd(4,8),
     simx:tx,simy:ty,px:wfx,py:2.2,pz:wfz,vx:0,vy:1,vz:0});
 }
+const onLand=null;
 function updArrowFlight(dt,onLand){
   for(let i=S.arrows.length-1;i>=0;i--){
     const a=S.arrows[i];a.t+=dt;

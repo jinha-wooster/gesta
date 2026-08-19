@@ -636,7 +636,7 @@ let stToastT=null;
 function showToast(t){
   const el=document.getElementById('stageToast');
   el.textContent=t;el.classList.add('show');
-  clearTimeout(stToastT);
+  window.clearTimeout(stToastT);
   stToastT=setTimeout(()=>el.classList.remove('show'),2100);
 }
 function addHubris(n,why){
