@@ -1061,6 +1061,23 @@ function setPhase(p){
   });
 }
 
+banners.no=makeBanner(0x2c3c6a);
+banners.sa=makeBanner(0x8c3028);
+function updateBanners(){
+  const sel={no:s=>s.side==='n'&&s.kind!=='nc', sa:s=>s.side==='s'};
+  for(const k in banners){
+    const list=S.soldiers.filter(s=>s.alive&&!s.escaped&&sel[k](s));
+    const b=banners[k];
+    if(list.length<5){b.visible=false;continue;}
+    let mx=0,my=0;for(const s of list){mx+=s.x;my+=s.y;}
+    mx/=list.length;my/=list.length;
+    const wx=sx2w(mx),wz=sy2w(my);
+    b.position.set(wx,terrainH(wx,wz),wz);
+    b.userData.flag.rotation.y=Math.sin(perfNow*0.002)*0.35;
+    b.visible=true;
+  }
+}
+
 /* ================= main loop ================= */
 let last=performance.now();
 function loop(now){
@@ -1093,19 +1110,3 @@ requestAnimationFrame(loop);
 </script>
 </body>
 </html>
-
-banners.sa=makeBanner(0x8c3028);
-function updateBanners(){
-  const sel={no:s=>s.side==='n'&&s.kind!=='nc', sa:s=>s.side==='s'};
-  for(const k in banners){
-    const list=S.soldiers.filter(s=>s.alive&&!s.escaped&&sel[k](s));
-    const b=banners[k];
-    if(list.length<5){b.visible=false;continue;}
-    let mx=0,my=0;for(const s of list){mx+=s.x;my+=s.y;}
-    mx/=list.length;my/=list.length;
-    const wx=sx2w(mx),wz=sy2w(my);
-    b.position.set(wx,terrainH(wx,wz),wz);
-    b.userData.flag.rotation.y=Math.sin(perfNow*0.002)*0.35;
-    b.visible=true;
-  }
-}
