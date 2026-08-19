@@ -1,5 +1,11 @@
 # GESTA format spec (binding)
 
+## Pipeline discipline
+Build the battle file incrementally: write the head and CSS first, then append the
+HTML body, then the script in 3 or 4 chunks via separate Write or Edit calls.
+After each chunk run: echo "PROGRESS: <section done>"
+Never write the whole file in one tool call.
+
 ## What an entry is
 A single self-contained HTML file in site/, cloned structurally from
 site/battle-of-zama-3d.html (battles) or site/the-odyssey-episode-one.html (sagas).
