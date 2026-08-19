@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GESTA · A Catalogue of Decisive Hours</title>
+<meta name="description" content="Playable 3D simulations of history's decisive hours: Red Cliffs, Cannae, Marathon, Myeongnyang, Agincourt and more. Stand where the commanders stood, give the orders yourself, and watch what history did with them.">
+<meta property="og:title" content="GESTA · A Catalogue of Decisive Hours">
+<meta property="og:description" content="Playable 3D simulations of history's decisive hours. Command the crescent at Cannae, hold the Roaring Channel at Myeongnyang, loose the archers at Agincourt.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14110d; --ink-2:#1c1812; --panel:#211c14; --line:#3a3226;
+    --parchment:#e7dcc4; --muted:#a2957c; --faint:#6f6450;
+    --bronze:#d9a441; --bronze-dim:#8f6f2e;
+    --sea:#4a7a86; --rome:#c0554a; --greek:#d9a441; --korea:#6f9ec9;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{background:var(--ink);scroll-behavior:smooth}
+  body{background:var(--ink);color:var(--parchment);font-family:'Source Serif 4',Georgia,serif;font-size:17px;line-height:1.65;min-height:100vh}
+  .wrap{max-width:1120px;margin:0 auto;padding:52px 20px 90px}
+
+  header{text-align:center;margin-bottom:18px}
+  .eyebrow{font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
+  h1{font-family:'GFS Didot',serif;font-weight:400;font-size:clamp(44px,8vw,84px);letter-spacing:.1em;line-height:1}
+  .subtitle{color:var(--muted);font-style:italic;margin-top:14px;font-size:17px;max-width:640px;margin-left:auto;margin-right:auto}
+  .meander{height:14px;margin:30px auto;max-width:560px;opacity:.55}
+
+  .map-wrap{border:1px solid var(--line);border-radius:3px;background:#131d21;overflow:hidden;margin-top:6px}
+  .map-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .map-scroll svg{display:block;min-width:760px;width:100%;height:auto}
+  .mk{cursor:pointer}
+  .mk .mk-hit{fill:#fff;fill-opacity:0}
+  .mk .mk-dot{fill:var(--bronze);stroke:#14110d;stroke-width:1.6;transition:all .18s}
+  .mk:hover .mk-dot{fill:#f0c467;stroke-width:2.2}
+  .mk .mk-pulse{fill:none;stroke:var(--bronze);stroke-width:1.4;animation:mpulse 2.4s ease-out infinite;pointer-events:none}
+  @keyframes mpulse{0%{opacity:.75;transform:scale(.5)}100%{opacity:0;transform:scale(1.9)}}
+  .mk .mk-pulse{transform-box:fill-box;transform-origin:center}
+  .mk-lead{stroke:#6f6450;stroke-width:1;stroke-dasharray:2 3;pointer-events:none}
+  .mk .mk-pill{fill:rgba(20,17,13,.88);stroke:#3a3226;transition:stroke .18s}
+  .mk:hover .mk-pill{stroke:var(--bronze-dim);fill:rgba(30,25,17,.95)}
+  .mk text{fill:var(--parchment);font-family:'Source Serif 4',Georgia,serif;font-size:13px;letter-spacing:.08em}
+  .mk.saga .mk-dot{fill:#8fb0d8}
+  .mk.saga .mk-pulse{stroke:#8fb0d8}
+  .shelf-label{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--bronze);
+    margin:44px 4px 6px;display:flex;align-items:baseline;gap:14px}
+  .shelf-label span{color:var(--faint);letter-spacing:.12em;text-transform:none;font-style:italic;font-size:13px}
+  .shelf-rule{height:1px;background:linear-gradient(90deg,var(--bronze-dim),transparent);margin:0 4px 22px}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px}
+  .card{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:3px;background:var(--panel);
+    text-decoration:none;color:var(--parchment);overflow:hidden;transition:border-color .25s,transform .25s,background .25s}
+  .card:hover{border-color:var(--bronze-dim);background:#26201a;transform:translateY(-3px)}
+  .card-art{height:120px;position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+  .card-art svg{width:100%;height:100%;display:block}
+  .card-era{position:absolute;top:10px;left:12px;font-size:10px;letter-spacing:.26em;text-transform:uppercase;
+    color:var(--parchment);background:rgba(20,17,13,.72);border:1px solid var(--line);padding:4px 9px;border-radius:2px}
+  .card-body{padding:18px 20px 20px;display:flex;flex-direction:column;flex:1}
+  .card h2{font-family:'GFS Didot',serif;font-weight:400;font-size:27px;letter-spacing:.05em;line-height:1.1}
+  .card .year{font-size:12.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--bronze);margin:6px 0 10px}
+  .card p{font-size:14.5px;color:var(--muted);line-height:1.6;flex:1}
+  .card .tags{margin-top:14px;display:flex;flex-wrap:wrap;gap:6px}
+  .tag{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);
+    border:1px solid var(--line);padding:3px 8px;border-radius:2px;white-space:nowrap}
+  .card .enter{margin-top:16px;font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--bronze)}
+  .card:hover .enter{color:#f0c467}
+
+  .platform-note{margin-top:56px;border:1px solid var(--line);border-radius:3px;background:var(--ink-2);
+    padding:26px 30px;font-size:14.5px;color:var(--muted);line-height:1.75}
+  .platform-note b{color:var(--parchment);font-weight:600}
+  .platform-note .k{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--bronze);display:block;margin-bottom:10px}
+
+  footer{margin-top:48px;text-align:center;font-size:13px;color:var(--faint);line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">A living catalogue of decisive hours</div>
+    <h1>GESTA</h1>
+    <p class="subtitle">History is listening. Stand where the commanders stood, weigh what they weighed, give the orders yourself,
+      and watch what history did with them. Every battle is playable in minutes and honest for a lifetime.</p>
+    <svg class="meander" viewBox="0 0 560 14" preserveAspectRatio="none" aria-hidden="true">
+      <defs><pattern id="key" width="26" height="14" patternUnits="userSpaceOnUse">
+        <path d="M0 12 H10 V2 H20 V8 H14 V6 H18 V4 H12 V10 H22 V0 H26" fill="none" stroke="#d9a441" stroke-width="1.4"/>
+      </pattern></defs>
+      <rect width="560" height="14" fill="url(#key)"/>
+    </svg>
+  </header>
+
+  <div class="shelf-label">The Map of Decisive Hours <span>tap a marker or its name to deploy</span></div>
+  <div class="shelf-rule"></div>
+  <div class="map-wrap"><div class="map-scroll">
+  <svg viewBox="0 0 1000 430" xmlns="http://www.w3.org/2000/svg" role="navigation" aria-label="World map of battles">
+    <rect width="1000" height="430" fill="#15242a"/>
+    <g stroke="#1e3138" stroke-width="1"><line x1="76" y1="0" x2="76" y2="430"/><line x1="172" y1="0" x2="172" y2="430"/><line x1="268" y1="0" x2="268" y2="430"/><line x1="363" y1="0" x2="363" y2="430"/><line x1="459" y1="0" x2="459" y2="430"/><line x1="554" y1="0" x2="554" y2="430"/><line x1="650" y1="0" x2="650" y2="430"/><line x1="745" y1="0" x2="745" y2="430"/><line x1="841" y1="0" x2="841" y2="430"/><line x1="936" y1="0" x2="936" y2="430"/><line x1="0" y1="361" x2="1000" y2="361"/><line x1="0" y1="275" x2="1000" y2="275"/><line x1="0" y1="189" x2="1000" y2="189"/><line x1="0" y1="103" x2="1000" y2="103"/><line x1="0" y1="17" x2="1000" y2="17"/></g>
+    <path d="M874.1 425.5 L875.7 430.0 L869.9 429.5 L868.1 425.1 L874.1 425.5 Z M845.3 417.3 L848.4 417.7 L850.5 420.3 L850.6 424.5 L848.6 428.1 L842.9 417.9 L845.3 417.3 Z M220.5 29.1 L225.0 30.5 L218.9 32.5 L216.5 35.0 L217.8 33.1 L215.8 32.1 L215.7 30.1 L220.5 29.1 Z M228.4 227.6 L230.4 227.1 L231.6 229.1 L240.3 229.2 L240.7 231.1 L244.1 229.5 L243.1 232.0 L234.4 232.8 L232.3 230.8 L226.7 230.0 L226.6 227.6 L227.6 226.6 L228.4 227.6 Z M225.6 198.2 L230.1 200.8 L232.7 206.6 L229.6 203.0 L222.1 198.9 L225.6 198.2 Z M295.9 227.1 L292.6 229.7 L293.3 232.3 L286.7 235.9 L283.1 234.5 L282.2 231.5 L285.9 230.6 L286.3 228.8 L290.5 229.2 L295.9 227.1 Z M197.9 35.8 L196.3 36.9 L196.9 39.6 L192.0 43.7 L192.0 38.2 L194.5 35.9 L197.9 35.8 Z M156.5 53.4 L154.2 56.2 L155.5 57.7 L153.4 58.6 L152.0 62.2 L146.4 54.0 L150.5 52.0 L151.7 54.2 L152.0 51.9 L154.3 50.6 L156.6 51.0 L156.5 53.4 Z M847.8 373.1 L852.5 375.9 L855.2 374.5 L854.5 381.3 L856.8 385.9 L854.4 394.0 L850.9 396.2 L849.6 401.4 L852.0 411.4 L854.9 413.4 L854.8 411.5 L857.5 410.1 L859.5 411.2 L860.5 414.9 L861.9 412.3 L865.1 414.2 L863.4 415.8 L864.9 420.4 L867.2 421.1 L866.6 425.1 L865.9 422.1 L861.9 421.0 L857.3 413.6 L857.3 419.7 L852.1 413.3 L849.3 415.8 L846.1 413.8 L844.8 414.5 L846.8 407.3 L844.5 405.2 L843.6 408.9 L841.3 405.5 L839.3 393.4 L843.1 394.7 L843.0 381.5 L844.6 374.0 L847.8 373.1 Z M985.7 65.4 L989.3 77.7 L988.5 86.5 L998.2 114.9 L993.9 109.7 L987.9 110.1 L984.4 122.7 L988.6 130.8 L990.4 131.1 L991.0 134.5 L990.0 137.4 L989.1 132.8 L984.6 131.6 L981.4 138.3 L979.8 133.7 L982.0 120.3 L980.0 113.9 L981.8 106.9 L982.2 92.7 L979.1 88.3 L978.7 83.7 L979.8 74.5 L984.2 73.6 L985.4 69.7 L983.0 66.4 L985.7 65.4 Z M992.5 153.8 L997.4 155.4 L1000.0 154.1 L1000.0 163.2 L993.4 164.4 L988.8 172.0 L979.9 167.0 L974.4 169.1 L971.2 167.2 L970.2 169.5 L975.5 173.7 L972.4 173.6 L968.7 176.9 L967.3 167.0 L970.9 163.8 L970.7 160.8 L976.9 161.0 L979.4 150.7 L978.8 142.7 L980.5 141.8 L992.5 153.8 Z M976.0 177.4 L977.4 177.1 L977.3 183.0 L979.6 186.7 L980.7 194.1 L977.5 202.9 L974.3 205.1 L974.5 214.0 L971.8 221.6 L973.7 226.0 L971.1 227.8 L970.4 230.6 L967.2 232.9 L968.8 227.2 L967.1 226.5 L966.1 230.9 L963.4 229.8 L960.7 235.5 L961.2 232.0 L960.0 231.1 L956.6 235.7 L949.4 235.8 L950.8 234.2 L948.2 234.5 L947.8 231.8 L946.1 235.0 L948.1 238.0 L944.8 239.3 L940.7 245.2 L937.1 240.7 L939.0 235.5 L934.6 234.2 L924.5 238.2 L919.2 238.0 L918.1 242.2 L915.5 240.4 L910.3 241.0 L910.9 237.4 L913.1 237.2 L923.1 227.8 L937.4 225.8 L938.4 227.7 L942.1 227.0 L943.1 222.6 L947.1 217.2 L948.0 211.7 L951.1 210.5 L948.4 214.0 L950.6 217.1 L957.5 213.1 L964.1 205.5 L966.9 198.8 L968.6 192.4 L966.5 189.9 L968.2 187.0 L967.9 183.4 L969.9 181.9 L970.6 178.6 L972.2 178.9 L972.9 182.1 L975.3 181.6 L976.1 178.8 L973.3 178.4 L974.1 176.3 L976.0 177.4 Z M932.2 238.6 L934.0 238.9 L934.6 242.3 L931.1 247.3 L927.6 245.0 L922.7 251.5 L921.3 251.4 L919.8 245.7 L917.4 246.5 L923.2 240.0 L924.8 241.4 L929.6 237.8 L932.2 238.6 Z M911.9 244.2 L915.3 244.2 L914.3 247.0 L916.5 247.2 L917.2 250.4 L913.0 263.1 L911.3 262.8 L911.5 264.4 L908.8 266.5 L909.4 260.5 L908.0 261.8 L908.2 265.1 L905.4 263.1 L907.9 250.8 L906.0 247.9 L906.6 252.0 L904.8 251.4 L903.0 253.1 L902.4 248.9 L904.4 250.7 L901.8 247.4 L909.0 241.4 L911.9 244.2 Z M847.2 338.7 L846.1 344.6 L842.2 337.8 L841.6 329.8 L847.4 317.9 L850.9 315.8 L853.1 318.4 L849.7 333.9 L847.2 338.7 Z M782.7 361.3 L783.5 364.2 L777.5 374.6 L774.0 376.5 L768.8 373.8 L768.6 367.2 L772.4 362.2 L780.8 361.4 L781.2 360.0 L782.7 361.3 Z M137.8 181.6 L138.9 184.9 L137.3 196.4 L134.1 195.7 L133.5 198.1 L131.5 198.4 L130.1 196.0 L130.9 190.6 L128.8 181.3 L131.0 181.9 L135.2 178.4 L137.8 181.6 Z M136.8 165.1 L137.3 170.9 L134.9 177.3 L132.5 175.5 L131.0 168.9 L135.8 165.9 L136.1 163.3 L136.8 165.1 Z M175.6 204.5 L172.6 211.1 L173.9 214.5 L172.7 217.7 L168.8 216.7 L155.6 207.9 L157.5 204.8 L164.3 206.6 L175.6 204.5 Z M56.6 30.0 L51.0 34.8 L51.9 36.0 L50.1 38.0 L63.2 37.0 L65.1 38.9 L59.9 46.8 L55.4 48.5 L59.4 49.4 L55.0 51.4 L52.3 50.8 L59.9 51.4 L65.9 55.3 L68.6 62.7 L75.9 67.8 L77.2 72.2 L72.2 71.2 L78.2 74.5 L78.7 76.0 L76.7 78.2 L83.2 77.8 L87.0 79.5 L86.6 85.0 L81.2 88.3 L82.1 89.7 L79.1 90.6 L85.4 91.5 L85.3 93.0 L77.7 96.6 L67.4 95.5 L63.5 98.0 L57.3 97.0 L54.7 97.8 L53.0 101.1 L49.7 99.8 L43.8 102.9 L40.6 102.8 L49.8 93.0 L56.5 92.8 L60.9 88.2 L55.5 91.2 L48.5 88.2 L43.5 88.2 L43.4 86.4 L49.6 83.6 L51.1 81.3 L50.3 78.1 L46.6 79.1 L49.2 76.2 L56.7 75.2 L56.9 73.7 L58.9 74.7 L56.9 73.0 L58.3 67.6 L56.3 67.7 L53.6 63.9 L57.1 60.6 L44.4 62.3 L43.5 60.3 L46.6 55.9 L45.4 52.7 L47.2 52.1 L45.9 50.2 L43.1 52.6 L44.0 49.9 L39.9 57.3 L43.4 45.1 L40.4 47.0 L37.4 45.5 L39.9 44.3 L41.0 41.0 L39.5 39.7 L40.9 38.3 L39.8 37.3 L40.7 35.4 L43.6 35.4 L42.0 33.8 L44.5 32.1 L44.5 29.5 L55.7 28.8 L56.6 30.0 Z M30.7 59.7 L37.4 58.3 L40.0 61.8 L39.0 63.3 L41.6 64.5 L40.3 64.1 L40.7 66.5 L36.0 68.9 L38.0 78.0 L35.3 83.0 L36.1 83.9 L32.1 83.9 L25.1 87.5 L22.9 87.0 L22.9 88.5 L17.2 90.3 L13.8 90.4 L15.4 88.7 L12.0 89.4 L15.3 87.1 L10.6 87.7 L13.3 84.9 L10.5 84.2 L14.2 83.8 L13.3 82.5 L15.1 81.3 L20.5 80.2 L13.3 81.1 L19.6 75.6 L12.2 73.8 L12.0 72.7 L14.5 72.2 L13.4 71.1 L15.4 70.5 L13.3 70.0 L12.4 66.6 L22.0 66.7 L24.6 63.3 L20.6 62.9 L23.7 58.9 L27.6 58.0 L27.7 60.4 L29.9 57.1 L32.1 58.2 L30.7 59.7 Z M191.0 23.0 L195.0 23.0 L184.6 28.8 L179.7 28.9 L184.2 30.2 L182.5 30.7 L181.7 42.4 L178.3 49.7 L170.2 50.4 L167.0 53.0 L166.7 56.8 L158.5 56.7 L159.1 53.8 L155.9 49.1 L158.0 49.3 L157.0 47.8 L158.5 46.3 L155.6 43.8 L148.1 31.2 L147.4 25.9 L149.0 25.2 L145.4 24.2 L143.9 19.2 L141.3 25.7 L137.3 24.8 L137.9 26.0 L128.4 33.2 L119.3 33.8 L118.9 32.1 L112.0 29.1 L112.2 25.7 L115.3 26.9 L117.0 25.8 L113.9 25.0 L117.3 21.1 L109.4 24.4 L109.8 20.9 L116.0 18.8 L112.9 18.4 L116.9 14.2 L118.3 14.1 L118.0 15.9 L121.0 12.8 L115.6 14.2 L109.2 20.3 L109.6 16.4 L112.7 16.1 L110.1 15.4 L109.2 13.4 L112.4 11.3 L109.0 11.7 L108.3 8.3 L119.6 7.4 L121.3 9.0 L121.3 7.8 L124.9 6.8 L123.2 6.0 L123.8 4.9 L122.8 7.0 L118.5 6.1 L117.1 7.4 L110.3 7.7 L108.4 6.4 L108.3 4.9 L110.4 4.4 L107.8 1.0 L119.3 1.1 L109.0 0.0 L1000.0 0.0 L1000.0 22.4 L988.5 22.6 L983.0 24.5 L973.2 31.8 L971.0 36.0 L959.6 43.3 L953.4 50.4 L937.8 61.0 L937.9 62.5 L941.7 63.8 L947.8 63.5 L947.8 70.7 L950.0 70.3 L949.9 67.2 L953.3 66.4 L951.2 67.9 L954.4 69.3 L950.7 72.7 L955.1 72.2 L958.8 69.1 L957.0 72.9 L958.3 72.8 L959.8 66.0 L966.9 66.6 L976.9 74.9 L975.7 77.3 L973.5 76.6 L976.2 78.8 L975.4 82.3 L977.6 84.5 L971.5 96.3 L972.1 102.5 L968.9 116.8 L959.2 128.5 L953.4 139.2 L941.9 151.6 L939.4 156.2 L930.0 163.9 L924.6 166.0 L919.1 164.4 L919.2 160.7 L916.9 162.6 L917.3 161.0 L915.9 161.2 L911.8 166.6 L909.0 166.4 L909.1 169.2 L906.0 170.4 L902.9 174.5 L902.6 181.8 L889.0 191.1 L887.9 196.0 L893.8 200.5 L900.8 214.5 L901.7 224.1 L899.5 230.6 L895.0 231.3 L894.5 233.3 L889.9 232.6 L889.9 234.6 L887.9 233.7 L887.4 236.8 L886.9 234.3 L882.4 238.1 L880.7 235.0 L882.8 233.7 L880.8 230.9 L883.8 224.7 L882.1 217.6 L880.0 217.0 L882.1 214.9 L884.5 216.5 L885.2 215.5 L883.0 208.3 L879.7 208.6 L877.5 206.5 L874.9 208.8 L872.5 207.0 L873.9 205.7 L870.6 205.3 L873.0 201.6 L876.1 200.5 L873.7 199.5 L874.9 193.3 L871.2 191.3 L870.3 192.5 L868.5 189.1 L858.9 192.6 L848.2 200.1 L847.8 198.5 L851.5 196.9 L852.3 194.5 L848.9 194.5 L848.8 193.1 L855.2 184.9 L852.5 180.8 L848.2 181.4 L843.8 187.2 L836.9 191.3 L834.2 196.2 L826.7 196.6 L825.8 202.8 L828.1 204.8 L834.0 206.0 L834.1 212.2 L836.2 213.8 L839.2 213.7 L842.4 209.2 L845.5 207.8 L851.2 211.0 L857.8 211.5 L855.7 216.4 L853.1 215.3 L845.9 218.2 L844.8 222.5 L841.9 221.9 L842.6 223.7 L835.4 233.5 L842.5 238.4 L846.2 252.3 L852.4 258.9 L852.0 260.6 L844.1 257.1 L841.0 258.5 L845.3 258.1 L852.1 265.2 L852.7 267.3 L846.0 272.2 L842.0 273.1 L843.9 272.6 L844.8 274.1 L848.8 272.6 L854.0 276.3 L850.4 279.6 L853.1 278.6 L853.0 282.6 L850.2 282.1 L851.5 284.2 L850.2 286.9 L851.0 289.9 L848.1 289.6 L845.5 292.3 L841.3 303.8 L838.1 302.8 L840.0 306.7 L837.3 309.1 L835.3 308.6 L836.5 310.0 L838.3 309.6 L838.4 314.8 L835.5 314.3 L836.2 316.2 L834.3 316.4 L832.2 321.5 L827.0 322.7 L828.4 324.7 L824.0 330.3 L821.1 329.8 L818.3 335.9 L812.1 337.8 L810.2 337.0 L808.0 338.7 L806.7 337.5 L806.1 339.5 L804.2 339.3 L804.3 341.5 L801.9 340.6 L802.6 339.6 L799.5 334.5 L798.3 336.2 L799.7 342.1 L797.1 343.4 L796.7 342.2 L795.9 344.8 L793.5 345.9 L792.1 344.2 L791.8 346.2 L789.5 345.3 L787.3 347.8 L783.5 348.2 L780.7 350.8 L779.7 349.7 L778.1 353.1 L780.3 356.7 L779.3 358.7 L776.7 358.7 L774.9 353.3 L776.6 348.5 L774.0 346.6 L774.2 348.0 L771.2 348.8 L768.1 344.9 L767.5 347.2 L763.1 348.3 L759.0 353.0 L755.9 352.6 L756.4 354.9 L754.9 358.7 L751.5 361.7 L749.2 370.1 L754.8 378.9 L754.0 380.6 L769.6 400.9 L773.4 421.8 L772.3 430.0 L731.0 430.0 L724.4 424.1 L719.1 424.4 L719.5 417.7 L717.2 416.5 L713.5 418.4 L712.7 430.0 L705.0 430.0 L704.3 420.0 L701.9 413.0 L701.3 415.3 L699.4 405.4 L698.0 395.4 L698.9 390.7 L696.7 391.1 L693.3 383.6 L692.8 389.5 L690.6 391.3 L689.1 389.0 L690.0 391.8 L684.0 398.0 L683.7 394.8 L682.7 397.1 L681.2 397.2 L680.8 394.0 L679.4 396.4 L679.6 391.2 L676.6 395.5 L678.9 382.1 L675.4 367.3 L674.7 370.7 L671.9 366.6 L674.0 367.7 L675.1 366.0 L672.7 363.1 L673.3 362.0 L670.4 360.6 L669.6 362.4 L669.2 358.0 L667.7 359.7 L667.1 356.4 L667.0 358.7 L664.4 354.4 L661.6 341.0 L659.1 336.4 L655.7 338.9 L653.5 330.3 L653.2 331.8 L651.4 331.5 L653.4 333.1 L652.5 337.5 L653.6 340.9 L651.2 345.5 L651.0 342.7 L649.2 343.0 L649.6 340.0 L646.9 346.0 L646.4 341.6 L645.6 346.4 L643.6 343.2 L643.6 347.0 L642.4 346.2 L641.7 347.6 L641.0 343.0 L640.7 346.9 L637.7 347.1 L638.2 342.8 L636.6 340.8 L638.0 343.0 L636.6 345.5 L629.7 350.6 L630.4 355.2 L629.0 358.5 L625.6 362.1 L619.4 363.3 L619.0 364.7 L620.6 364.4 L612.1 375.9 L601.0 386.2 L600.4 390.8 L594.2 392.7 L592.2 397.7 L590.1 396.5 L587.9 398.1 L586.3 403.6 L587.9 417.2 L587.0 415.3 L586.4 416.2 L588.2 418.3 L585.1 430.0 L555.8 430.0 L550.2 408.5 L543.6 391.6 L540.6 372.9 L541.2 368.5 L540.1 369.1 L540.2 367.2 L541.3 367.4 L539.3 362.7 L540.7 355.4 L538.9 348.6 L542.1 346.1 L538.5 346.6 L538.6 342.6 L540.2 342.0 L536.2 341.7 L535.3 345.5 L536.6 348.0 L535.1 351.3 L526.9 354.8 L515.7 341.5 L516.3 340.2 L517.7 341.5 L523.4 339.1 L525.4 334.6 L520.2 337.5 L514.8 334.9 L512.2 330.5 L514.5 328.1 L511.1 330.3 L510.6 328.0 L506.8 327.8 L504.3 320.3 L501.3 319.4 L499.5 313.3 L497.7 314.0 L499.8 314.4 L488.3 316.6 L484.5 314.7 L480.8 316.4 L467.6 317.3 L461.9 314.4 L461.1 315.5 L452.5 314.6 L441.6 311.4 L437.8 299.9 L433.9 299.8 L425.2 305.3 L418.5 303.4 L410.7 295.7 L404.6 293.2 L395.4 273.5 L392.1 275.0 L388.7 272.3 L390.1 271.7 L389.4 270.8 L387.5 274.9 L382.1 275.1 L383.1 278.9 L380.4 280.4 L382.5 280.7 L387.2 294.8 L395.9 303.9 L395.4 309.9 L400.0 320.0 L401.3 309.8 L402.9 308.3 L404.7 310.4 L405.2 317.7 L403.2 323.9 L408.4 327.0 L411.8 325.5 L421.3 325.3 L435.8 306.6 L435.5 318.0 L437.2 322.8 L440.9 327.5 L450.8 331.0 L457.5 341.4 L448.9 357.7 L446.9 356.1 L445.0 359.1 L444.7 369.7 L438.4 371.9 L435.6 378.5 L429.8 379.7 L427.2 386.7 L420.8 387.0 L411.3 391.6 L409.2 394.1 L409.0 398.6 L405.1 401.3 L390.8 407.3 L386.4 412.4 L382.1 412.4 L374.5 417.4 L367.2 418.5 L363.3 423.0 L356.7 424.8 L353.4 424.0 L351.8 419.1 L349.9 404.7 L348.1 402.2 L349.0 391.7 L345.8 383.3 L341.8 378.3 L336.0 363.3 L329.5 357.8 L326.6 352.8 L324.8 345.0 L325.2 338.9 L321.4 329.3 L315.6 324.3 L313.0 315.7 L300.5 292.1 L297.0 291.8 L299.2 279.0 L294.4 294.4 L288.2 287.5 L283.9 275.4 L282.5 278.4 L286.0 287.5 L290.1 293.3 L292.7 304.0 L300.6 322.7 L304.4 327.3 L302.6 328.7 L303.8 335.9 L311.0 343.2 L313.7 351.7 L315.1 371.3 L322.1 377.8 L328.1 399.6 L329.8 403.1 L330.3 400.2 L332.5 404.1 L338.7 407.5 L346.5 419.6 L350.8 422.9 L352.3 430.0 L0.0 430.0 L0.0 291.3 L9.6 283.2 L13.7 276.8 L15.1 272.2 L13.5 269.0 L14.0 262.9 L17.5 253.1 L22.2 247.2 L32.5 241.1 L38.7 225.4 L42.8 224.4 L43.0 226.9 L47.0 230.4 L54.8 230.4 L57.5 228.7 L58.3 231.1 L64.2 231.4 L84.4 219.1 L100.5 215.9 L106.7 215.9 L110.2 218.0 L117.7 214.3 L120.6 215.7 L123.8 214.5 L126.8 216.2 L138.1 212.1 L139.0 213.8 L141.4 213.2 L142.8 217.3 L146.2 214.5 L147.3 216.1 L143.2 221.4 L147.3 230.1 L140.5 239.0 L142.1 243.1 L144.7 243.5 L144.7 245.0 L146.2 244.0 L147.8 247.3 L154.6 250.6 L161.0 250.1 L173.1 254.6 L176.5 262.9 L190.0 267.2 L197.0 272.7 L201.2 271.6 L203.9 268.3 L204.7 264.9 L203.4 259.6 L204.6 256.1 L214.8 249.9 L223.5 252.7 L224.8 256.2 L234.9 258.1 L237.1 262.0 L246.9 262.6 L261.6 268.1 L274.4 261.4 L279.5 261.9 L281.1 263.7 L279.6 262.5 L278.8 264.1 L280.9 265.8 L281.9 264.1 L284.1 266.0 L290.9 265.5 L296.1 261.5 L303.5 238.7 L305.6 236.1 L304.5 220.9 L306.9 216.7 L306.0 215.8 L301.9 218.7 L297.5 216.6 L291.0 222.0 L285.3 223.3 L275.4 216.5 L271.6 216.2 L270.4 221.3 L265.5 222.3 L262.6 220.8 L261.0 217.4 L251.8 217.7 L256.3 214.8 L250.1 215.2 L251.8 213.6 L248.8 209.3 L249.9 206.6 L243.9 204.0 L244.8 200.9 L246.3 203.5 L249.3 202.5 L246.9 200.3 L248.5 198.8 L246.4 195.3 L247.8 193.1 L242.8 193.8 L243.2 189.3 L246.7 185.8 L253.0 186.4 L254.0 184.8 L254.5 186.0 L261.2 185.8 L259.8 184.6 L260.9 183.8 L266.6 182.7 L261.9 181.1 L262.1 178.7 L275.5 179.7 L282.2 174.3 L289.1 171.8 L299.4 171.5 L301.3 174.3 L306.1 174.7 L308.3 178.2 L310.7 177.5 L320.9 181.2 L327.6 179.7 L332.9 180.9 L342.0 174.5 L340.3 165.7 L330.4 159.3 L323.0 152.3 L309.7 144.9 L311.7 143.7 L310.3 143.0 L311.2 142.5 L313.5 143.9 L316.2 143.0 L318.0 137.6 L321.6 136.8 L317.0 132.1 L321.7 131.9 L321.3 130.6 L326.6 128.6 L326.1 126.7 L315.6 128.4 L310.8 131.5 L304.6 132.2 L299.5 136.7 L300.8 133.8 L298.4 136.0 L299.5 140.2 L302.3 143.5 L309.4 142.8 L308.2 145.6 L302.4 145.4 L292.4 151.5 L289.5 150.0 L290.2 145.4 L283.5 142.7 L290.9 138.1 L290.4 136.8 L283.3 136.9 L279.2 135.2 L280.3 133.9 L277.4 132.8 L282.6 133.5 L283.9 132.3 L280.5 132.1 L278.7 127.2 L279.4 132.0 L277.5 130.9 L272.6 132.9 L268.9 138.7 L265.1 140.0 L264.7 147.5 L261.5 148.3 L260.7 146.5 L258.4 159.1 L255.6 160.0 L254.1 165.6 L251.5 168.0 L256.0 175.8 L261.5 178.6 L260.9 180.5 L251.6 180.8 L243.3 188.6 L243.7 186.5 L247.1 183.8 L242.7 183.9 L241.1 181.9 L236.3 180.6 L227.8 182.8 L228.5 185.6 L231.5 187.9 L227.6 186.4 L229.0 189.5 L225.6 186.9 L227.2 189.6 L225.4 189.3 L222.4 184.1 L220.6 184.9 L220.3 188.9 L225.0 196.3 L223.9 196.9 L222.4 195.2 L223.4 197.5 L220.2 198.9 L229.1 204.0 L229.7 208.3 L229.1 209.2 L226.4 206.1 L223.2 207.2 L226.1 211.0 L224.0 212.1 L221.2 210.3 L224.0 219.7 L221.1 216.8 L219.7 219.8 L217.1 214.8 L215.9 217.3 L214.9 216.2 L214.5 211.7 L211.0 207.3 L215.4 203.6 L222.0 206.7 L224.1 205.3 L219.2 202.6 L210.9 203.1 L208.7 198.9 L210.9 197.5 L208.8 197.7 L205.7 195.0 L202.9 188.8 L199.5 185.7 L201.1 173.8 L195.2 168.2 L185.0 163.3 L189.3 164.7 L184.1 160.0 L178.3 158.9 L173.2 153.3 L175.0 152.5 L171.9 149.6 L169.1 143.6 L167.6 143.3 L164.7 147.6 L162.5 142.1 L164.2 140.8 L160.5 139.6 L154.6 142.4 L156.2 146.5 L154.4 148.6 L155.4 152.9 L162.8 158.5 L165.7 166.1 L169.0 169.9 L173.0 172.6 L179.4 172.9 L177.7 176.2 L190.8 183.6 L194.0 187.3 L193.3 190.7 L190.2 186.8 L184.3 185.3 L181.7 191.4 L185.4 194.5 L185.8 197.8 L182.3 199.5 L181.8 202.9 L178.7 206.9 L176.1 206.1 L179.7 198.3 L176.4 189.3 L171.7 187.1 L170.5 183.5 L167.8 184.1 L168.5 182.9 L165.9 182.2 L163.9 178.6 L159.8 178.5 L150.6 169.5 L147.4 168.6 L143.4 163.7 L141.3 155.3 L132.3 151.2 L127.4 155.9 L122.7 157.4 L115.4 162.8 L102.2 158.3 L97.2 161.7 L95.8 164.8 L97.1 172.5 L89.7 178.1 L83.0 180.1 L81.0 182.1 L82.1 183.0 L74.4 193.3 L75.1 197.3 L77.7 199.9 L73.1 203.7 L71.8 209.6 L66.0 211.7 L63.0 216.9 L48.6 217.4 L43.5 220.0 L40.6 223.4 L38.0 222.0 L35.8 218.1 L36.8 215.7 L35.7 216.4 L32.7 212.6 L26.5 215.0 L19.1 214.7 L19.9 202.6 L21.2 202.8 L17.7 202.5 L17.5 200.8 L20.4 197.1 L18.2 200.0 L16.1 199.5 L21.1 182.7 L19.8 174.0 L21.1 169.6 L18.0 161.9 L27.4 156.8 L31.5 158.6 L39.2 157.9 L47.6 159.8 L53.5 158.9 L63.7 160.4 L67.0 158.6 L69.6 148.9 L68.5 149.1 L69.5 141.6 L72.9 146.2 L68.8 140.1 L69.9 139.8 L69.1 134.9 L65.1 133.2 L63.1 130.2 L62.7 127.1 L65.3 127.1 L60.5 126.3 L61.0 125.0 L58.7 123.6 L49.0 121.9 L46.6 120.1 L48.9 118.9 L47.3 117.9 L49.4 117.8 L46.4 117.3 L46.4 115.8 L55.9 113.2 L59.3 115.8 L67.7 114.8 L64.6 105.9 L68.4 106.0 L69.2 108.5 L75.4 109.2 L79.1 107.9 L77.3 107.4 L77.6 105.8 L85.4 102.4 L87.7 95.2 L98.3 91.2 L103.4 91.3 L98.4 89.9 L103.7 90.5 L101.9 89.5 L103.1 89.4 L102.1 86.6 L106.8 77.9 L111.7 75.1 L119.8 73.6 L122.3 75.0 L122.3 71.8 L125.0 71.4 L127.4 71.5 L128.7 73.7 L129.5 72.2 L130.5 74.0 L131.3 69.9 L135.1 70.0 L138.8 72.6 L131.5 66.3 L133.5 64.2 L131.7 62.0 L131.3 56.6 L128.2 55.0 L128.4 46.4 L131.7 47.3 L133.0 45.3 L135.0 45.6 L134.5 42.6 L132.3 45.4 L129.1 45.1 L131.3 42.0 L136.5 41.5 L139.9 38.0 L144.0 36.7 L141.9 46.3 L146.0 47.8 L144.9 49.5 L142.2 49.8 L141.3 52.8 L139.5 53.0 L140.3 53.7 L137.5 56.0 L136.6 59.9 L140.3 63.0 L139.3 64.7 L146.6 65.5 L145.6 68.7 L149.0 69.3 L156.5 64.8 L159.4 65.3 L163.8 67.5 L165.3 70.5 L169.3 71.9 L169.2 70.3 L165.1 69.8 L164.5 67.7 L168.1 69.4 L191.6 61.6 L195.9 62.9 L193.9 62.4 L196.4 65.6 L200.0 65.5 L203.7 60.9 L208.1 59.3 L210.9 54.9 L207.6 60.4 L211.4 60.8 L210.4 46.1 L214.8 38.1 L220.1 36.8 L227.1 43.2 L231.7 40.8 L232.7 31.4 L227.8 31.3 L226.1 24.1 L238.9 20.3 L254.1 22.2 L255.1 19.1 L256.9 19.8 L262.1 17.2 L268.6 17.6 L258.9 14.0 L258.0 11.4 L245.4 13.6 L245.7 11.8 L240.5 14.9 L223.1 18.8 L224.2 17.0 L222.4 15.4 L219.5 16.9 L220.3 13.9 L213.0 12.1 L214.1 3.5 L211.8 0.0 L187.5 0.0 L187.7 2.7 L186.0 2.4 L185.5 3.6 L186.3 11.2 L190.8 12.1 L197.4 18.7 L191.0 23.0 Z M399.2 129.5 L390.7 133.1 L390.1 135.1 L386.5 136.9 L386.8 138.5 L379.8 141.2 L378.7 140.4 L374.0 150.9 L377.8 153.9 L378.7 158.6 L379.9 155.8 L378.7 163.1 L380.4 166.1 L391.4 182.3 L397.2 186.8 L392.0 187.5 L390.8 194.8 L389.6 197.5 L388.3 197.1 L389.1 209.3 L395.7 211.5 L400.8 216.6 L406.1 218.3 L418.9 215.6 L420.2 216.6 L419.5 198.2 L418.5 196.0 L415.0 195.5 L415.5 192.6 L417.9 193.1 L417.1 190.0 L413.9 189.3 L414.2 191.1 L412.3 185.8 L413.7 180.3 L419.6 183.6 L422.8 183.2 L424.9 180.0 L421.0 176.1 L418.8 170.9 L413.8 172.2 L413.1 178.9 L410.6 173.0 L411.4 165.5 L403.2 161.9 L400.2 153.1 L396.5 151.3 L397.5 149.4 L404.7 150.2 L401.3 146.9 L403.9 143.1 L415.3 143.3 L412.6 141.3 L415.1 131.8 L413.5 129.4 L408.5 130.5 L402.4 128.1 L399.2 129.5 Z" fill="#2b251b" stroke="#8f6f2e" stroke-width="1" stroke-linejoin="round" fill-rule="evenodd"/>
+    <a class="mk" href="battle-of-zama-3d.html" aria-label="Zama 202 BC">
+      <line class="mk-lead" x1="136.3" y1="222.7" x2="96" y2="200"/>
+      <circle class="mk-hit" cx="136.3" cy="222.7" r="24"/>
+      <circle class="mk-pulse" cx="136.3" cy="222.7" r="9"/>
+      <circle class="mk-dot" cx="136.3" cy="222.7" r="5.5"/>
+      <rect class="mk-pill" x="8" y="176" width="140" height="27" rx="3"/>
+      <text x="19" y="194">ZAMA · 202 BC</text>
+    </a>
+    <a class="mk" href="battle-of-kalka-river-3d.html" aria-label="Kalka River 1223">
+      <line class="mk-lead" x1="315.3" y1="126.4" x2="386" y2="76"/>
+      <circle class="mk-hit" cx="315.3" cy="126.4" r="26"/>
+      <circle class="mk-pulse" cx="315.3" cy="126.4" r="9"/>
+      <circle class="mk-dot" cx="315.3" cy="126.4" r="5.5"/>
+      <rect class="mk-pill" x="386" y="60" width="186" height="27" rx="3"/>
+      <text x="397" y="78">KALKA RIVER · 1223</text>
+    </a>
+    <a class="mk" href="battle-of-agincourt-3d.html" aria-label="Agincourt 1415">
+      <line class="mk-lead" x1="89.7" y1="99.2" x2="136" y2="64"/>
+      <circle class="mk-hit" cx="89.7" cy="99.2" r="30"/>
+      <circle class="mk-pulse" cx="89.7" cy="99.2" r="9"/>
+      <circle class="mk-dot" cx="89.7" cy="99.2" r="5.5"/>
+      <rect class="mk-pill" x="128" y="50" width="152" height="27" rx="3"/>
+      <text x="139" y="68">AGINCOURT · 1415</text>
+    </a>
+    <a class="mk" href="siege-of-alesia-3d.html" aria-label="Alesia 52 BC">
+      <line class="mk-lead" x1="105.1" y1="124.4" x2="176" y2="124"/>
+      <circle class="mk-hit" cx="105.1" cy="124.4" r="30"/>
+      <circle class="mk-pulse" cx="105.1" cy="124.4" r="9"/>
+      <circle class="mk-dot" cx="105.1" cy="124.4" r="5.5"/>
+      <rect class="mk-pill" x="168" y="110" width="128" height="27" rx="3"/>
+      <text x="179" y="128">ALESIA · 52 BC</text>
+    </a>
+    <a class="mk" href="battle-of-cannae-3d.html" aria-label="Cannae 216 BC">
+      <line class="mk-lead" x1="179.2" y1="178.0" x2="58" y2="258"/>
+      <circle class="mk-hit" cx="179.2" cy="178.0" r="30"/>
+      <circle class="mk-pulse" cx="179.2" cy="178.0" r="9"/>
+      <circle class="mk-dot" cx="179.2" cy="178.0" r="5.5"/>
+      <rect class="mk-pill" x="50" y="244" width="142" height="27" rx="3"/>
+      <text x="61" y="262">CANNAE · 216 BC</text>
+    </a>
+    <a class="mk" href="battle-of-thermopylae-3d.html" aria-label="Thermopylae 480 BC">
+      <line class="mk-lead" x1="220.0" y1="199.5" x2="304" y2="164"/>
+      <circle class="mk-hit" cx="220.0" cy="199.5" r="30"/>
+      <circle class="mk-pulse" cx="220.0" cy="199.5" r="9"/>
+      <circle class="mk-dot" cx="220.0" cy="199.5" r="5.5"/>
+      <rect class="mk-pill" x="296" y="150" width="188" height="27" rx="3"/>
+      <text x="307" y="168">THERMOPYLAE · 480 BC</text>
+    </a>
+    <a class="mk" href="battle-of-marathon-3d.html" aria-label="Marathon 490 BC">
+      <line class="mk-lead" x1="229.0" y1="205.1" x2="314" y2="198"/>
+      <circle class="mk-hit" cx="229.0" cy="205.1" r="30"/>
+      <circle class="mk-pulse" cx="229.0" cy="205.1" r="9"/>
+      <circle class="mk-dot" cx="229.0" cy="205.1" r="5.5"/>
+      <rect class="mk-pill" x="306" y="184" width="164" height="27" rx="3"/>
+      <text x="317" y="202">MARATHON · 490 BC</text>
+    </a>
+    <a class="mk saga" href="the-odyssey-episode-one.html" aria-label="The Odyssey saga">
+      <line class="mk-lead" x1="208.2" y1="203.2" x2="136" y2="306"/>
+      <circle class="mk-hit" cx="208.2" cy="203.2" r="30"/>
+      <circle class="mk-pulse" cx="208.2" cy="203.2" r="9"/>
+      <rect class="mk-dot" x="203.2" y="198.2" width="10" height="10" transform="rotate(45 208.2 203.2)"/>
+      <rect class="mk-pill" x="128" y="292" width="180" height="27" rx="3"/>
+      <text x="139" y="310">THE ODYSSEY · SAGA</text>
+    </a>
+    <a class="mk" href="red-cliffs-episode-one.html" aria-label="Red Cliffs saga">
+      <line class="mk-lead" x1="800.1" y1="277.6" x2="568" y2="330"/>
+      <circle class="mk-hit" cx="800.1" cy="277.6" r="30"/>
+      <circle class="mk-pulse" cx="800.1" cy="277.6" r="9"/>
+      <circle class="mk-dot" cx="800.1" cy="277.6" r="5.5"/>
+      <rect class="mk-pill" x="560" y="316" width="224" height="27" rx="3"/>
+      <text x="571" y="334">RED CLIFFS · SAGA + BATTLE</text>
+    </a>
+    <a class="mk" href="battle-of-myeongnyang-3d.html" aria-label="Myeongnyang 1597">
+      <line class="mk-lead" x1="880.9" y1="235.9" x2="750" y2="162"/>
+      <circle class="mk-hit" cx="880.9" cy="235.9" r="30"/>
+      <circle class="mk-pulse" cx="880.9" cy="235.9" r="9"/>
+      <circle class="mk-dot" cx="880.9" cy="235.9" r="5.5"/>
+      <rect class="mk-pill" x="742" y="148" width="188" height="27" rx="3"/>
+      <text x="753" y="166">MYEONGNYANG · 1597</text>
+    </a>
+  </svg>
+  
+  </div></div>
+
+  <div class="shelf-label">The Catalogue <span>eleven playable hours of history · the shelf grows</span></div>
+  <div class="shelf-rule"></div>
+  <div class="grid">
+
+    <a class="card" href="battle-of-red-cliffs-3d.html">
+      <div class="card-art"><svg viewBox="0 0 340 120" preserveAspectRatio="xMidYMid slice">
+        <rect width="340" height="120" fill="#1a2a30"/>
+        <path d="M0 78 Q80 66 170 76 T340 74 V120 H0 Z" fill="#24444e"/>
+        <path d="M0 20 Q60 44 120 30 T260 34 T340 22" fill="none" stroke="#2e3d42" stroke-width="22" opacity=".6"/>
+        <g fill="#d9a441"><rect x="60" y="62" width="30" height="6"/><rect x="72" y="44" width="3" height="18"/><path d="M75 44 L92 52 L75 58 Z" opacity=".85"/></g>
+        <g fill="#c0554a"><rect x="150" y="66" width="30" height="6"/><rect x="162" y="48" width="3" height="18"/><path d="M165 48 L182 56 L165 62 Z" opacity=".85"/>
+        <path d="M150 60 q8 -14 4 -22 M162 58 q6 -12 12 -18 M176 62 q8 -10 2 -20" stroke="#e0813f" stroke-width="3" fill="none"/></g>
+        <g fill="#c0554a" opacity=".7"><rect x="228" y="63" width="26" height="5"/><rect x="238" y="48" width="3" height="15"/></g>
+      </svg><span class="card-era">Three Kingdoms · China</span></div>
+      <div class="card-body">
+        <h2>Red Cliffs</h2>
+        <div class="year">Winter, 208 AD · the Yangtze</div>
+        <p>Cao Cao brings the north's vast fleet south to end the wars in one season, and chains his ships
+          together for the comfort of his landsmen. Zhou Yu and a defector's letter arrange for the wind.
+          Command the allied fleet, time the fire, and split China for seventy years.</p>
+        <div class="tags"><span class="tag">Naval</span><span class="tag">Fire</span><span class="tag">3 decisions</span><span class="tag">Wind &amp; timing</span></div>
+        <div class="enter">Enter the battle &#9656;</div>
+      </div>
+    </a>
+
+    <a class="card" href="battle-of-cannae-3d.html">
+      <div class="card-art"><svg viewBox="0 0 340 120" preserveAspectRatio="xMidYMid slice">
+        <rect width="340" height="120" fill="#2a2418"/>
+        <path d="M0 90 Q120 78 340 88 V120 H0 Z" fill="#3a3120"/>
+        <path d="M20 0 Q26 60 20 120" stroke="#3f6a70" stroke-width="14" fill="none" opacity=".8"/>
+        <path d="M90 38 Q170 64 250 38" stroke="#7a6db0" stroke-width="7" fill="none"/>
+        <rect x="120" y="14" width="100" height="18" fill="#c0554a" opacity=".9"/>
+        <path d="M84 44 L104 62 M256 44 L236 62" stroke="#9a8ac8" stroke-width="6"/>
+        <circle cx="290" cy="86" r="14" fill="none" stroke="#d9a441" stroke-width="2.5" opacity=".9"/>
+      </svg><span class="card-era">Second Punic War · Italy</span></div>
+      <div class="card-body">
+        <h2>Cannae</h2>
+        <div class="year">2 August, 216 BC · the Aufidus plain</div>
+        <p>The largest army Rome ever fielded walks into a line deliberately bowed to receive it. Play
+          Hannibal: shape the crescent with your own hands, hold your cavalry off the chase, and close
+          the most studied encirclement in the history of war.</p>
+        <div class="tags"><span class="tag">Double envelopment</span><span class="tag">2 command beats</span><span class="tag">3 decisions</span></div>
+        <div class="enter">Enter the battle &#9656;</div>
+      </div>
+    </a>
+    <a class="card" href="battle-of-zama-3d.html">
+      <div class="card-art"><svg viewBox="0 0 340 120" preserveAspectRatio="xMidYMid slice">
+        <rect width="340" height="120" fill="#a08c62"/>
+        <path d="M0 96 Q90 88 170 94 Q260 100 340 92 V120 H0 Z" fill="#8a7852"/>
+        <rect x="40" y="74" width="52" height="9" fill="#8c2f2a"/><rect x="104" y="74" width="52" height="9" fill="#8c2f2a"/>
+        <rect x="168" y="74" width="52" height="9" fill="#8c2f2a"/><rect x="232" y="74" width="52" height="9" fill="#8c2f2a"/>
+        <path d="M98 40 q6 -12 16 -12 q10 0 13 8 q6 -3 9 2 l-3 8 q-4 6 -14 6 q-14 0 -21 -12 M118 52 v10 M108 52 v10" stroke="#5c5248" stroke-width="0" fill="#6e6458"/>
+        <path d="M190 34 q6 -12 16 -12 q10 0 13 8 q6 -3 9 2 l-3 8 q-4 6 -14 6 q-14 0 -21 -12 M210 46 v12 M200 46 v12" fill="#6e6458"/>
+        <path d="M98 62 L98 74 M162 62 L162 74 M226 62 L226 74" stroke="#d9a441" stroke-width="4"/>
+        <path d="M20 20 q40 10 60 34 M320 20 q-40 10 -60 34" stroke="#c9b07a" stroke-width="3" fill="none"/>
+      </svg><span class="card-era">Second Punic War · Africa</span></div>
+      <div class="card-body">
+        <h2>Zama</h2>
+        <div class="year">October, 202 BC · Sixteen years after Cannae</div>
+        <p>The student of the massacre meets its author. Play Scipio: face Hannibal across the parley
+          ground, open the lanes for eighty elephants, halt a battle to re-form your line, and hand
+          Cannae back to the man who invented it. The answer to the catalogue's question.</p>
+        <div class="tags"><span class="tag">War elephants</span><span class="tag">The parley</span><span class="tag">2 command beats</span><span class="tag">3 decisions</span></div>
+        <div class="enter">Enter the battle &#9656;</div>
+      </div>
+    </a>
+
+    <a class="card" href="battle-of-marathon-3d.html">
+      <div class="card-art"><svg viewBox="0 0 340 120" preserveAspectRatio="xMidYMid slice">
+        <rect width="340" height="120" fill="#232b1e"/>
+        <path d="M0 0 H340 V34 Q220 46 120 36 T0 30 Z" fill="#28414c"/>
+        <path d="M0 96 Q140 84 340 94 V120 H0 Z" fill="#39442a"/>
+        <rect x="60" y="66" width="220" height="9" fill="#d9a441"/>
+        <rect x="60" y="66" width="70" height="12" fill="#d9a441"/>
+        <rect x="230" y="66" width="50" height="12" fill="#d9a441"/>
+        <rect x="90" y="42" width="160" height="10" fill="#c0554a" opacity=".9"/>
+        <path d="M70 24 l8 8 M270 24 l-8 8" stroke="#8fb0bc" stroke-width="3"/>
+      </svg><span class="card-era">Greco-Persian Wars · Greece</span></div>
+      <div class="card-body">
+        <h2>Marathon</h2>
+        <div class="year">September, 490 BC · the bay of Marathon</div>
+        <p>Ten thousand Athenians against the empire that has never lost, and Miltiades's heresy: thin the
+          centre on purpose. Drag the phalanx into shape, survive the arrow storm at a run, and give the
+          order that invented the double envelopment.</p>
+        <div class="tags"><span class="tag">Phalanx</span><span class="tag">Formation drag</span><span class="tag">Field orders</span><span class="tag">3 decisions</span></div>
+        <div class="enter">Enter the battle &#9656;</div>
+      </div>
+    </a>
+
+    <a class="card" href="battle-of-myeongnyang-3d.html">
+      <div class="card-art"><svg viewBox="0 0 340 120" preserveAspectRatio="xMidYMid slice">
+        <rect width="340" height="120" fill="#16211f"/>
+        <path d="M0 0 H340 V26 Q250 52 170 40 T0 34 Z" fill="#3a4a36"/>
+        <path d="M0 120 H340 V96 Q240 72 170 82 T0 90 Z" fill="#3a4a36"/>
+        <path d="M0 62 Q90 56 170 61 T340 60" stroke="#4a7a86" stroke-width="26" fill="none"/>
+        <path d="M30 62 h24 M70 58 h20 M110 64 h22" stroke="#9cc4c0" stroke-width="2" opacity=".7"/>
+        <g fill="#6f9ec9"><rect x="86" y="54" width="26" height="7"/><rect x="96" y="40" width="3" height="14"/></g>
+        <g fill="#8a7a68" opacity=".95">
+          <rect x="196" y="52" width="20" height="6"/><rect x="222" y="58" width="20" height="6"/>
+          <rect x="248" y="50" width="20" height="6"/><rect x="240" y="64" width="20" height="6"/>
+          <rect x="272" y="56" width="20" height="6"/><rect x="296" y="62" width="20" height="6"/>
+        </g>
+      </svg><span class="card-era">Imjin War · Korea</span></div>
+      <div class="card-body">
+        <h2>Myeongnyang</h2>
+        <div class="year">26 October, 1597 · the Roaring Channel</div>
+        <p>Thirteen ships against a hundred and thirty three, in a strait where the tide runs faster than
+          oars and reverses on a schedule. Play Yi Sun-sin: choose the water, hold the narrows alone, and
+          let the channel take your side. The most lopsided naval victory ever recorded.</p>
+        <div class="tags"><span class="tag">Naval</span><span class="tag">Tide as weapon</span><span class="tag">2 command beats</span><span class="tag">4 decisions</span></div>
+        <div class="enter">Enter the battle &#9656;</div>
+      </div>
+    </a>
+
+
+    <a class="card" href="battle-of-agincourt-3d.html">
+      <div class="card-art"><svg viewBox="0 0 340 120" preserveAspectRatio="xMidYMid slice">
+        <rect width="340" height="120" fill="#3a3226"/>
+        <path d="M0 0 H70 Q54 60 78 120 H0 Z" fill="#3e5236"/>
+        <path d="M340 0 H270 Q286 60 262 120 H340 Z" fill="#3e5236"/>
+        <path d="M78 46 Q170 56 262 46 V84 Q170 74 78 84 Z" fill="#4a3c2a" opacity=".85"/>
+        <rect x="104" y="92" width="132" height="8" fill="#8c2f2a"/>
+        <path d="M96 88 l6 10 M116 86 l6 12 M226 86 l6 12 M244 88 l6 10" stroke="#6e5838" stroke-width="3"/>
+        <rect x="120" y="18" width="100" height="14" fill="#3f5a9c" opacity=".9"/>
+        <path d="M120 40 q20 26 24 44 M170 38 q0 28 0 46 M220 40 q-20 26 -24 44" stroke="#2d251a" stroke-width="2" fill="none" opacity=".8"/>
+      </svg><span class="card-era">Hundred Years' War · France</span></div>
+      <div class="card-body">
+        <h2>Agincourt</h2>
+        <div class="year">25 October, 1415 · Saint Crispin's Day</div>
+        <p>A starving English army blocked on the road to Calais, a ploughed field after a night of rain,
+          and the chivalry of France wading into a funnel of mud and arrows. Play Henry V: place the line
+          between the woods, dare the advance, loose the archers, and face the day's darkest order.</p>
+        <div class="tags"><span class="tag">Longbow</span><span class="tag">Mud &amp; terrain</span><span class="tag">2 command beats</span><span class="tag">4 decisions</span></div>
+        <div class="enter">Enter the battle &#9656;</div>
+      </div>
+    </a>
+    <a class="card" href="battle-of-kalka-river-3d.html">
+      <div class="card-art"><svg viewBox="0 0 340 120" preserveAspectRatio="xMidYMid slice">
+        <rect width="340" height="120" fill="#6e6a48"/>
+        <path d="M0 30 Q80 20 170 28 Q260 36 340 26 V60 Q260 70 170 62 Q80 54 0 64 Z" fill="#7c7852" opacity=".7"/>
+        <rect x="272" y="0" width="10" height="120" fill="#4a6a72"/>
+        <circle cx="252" cy="34" r="15" fill="#7a6f5c"/>
+        <path d="M30 84 Q120 96 210 78 Q250 70 262 56" stroke="#8c2f2a" stroke-width="4" fill="none"/>
+        <path d="M40 44 Q140 30 240 50 Q276 58 284 72 Q276 86 246 84" stroke="#1c1c20" stroke-width="4" fill="none"/>
+        <path d="M246 84 l12 -2 l-6 10 Z" fill="#1c1c20"/>
+        <path d="M70 40 l8 -6 M110 34 l8 -6 M150 34 l8 -6" stroke="#1c1c20" stroke-width="3"/>
+      </svg><span class="card-era">Mongol Empire · the Pontic steppe</span></div>
+      <div class="card-body">
+        <h2>Kalka River</h2>
+        <div class="year">31 May, 1223 · Day nine of the withdrawal</div>
+        <p>Jebe and Subutai at the end of the greatest cavalry raid in history, and the princes of Rus'
+          racing each other into a nine-day retreat that was never a retreat. Play Subutai: set the length
+          of the lure, break the screen, and face the oath on the hill.</p>
+        <div class="tags"><span class="tag">Feigned retreat</span><span class="tag">Horse archers</span><span class="tag">2 command beats</span><span class="tag">3 decisions</span></div>
+        <div class="enter">Enter the battle &#9656;</div>
+      </div>
+    </a>
+
+
+    <a class="card" href="battle-of-thermopylae-3d.html">
+      <div class="card-art"><svg viewBox="0 0 340 120" preserveAspectRatio="xMidYMid slice"><rect width="340" height="120" fill="#22303a"/><path d="M0 0 H150 Q120 40 140 78 L120 120 H0 Z" fill="#4a4436"/><path d="M340 0 H210 Q236 44 220 120 H340 Z" fill="#3c382c"/><path d="M140 78 Q170 70 220 78 L220 120 L140 120 Z" fill="#2c4a56"/><rect x="146" y="60" width="52" height="7" fill="#8c2f2a"/><path d="M120 20 q30 26 26 40 M180 14 q6 30 0 46 M240 22 q-26 24 -22 38" stroke="#2d251a" stroke-width="2" fill="none" opacity=".75"/></svg><span class="card-era">Greco-Persian Wars · Greece</span></div>
+      <div class="card-body">
+        <h2>Thermopylae</h2>
+        <div class="year">August, 480 BC · the Hot Gates</div>
+        <p>Three days, one goat path, and the most famous rearguard in history. Hold the wall, learn what
+          the Immortals were for, and decide who stays when the path is betrayed.</p>
+        <div class="tags"><span class="tag">3 days</span><span class="tag">The last stand</span></div>
+        <div class="enter">Enter the battle &#9656;</div>
+      </div>
+    </a>
+
+    <a class="card" href="siege-of-alesia-3d.html">
+      <div class="card-art"><svg viewBox="0 0 340 120" preserveAspectRatio="xMidYMid slice"><rect width="340" height="120" fill="#2a2e24"/><circle cx="170" cy="60" r="26" fill="#5a5040"/><circle cx="170" cy="60" r="40" fill="none" stroke="#8c2f2a" stroke-width="6"/><circle cx="170" cy="60" r="56" fill="none" stroke="#8c2f2a" stroke-width="6" stroke-dasharray="10 6"/><path d="M20 24 l10 6 M40 90 l10 6 M290 20 l12 6 M300 94 l12 6" stroke="#4a5c3a" stroke-width="4"/><circle cx="30" cy="28" r="7" fill="#4a5c3a"/><circle cx="50" cy="94" r="7" fill="#4a5c3a"/><circle cx="298" cy="24" r="7" fill="#4a5c3a"/><circle cx="308" cy="98" r="7" fill="#4a5c3a"/></svg><span class="card-era">Gallic Wars · Gaul</span></div>
+      <div class="card-body">
+        <h2>Alesia</h2>
+        <div class="year">September, 52 BC · Gaul</div>
+        <p>Caesar besieges a hilltop army and is besieged in turn, and answers with eighteen kilometres of
+          engineering. Build the double wall, hold both fronts at once, and end a nation's war.</p>
+        <div class="tags"><span class="tag">Siegecraft</span><span class="tag">Two fronts</span></div>
+        <div class="enter">Enter the battle &#9656;</div>
+      </div>
+    </a>
+
+
+    <a class="card" href="the-odyssey-episode-one.html">
+      <div class="card-art"><svg viewBox="0 0 340 120" preserveAspectRatio="xMidYMid slice"><rect width="340" height="120" fill="#1d2b36"/><path d="M0 84 Q60 70 120 84 Q200 98 340 80 V120 H0 Z" fill="#2c4a56"/><path d="M230 84 Q248 30 296 26 Q330 26 340 44 V84 Z" fill="#4a4436"/><circle cx="292" cy="50" r="9" fill="#1a1410"/><circle cx="292" cy="50" r="3.5" fill="#d9a441"/><path d="M60 84 q4 -18 16 -22 l2 6 q14 -4 26 2 l-4 8 q8 2 8 6 Z" fill="#3a2c1a"/><path d="M66 62 q10 -22 34 -20" stroke="#e5ddc8" stroke-width="2" fill="none"/></svg><span class="card-era">Saga · the wine-dark sea</span></div>
+      <div class="card-body">
+        <h2>The Odyssey</h2>
+        <div class="year">Episode One · Nobody</div>
+        <p>The Cyclops, the wine of Maron, the name trick, and the taunt that costs ten years. Bond with
+          Homer's crew, bind them beneath the sheep with your own hands, and carry your hubris into
+          Episode Two.</p>
+        <div class="tags"><span class="tag">Season state</span><span class="tag">Bond characters</span><span class="tag">The chorus</span></div>
+        <div class="enter">Begin the episode &#9656;</div>
+      </div>
+    </a>
+
+    <a class="card" href="red-cliffs-episode-one.html">
+      <div class="card-art"><svg viewBox="0 0 340 120" preserveAspectRatio="xMidYMid slice"><rect width="340" height="120" fill="#1a2028"/><path d="M0 78 Q80 66 170 76 Q260 86 340 74 V120 H0 Z" fill="#22384a"/><rect x="60" y="58" width="34" height="10" fill="#3a3226"/><rect x="104" y="58" width="34" height="10" fill="#3a3226"/><path d="M94 63 H104" stroke="#6a5a3e" stroke-width="3"/><path d="M200 66 q6 -26 18 -30 q-2 14 8 22 q8 -4 10 -14 q10 18 -2 30 Z" fill="#c46530"/><path d="M206 60 q6 -14 12 -16" stroke="#e8a050" stroke-width="3" fill="none"/></svg><span class="card-era">Saga · the Yangtze</span></div>
+      <div class="card-body">
+        <h2>Red Cliffs: The Fire</h2>
+        <div class="year">Episode One · story edition</div>
+        <p>The same winter on the Yangtze, told from the deck: an old boat-master who reads the wind, a
+          signal-hand with steady eyes, an oarsman whose brother serves the enemy, and one drop of a
+          signal flag.</p>
+        <div class="tags"><span class="tag">Voiced-cast ready</span><span class="tag">Mini-game</span></div>
+        <div class="enter">Begin the episode &#9656;</div>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="platform-note">
+    <span class="k">How a battle is made</span>
+    Every title in this catalogue is compiled from the same grammar: a fixed historical spine, two to four
+    real decisions rendered as <b>choices and counterfactuals you can rewind</b>, one or two <b>command
+    beats</b> where the field itself is in your hands, and an aftermath that tells the truth about what it
+    all changed. One engine, one design language, a new decisive hour every week. <b>Story in, experience
+    out.</b>
+  </div>
+
+  <footer>
+    <svg class="meander" viewBox="0 0 560 14" preserveAspectRatio="none" aria-hidden="true"><rect width="560" height="14" fill="url(#key)"/></svg>
+    GESTA is a working prototype. Keep all battle files in the same folder as this page for the
+    catalogue links to work.
+  </footer>
+</div>
+</body>
+</html>

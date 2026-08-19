@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thermopylae, 480 BC · 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16120e; --ink-2:#1e1913; --panel:#221c15; --line:#3a3226;
+    --parchment:#e7dcc4; --muted:#a2957c; --faint:#6f6450;
+    --bronze:#d9a441; --bronze-dim:#8f6f2e;
+    --crimson:#c04a3d;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{background:var(--ink)}
+  body{background:var(--ink);color:var(--parchment);font-family:'Source Serif 4',Georgia,serif;font-size:17px;line-height:1.65;min-height:100vh}
+  .wrap{max-width:1060px;margin:0 auto;padding:36px 18px 80px}
+
+  header{text-align:center;margin-bottom:26px}
+  .eyebrow{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  h1{font-family:'GFS Didot',serif;font-weight:400;font-size:clamp(38px,7vw,68px);letter-spacing:.06em;line-height:1}
+  .subtitle{color:var(--muted);font-style:italic;margin-top:12px;font-size:16px}
+  .meander{height:14px;margin:24px auto;max-width:520px;opacity:.55}
+
+  .phases{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+  .pill{font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:7px 13px;border:1px solid var(--line);border-radius:2px;color:var(--faint);transition:all .35s;white-space:nowrap}
+  .pill.active{color:var(--bronze);border-color:var(--bronze-dim);background:rgba(217,164,65,.06)}
+  .pill.done{color:var(--muted)}
+
+  .stage{position:relative;border:1px solid var(--line);background:#000;border-radius:3px;overflow:hidden}
+  #view{display:block;width:100%;height:560px;cursor:grab;touch-action:none}
+  #view.dragging{cursor:grabbing}
+  @media(max-width:700px){#view{height:420px}}
+
+  .counters{position:absolute;top:10px;left:12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;font-size:12px;letter-spacing:.08em;opacity:0;transition:opacity .6s}
+  .counters.show{opacity:1}
+  .counter{background:rgba(22,18,14,.72);padding:4px 10px;border-radius:2px;border:1px solid var(--line);width:max-content}
+  .counter b{font-weight:600}
+  .c-grk b{color:var(--crimson)} .c-per b{color:#8b93d6}
+
+  .daytag{position:absolute;bottom:10px;left:12px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(231,220,196,.7);background:rgba(22,18,14,.6);padding:5px 10px;border-radius:2px;pointer-events:none}
+
+  .camctl{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:6px}
+  .cambtn{font-family:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;background:rgba(22,18,14,.72);border:1px solid var(--line);border-radius:2px;color:var(--muted);cursor:pointer;transition:all .2s}
+  .cambtn:hover{color:var(--bronze);border-color:var(--bronze-dim)}
+  .camhint{position:absolute;bottom:10px;right:12px;font-size:11px;letter-spacing:.06em;color:rgba(231,220,196,.55);background:rgba(22,18,14,.6);padding:4px 9px;border-radius:2px;pointer-events:none}
+  @media(max-width:700px){.camhint{display:none}}
+
+  .narration{border:1px solid var(--line);border-top:none;background:var(--panel);padding:26px 30px;border-radius:0 0 3px 3px;min-height:150px}
+  .narr-label{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--bronze);margin-bottom:10px}
+  .narration p{margin-bottom:12px}
+  .narration p:last-child{margin-bottom:0}
+  .narration em{color:var(--muted)}
+  .aside{font-size:14px;color:var(--muted);font-style:italic;border-left:2px solid var(--bronze-dim);padding-left:14px;margin-top:14px}
+
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  @media(max-width:640px){.choices{grid-template-columns:1fr}}
+  .choice{border:1px solid var(--line);border-radius:3px;padding:20px;background:var(--ink-2);cursor:pointer;text-align:left;color:var(--parchment);font-family:inherit;font-size:16px;transition:border-color .25s,background .25s}
+  .choice:hover{border-color:var(--bronze-dim);background:#26201780}
+  .choice h3{font-family:'GFS Didot',serif;font-weight:400;font-size:20px;letter-spacing:.04em;margin-bottom:8px;color:var(--bronze)}
+  .choice p{font-size:14.5px;color:var(--muted);line-height:1.55}
+
+  .controls{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn{font-family:inherit;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:13px 28px;background:transparent;color:var(--bronze);border:1px solid var(--bronze-dim);border-radius:2px;cursor:pointer;transition:all .25s}
+  .btn:hover{background:rgba(217,164,65,.1);border-color:var(--bronze)}
+  .btn.ghost{color:var(--muted);border-color:var(--line)}
+  .btn.ghost:hover{color:var(--parchment);background:rgba(255,255,255,.04)}
+
+  #vn{display:none;position:absolute;left:0;right:0;bottom:0;padding:14px 16px 16px;
+      background:linear-gradient(transparent, rgba(12,12,10,.55) 18%, rgba(12,12,10,.92) 60%);z-index:5}
+  .vn-box{display:flex;gap:16px;max-width:860px;margin:0 auto;align-items:flex-end;cursor:pointer}
+  .vn-portrait{width:104px;height:128px;flex:0 0 auto;border:1px solid var(--bronze-dim);
+      border-radius:3px;background:#1c1814;overflow:hidden}
+  .vn-portrait svg{width:100%;height:100%;display:block}
+  .vn-main{flex:1;min-width:0}
+  .vn-name{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--bronze);margin-bottom:7px}
+  .vn-text{font-size:16.5px;line-height:1.6;color:var(--parchment);min-height:52px}
+  .vn-text em{color:var(--muted)}
+  .vn-next{font-size:11px;letter-spacing:.2em;color:var(--faint);margin-top:8px;text-transform:uppercase}
+  .vn-choices{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .vn-choice{font-family:inherit;font-size:14.5px;text-align:left;padding:11px 16px;background:rgba(24,22,18,.9);
+      border:1px solid var(--line);border-radius:2px;color:var(--parchment);cursor:pointer;transition:all .2s}
+  .vn-choice:hover{border-color:var(--bronze-dim);background:rgba(32,29,23,.95)}
+  #vntoast{position:absolute;right:16px;bottom:100%;margin-bottom:8px;font-size:11px;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--bronze);background:rgba(18,16,13,.85);border:1px solid var(--bronze-dim);
+      padding:6px 12px;border-radius:2px;opacity:0;transition:opacity .5s;pointer-events:none}
+  #vntoast.show{opacity:1}
+  .vn-narr .vn-text{font-style:italic;color:var(--muted)}
+  @media(max-width:640px){.vn-portrait{width:76px;height:96px}.vn-text{font-size:15px}}
+  /* decision dock overlaid on the simulation */
+  #dock{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:10px 14px 12px;
+      background:linear-gradient(transparent, rgba(12,12,10,.45) 18%, rgba(12,12,10,.9) 72%)}
+  #dock:not(:has(button)){display:none}
+  #dock .choices{max-width:880px;margin:0 auto;gap:10px}
+  #dock .choice{padding:12px 14px;background:rgba(24,22,18,.93)}
+  #dock .choice h3{font-size:17px;margin-bottom:5px}
+  #dock .choice p{font-size:13px;line-height:1.45}
+  #dock .controls{margin-top:0;padding-top:8px}
+  @media(max-width:640px){#dock .choice{padding:10px 12px}#dock .choice p{font-size:12px}}
+  footer{margin-top:44px;text-align:center;font-size:13px;color:var(--faint);line-height:1.7}
+  .fade-in{animation:fadeIn .6s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">480 BC · The Hot Gates · Malis, central Greece</div>
+    <h1>THERMOPYLAE</h1>
+    <p class="subtitle">Seven thousand Greeks in a pass fifteen metres wide, against the army of the whole East</p>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true">
+      <defs><pattern id="key" width="26" height="14" patternUnits="userSpaceOnUse">
+        <path d="M0 12 H10 V2 H20 V8 H14 V6 H18 V4 H12 V10 H22 V0 H26" fill="none" stroke="#d9a441" stroke-width="1.4"/>
+      </pattern></defs>
+      <rect width="520" height="14" fill="url(#key)"/>
+    </svg>
+  </header>
+
+  <nav class="phases" aria-label="Battle phases">
+    <span class="pill" data-p="0">Prologue</span>
+    <span class="pill" data-p="1">Day one</span>
+    <span class="pill" data-p="2">Day two</span>
+    <span class="pill" data-p="3">The betrayal</span>
+    <span class="pill" data-p="4">The last stand</span>
+    <span class="pill" data-p="5">Aftermath</span>
+  </nav>
+
+  <div class="stage">
+    <div id="view" role="img" aria-label="3D battlefield of the pass of Thermopylae"></div>
+    <div class="counters" id="counters">
+      <span class="counter c-grk">Greek fallen&nbsp; <b id="grkDead">0</b></span>
+      <span class="counter c-per">Persian fallen&nbsp; <b id="perDead">0</b></span>
+    </div>
+    <div class="daytag" id="daytag">Before the battle</div>
+    <div class="camctl">
+      <button class="cambtn" data-cam="over">Overview</button>
+      <button class="cambtn" data-cam="wall">The wall</button>
+      <button class="cambtn" data-cam="per">Persian camp</button>
+      <button class="cambtn" data-cam="path">Anopaia path</button>
+    </div>
+    <div class="camhint">drag · rotate&ensp;|&ensp;scroll · zoom&ensp;|&ensp;right-drag · pan</div>
+    <div id="dock"><div id="choiceArea"></div><div class="controls" id="controls"></div></div>
+    <div id="vn"><div id="vntoast"></div>
+      <div class="vn-box" id="vnbox">
+        <div class="vn-portrait" id="vnportrait"></div>
+        <div class="vn-main">
+          <div class="vn-name" id="vnname"></div>
+          <div class="vn-text" id="vntext"></div>
+          <div class="vn-choices" id="vnchoices"></div>
+          <div class="vn-next" id="vnnext">tap to continue &#9656;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="narration">
+    <div class="narr-label" id="narrLabel">Prologue</div>
+    <div id="narrBody"></div>
+  </div>
+
+
+  <footer>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true"><rect width="520" height="14" fill="url(#key)"/></svg>
+    Grounded in Herodotus, <em>Histories</em> VII, and mainstream scholarship. Herodotus's Persian millions are
+    rejected by modern historians (likely 70,000 to 300,000); the role of the Thebans and the exact ground are
+    debated. Where accounts differ, this simulation follows the most widely accepted reconstruction.
+    One figure represents roughly 25 to 40 men.
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+
+/* ================= geography =================
+   Sim space 1000 x 620. West (Persian camp) = low x. East (Greek rear) = high x.
+   North (Malian Gulf, the sea) = low y. South (cliffs of Kallidromon) = high y.
+   World mapping: wx=(x-500)*0.2, wz=(y-310)*0.2. */
+const sx2w=x=>(x-500)*0.2, sy2w=y=>(y-310)*0.2;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const FRONT_X=575;                    // Greek shield line, just west of the wall
+const KOLONOS={x:700,y:262};          // the hillock of the last stand
+const PATH=[[140,470],[300,545],[520,565],[680,525],[745,455],[755,350]];  // Anopaia trail
+
+const S={
+  phase:0, stage:'idle', tactic:null,
+  soldiers:[], arrows:[],
+  grkDead:0, perDead:0,
+  st:0, sub:'', subT:0,
+  wave:null, waveNum:0, onWaveEnd:null,
+  killBurst:0, savedGrk:0, savedPer:0,
+  daylight:1, dayTarget:1,
+};
+const GRK_PER=35, PER_PER=25;
+
+/* ================= three.js ================= */
+const view=document.getElementById('view');
+const scene=new THREE.Scene();
+const DAY_SKY=new THREE.Color(0x9db4bd), NIGHT_SKY=new THREE.Color(0x151d2e);
+scene.background=DAY_SKY.clone();
+scene.fog=new THREE.Fog(0x9db4bd,160,430);
+
+const camera=new THREE.PerspectiveCamera(52,1,0.5,900);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const SHADOWS=window.innerWidth>700;
+if(SHADOWS){renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;}
+view.appendChild(renderer.domElement);
+function resize(){const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+
+const hemi=new THREE.HemisphereLight(0xcfdde4,0x5c5138,0.85);
+scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xffe9c4,1.15);
+sun.position.set(-70,95,-50);
+if(SHADOWS){
+  sun.castShadow=true; sun.shadow.mapSize.set(2048,2048);
+  const sc=sun.shadow.camera;
+  sc.left=-130;sc.right=130;sc.top=130;sc.bottom=-130;sc.far=360;
+  sc.updateProjectionMatrix();
+  sun.shadow.bias=-0.0008;
+}
+scene.add(sun);
+
+/* ---------- terrain: the Hot Gates ---------- */
+function kolH(wx,wz){
+  const dx=(wx-sx2w(KOLONOS.x))/6.5, dz=(wz-sy2w(KOLONOS.y))/6.5;
+  return 3.4*Math.exp(-(dx*dx+dz*dz));
+}
+function spurH(wx,wz){
+  // rocky spur pinching the West Gate near sim x 400
+  const dx=(wx+20)/7;
+  const t=THREE.MathUtils.clamp((wz+16)/1,0,1);   // fades out toward the shore lane
+  const ridge=Math.exp(-dx*dx)*10;
+  return ridge*THREE.MathUtils.clamp((wz+16)/30+0.0,0,1)*( wz>-16?1:0 );
+}
+function terrainH(wx,wz){
+  let h=Math.sin(wx*0.11)*0.3+Math.cos(wz*0.13+wx*0.05)*0.3;
+  if(wz<-26) h+=(wz+26)*0.5;                                   // shore falls to the gulf
+  if(wz>22){                                                    // Kallidromon rises fast
+    const t=wz-22;
+    h+=t*1.35+Math.sin(wx*0.12)*Math.min(t*0.15,2.2)*1.5+Math.sin(wx*0.05+2)*t*0.12;
+  }
+  h+=spurH(wx,wz);
+  h+=kolH(wx,wz);
+  return h;
+}
+{
+  const g=new THREE.PlaneGeometry(230,150,160,110);
+  g.rotateX(-Math.PI/2);
+  const pos=g.attributes.position,colors=[];
+  const cPlain=new THREE.Color(0x8d8256),cSand=new THREE.Color(0xa39062),
+        cRock=new THREE.Color(0x6a5e48),cHigh=new THREE.Color(0x57503f),
+        cDeep=new THREE.Color(0x49584a),tmp=new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const wx=pos.getX(i),wz=pos.getZ(i),h=terrainH(wx,wz);
+    pos.setY(i,h);
+    tmp.copy(cPlain);
+    tmp.lerp(cSand,THREE.MathUtils.clamp((-22-wz)/8,0,1));
+    tmp.lerp(cRock,THREE.MathUtils.clamp((h-3)/9,0,1));
+    tmp.lerp(cHigh,THREE.MathUtils.clamp((h-14)/22,0,1));
+    if(h<-1.8)tmp.lerp(cDeep,0.7);
+    tmp.offsetHSL(0,0,(Math.sin(wx*1.4)*Math.sin(wz*1.8))*0.045);
+    colors.push(tmp.r,tmp.g,tmp.b);
+  }
+  g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  g.computeVertexNormals();
+  const terrain=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}));
+  terrain.receiveShadow=SHADOWS;
+  scene.add(terrain);
+}
+
+/* ---------- the sea (Malian Gulf) ---------- */
+const sea=new THREE.Mesh(
+  new THREE.PlaneGeometry(240,66),
+  new THREE.MeshLambertMaterial({color:0x2f6b7a,transparent:true,opacity:0.92}));
+sea.rotation.x=-Math.PI/2; sea.position.set(0,-1.0,-58);
+scene.add(sea);
+
+/* ---------- the Phocian wall ---------- */
+{
+  const stone=new THREE.MeshLambertMaterial({color:0x7a6f5c});
+  const wallX=sx2w(622);
+  for(let i=0;i<9;i++){
+    const wz=-24+i*5.6;
+    if(wz>-6&&wz<-1) continue;                                  // the old gate gap
+    const seg=new THREE.Mesh(new THREE.BoxGeometry(2.1,2.3,5.2),stone);
+    seg.position.set(wallX+rnd(-.2,.2), terrainH(wallX,wz)+1.0, wz);
+    seg.rotation.y=rnd(-.06,.06);
+    seg.castShadow=SHADOWS;
+    scene.add(seg);
+  }
+}
+
+/* ---------- Persian camp, Xerxes's throne, Greek camp ---------- */
+{
+  const tentMat=new THREE.MeshLambertMaterial({color:0x8f86a8});
+  for(let i=0;i<12;i++){
+    const t=new THREE.Mesh(new THREE.ConeGeometry(1.7,2.4,5),tentMat);
+    const wx=rnd(-97,-72),wz=rnd(-22,8);
+    t.position.set(wx,terrainH(wx,wz)+1.1,wz); t.rotation.y=rnd(0,1);
+    t.castShadow=SHADOWS; scene.add(t);
+  }
+  const grand=new THREE.Mesh(new THREE.ConeGeometry(3.4,4.6,7),
+    new THREE.MeshLambertMaterial({color:0xb59a4e}));
+  grand.position.set(-86,terrainH(-86,-4)+2.2,-4); grand.castShadow=SHADOWS; scene.add(grand);
+
+  // the throne on the lower slope, from which Xerxes watched
+  const plinth=new THREE.Mesh(new THREE.BoxGeometry(3.4,1,3.4),new THREE.MeshLambertMaterial({color:0x6a5e48}));
+  const tx=-58,tz=25;
+  plinth.position.set(tx,terrainH(tx,tz)+0.5,tz); scene.add(plinth);
+  const seat=new THREE.Mesh(new THREE.ConeGeometry(1,2.1,5),new THREE.MeshLambertMaterial({color:0xd0b25c}));
+  seat.position.set(tx,terrainH(tx,tz)+2.1,tz); seat.castShadow=SHADOWS; scene.add(seat);
+
+  const gtent=new THREE.MeshLambertMaterial({color:0xb7a887});
+  for(let i=0;i<6;i++){
+    const t=new THREE.Mesh(new THREE.ConeGeometry(1.5,2.1,4),gtent);
+    const wx=rnd(58,86),wz=rnd(-16,10);
+    t.position.set(wx,terrainH(wx,wz)+1.0,wz); t.rotation.y=rnd(0,1);
+    t.castShadow=SHADOWS; scene.add(t);
+  }
+}
+
+/* ---------- the Anopaia path, drawn on the mountain ---------- */
+{
+  const pts=[];
+  for(let i=0;i<PATH.length-1;i++){
+    for(let t=0;t<1;t+=0.08){
+      const x=PATH[i][0]+(PATH[i+1][0]-PATH[i][0])*t;
+      const y=PATH[i][1]+(PATH[i+1][1]-PATH[i][1])*t;
+      const wx=sx2w(x),wz=sy2w(y);
+      pts.push(new THREE.Vector3(wx,terrainH(wx,wz)+0.25,wz));
+    }
+  }
+  const line=new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(pts),
+    new THREE.LineDashedMaterial({color:0xd9c9a0,dashSize:1.2,gapSize:1.4,transparent:true,opacity:0.55}));
+  line.computeLineDistances();
+  scene.add(line);
+}
+
+/* ---------- soldiers ---------- */
+function soldierGeometry(){
+  const body=new THREE.CylinderGeometry(0.32,0.42,1.5,6); body.translate(0,0.75,0);
+  const head=new THREE.SphereGeometry(0.26,6,5); head.translate(0,1.72,0);
+  const spear=new THREE.CylinderGeometry(0.04,0.04,2.6,4); spear.translate(0.42,1.5,0);
+  const geos=[body,head,spear];
+  let vC=0,iC=0;
+  for(const g of geos){vC+=g.attributes.position.count;iC+=g.index.count;}
+  const P=new Float32Array(vC*3),N=new Float32Array(vC*3),I=new Uint16Array(iC);
+  let vO=0,iO=0;
+  for(const g of geos){
+    P.set(g.attributes.position.array,vO*3);
+    N.set(g.attributes.normal.array,vO*3);
+    const idx=g.index.array;
+    for(let i=0;i<idx.length;i++)I[iO+i]=idx[i]+vO;
+    vO+=g.attributes.position.count;iO+=idx.length;
+  }
+  const out=new THREE.BufferGeometry();
+  out.setAttribute('position',new THREE.BufferAttribute(P,3));
+  out.setAttribute('normal',new THREE.BufferAttribute(N,3));
+  out.setIndex(new THREE.BufferAttribute(I,1));
+  return out;
+}
+const hopliteGeo=soldierGeometry();
+const MATS={
+  sp:new THREE.MeshLambertMaterial({color:0xb8382e}),   // Spartans, crimson
+  gk:new THREE.MeshLambertMaterial({color:0xcda23e}),   // allied Greeks, bronze
+  pe:new THREE.MeshLambertMaterial({color:0x50597f}),   // Persian levies, indigo
+  im:new THREE.MeshLambertMaterial({color:0x7a6aa8}),   // the Immortals, royal purple
+};
+let MESH={};
+const M4=new THREE.Matrix4(),QT=new THREE.Quaternion(),V3=new THREE.Vector3(),SC=new THREE.Vector3(),EUL=new THREE.Euler();
+
+function soldier(x,y,side,grp,mat){
+  return {x,y,tx:x,ty:y,hx:x,hy:y,side,grp,mat,alive:true,flee:false,dieAt:null,
+          jit:rnd(0,6.28),face:side==='g'?Math.PI/2:-Math.PI/2,moving:false,escaped:false,
+          engaged:false,w1y:0,w2y:0,pi:0,delay:0};
+}
+function buildInstances(){
+  for(const k in MESH){scene.remove(MESH[k]);}
+  MESH={};
+  for(const k of ['sp','gk','pe','im']){
+    const list=S.soldiers.filter(s=>s.mat===k);
+    const m=new THREE.InstancedMesh(hopliteGeo,MATS[k],Math.max(list.length,1));
+    m.castShadow=SHADOWS;
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    SC.setScalar(0.0001);V3.set(0,-60,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);
+    for(let i=0;i<m.count;i++)m.setMatrixAt(i,M4);
+    m.instanceMatrix.needsUpdate=true;
+    list.forEach((s,i)=>{s.idx=i;s.mesh=m;});
+    scene.add(m);
+    MESH[k]=m;
+  }
+}
+let perfNow=0;
+function writeInstance(s){
+  const wx=sx2w(s.x),wz=sy2w(s.y);
+  if(s.escaped){SC.setScalar(0.0001);V3.set(wx,-60,wz);QT.set(0,0,0,1);}
+  else if(!s.alive){
+    V3.set(wx,terrainH(wx,wz)+0.22,wz);
+    EUL.set(Math.PI/2,s.jit,0);QT.setFromEuler(EUL);
+    SC.set(1,1,0.35);
+  }else{
+    const bob=s.moving?Math.abs(Math.sin(perfNow*0.012+s.jit))*0.14:0;
+    V3.set(wx,terrainH(wx,wz)+bob,wz);
+    EUL.set(0,s.face,0);QT.setFromEuler(EUL);
+    SC.setScalar(1);
+  }
+  M4.compose(V3,QT,SC);
+  s.mesh.setMatrixAt(s.idx,M4);
+}
+function flushInstances(){
+  for(const s of S.soldiers)writeInstance(s);
+  for(const k in MESH)MESH[k].instanceMatrix.needsUpdate=true;
+}
+
+/* ---------- banners ---------- */
+const banners={};
+function makeBanner(color){
+  const g=new THREE.Group();
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,5.2,5),new THREE.MeshLambertMaterial({color:0x4a3b26}));
+  pole.position.y=2.6;
+  const flag=new THREE.Mesh(new THREE.PlaneGeometry(2.2,1.3),new THREE.MeshLambertMaterial({color,side:THREE.DoubleSide}));
+  flag.position.set(1.15,4.4,0);
+  g.add(pole,flag);g.userData.flag=flag;
+  scene.add(g);g.visible=false;
+  return g;
+}
+banners.sp=makeBanner(0xc04a3d);
+banners.gk=makeBanner(0xd9a441);
+banners.im=makeBanner(0x8a7ac2);
+function updateBanners(){
+  for(const k in banners){
+    const list=S.soldiers.filter(s=>s.alive&&!s.flee&&s.mat===k&&(k!=='im'||s.grp==='hy'||s.grp==='im'));
+    const b=banners[k];
+    if(list.length<5){b.visible=false;continue;}
+    let mx=0,my=0;for(const s of list){mx+=s.x;my+=s.y;}
+    mx/=list.length;my/=list.length;
+    const wx=sx2w(mx),wz=sy2w(my);
+    b.position.set(wx,terrainH(wx,wz),wz);
+    b.userData.flag.rotation.y=Math.sin(perfNow*0.002)*0.35;
+    b.visible=true;
+  }
+}
+
+/* ---------- arrows ---------- */
+const ARROW_MAX=320;
+const arrowMesh=new THREE.InstancedMesh(
+  new THREE.CylinderGeometry(0.05,0.05,1.5,4),
+  new THREE.MeshLambertMaterial({color:0x2d251a}),ARROW_MAX);
+arrowMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(arrowMesh);
+const UP=new THREE.Vector3(0,1,0),DIR=new THREE.Vector3();
+function fireArrowAt(fromList,targetList,hitChance){
+  if(!fromList.length||!targetList.length)return;
+  const from=fromList[Math.floor(Math.random()*fromList.length)];
+  const t=targetList[Math.floor(Math.random()*targetList.length)];
+  const fx=sx2w(from.x),fz=sy2w(from.y),tx=sx2w(t.x+rnd(-3,3)),tz=sy2w(t.y+rnd(-3,3));
+  const fy=terrainH(fx,fz)+1.7,ty=terrainH(tx,tz)+0.3;
+  S.arrows.push({fx,fy,fz,tx,ty,tz,t:0,dur:rnd(0.8,1.15),arc:rnd(6,10),
+    simx:t.x,simy:t.y,px:fx,py:fy,pz:fz,vx:0,vy:1,vz:0,side:t.side,hit:hitChance});
+}
+function updArrowFlight(dt){
+  for(let i=S.arrows.length-1;i>=0;i--){
+    const a=S.arrows[i];a.t+=dt;
+    const u=Math.min(a.t/a.dur,1);
+    const nx=a.fx+(a.tx-a.fx)*u,nz=a.fz+(a.tz-a.fz)*u;
+    const ny=a.fy+(a.ty-a.fy)*u+Math.sin(u*Math.PI)*a.arc;
+    a.vx=nx-a.px;a.vy=ny-a.py;a.vz=nz-a.pz;
+    a.px=nx;a.py=ny;a.pz=nz;
+    if(u>=1){
+      if(Math.random()<a.hit){
+        const near=alive(a.side).filter(s=>Math.hypot(s.x-a.simx,s.y-a.simy)<10);
+        if(near.length)kill(near[0]);
+      }
+      S.arrows.splice(i,1);
+    }
+  }
+}
+function flushArrows(){
+  let i=0;
+  for(const a of S.arrows){
+    if(i>=ARROW_MAX)break;
+    V3.set(a.px,a.py,a.pz);
+    DIR.set(a.vx,a.vy,a.vz).normalize();
+    QT.setFromUnitVectors(UP,DIR);
+    SC.setScalar(1);M4.compose(V3,QT,SC);
+    arrowMesh.setMatrixAt(i++,M4);
+  }
+  for(;i<ARROW_MAX;i++){SC.setScalar(0.0001);V3.set(0,-60,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);arrowMesh.setMatrixAt(i,M4);}
+  arrowMesh.instanceMatrix.needsUpdate=true;
+}
+
+/* ================= camera ================= */
+const cam={yaw:Math.PI,pitch:0.9,dist:175,tx:0,ty:2,tz:0,auto:null};
+function applyCamera(dt){
+  if(cam.auto){
+    const a=cam.auto,k=1-Math.pow(0.001,dt);
+    cam.yaw+=(a.yaw-cam.yaw)*k;cam.pitch+=(a.pitch-cam.pitch)*k;cam.dist+=(a.dist-cam.dist)*k;
+    cam.tx+=(a.tx-cam.tx)*k;cam.ty+=(a.ty-cam.ty)*k;cam.tz+=(a.tz-cam.tz)*k;
+    if(Math.abs(a.dist-cam.dist)<0.5&&Math.abs(a.yaw-cam.yaw)<0.01)cam.auto=null;
+  }
+  cam.pitch=THREE.MathUtils.clamp(cam.pitch,0.14,1.4);
+  cam.dist=THREE.MathUtils.clamp(cam.dist,20,280);
+  const cp=Math.cos(cam.pitch);
+  camera.position.set(
+    cam.tx+Math.sin(cam.yaw)*cp*cam.dist,
+    cam.ty+Math.sin(cam.pitch)*cam.dist,
+    cam.tz+Math.cos(cam.yaw)*cp*cam.dist);
+  camera.lookAt(cam.tx,cam.ty,cam.tz);
+}
+const PRESETS={
+  over:{yaw:Math.PI,pitch:0.9,dist:175,tx:0,ty:2,tz:0},
+  wall:{yaw:Math.PI*0.72,pitch:0.32,dist:52,tx:sx2w(590),ty:1,tz:-8},
+  per:{yaw:Math.PI*1.25,pitch:0.4,dist:75,tx:-55,ty:1,tz:-6},
+  path:{yaw:Math.PI,pitch:0.5,dist:130,tx:5,ty:16,tz:42},
+  fight:{yaw:Math.PI*0.8,pitch:0.42,dist:68,tx:sx2w(555),ty:1,tz:-8},
+  kolonos:{yaw:Math.PI*0.85,pitch:0.5,dist:48,tx:sx2w(KOLONOS.x),ty:2,tz:sy2w(KOLONOS.y)},
+  retreat:{yaw:Math.PI*0.95,pitch:0.6,dist:110,tx:sx2w(800),ty:2,tz:-6},
+};
+document.querySelectorAll('.cambtn').forEach(b=>b.onclick=()=>{cam.auto={...PRESETS[b.dataset.cam]};});
+function cine(name){cam.auto={...PRESETS[name]};}
+
+let drag=null;
+view.addEventListener('pointerdown',e=>{view.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,btn:e.button,shift:e.shiftKey};view.classList.add('dragging');cam.auto=null;});
+view.addEventListener('pointermove',e=>{
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  drag.x=e.clientX;drag.y=e.clientY;
+  if(drag.btn===2||drag.shift){
+    const cp=Math.cos(cam.yaw),sp=Math.sin(cam.yaw),k=cam.dist*0.0016;
+    cam.tx-=(dx*cp-dy*sp)*k;
+    cam.tz-=(-dx*sp-dy*cp)*k;
+    cam.tx=THREE.MathUtils.clamp(cam.tx,-100,100);
+    cam.tz=THREE.MathUtils.clamp(cam.tz,-64,64);
+  }else{
+    cam.yaw-=dx*0.0055;cam.pitch+=dy*0.0045;
+  }
+});
+const endDrag=()=>{drag=null;view.classList.remove('dragging');};
+view.addEventListener('pointerup',endDrag);
+view.addEventListener('pointercancel',endDrag);
+view.addEventListener('wheel',e=>{e.preventDefault();cam.auto=null;cam.dist*=(1+Math.sign(e.deltaY)*0.09);},{passive:false});
+view.addEventListener('contextmenu',e=>e.preventDefault());
+let pinch=null;
+view.addEventListener('touchstart',e=>{if(e.touches.length===2)pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);});
+view.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&pinch){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    cam.dist*=pinch/d;pinch=d;cam.auto=null;
+  }
+},{passive:true});
+view.addEventListener('touchend',()=>pinch=null);
+
+/* ================= armies ================= */
+function spawnGreeks(){
+  S.soldiers=S.soldiers.filter(s=>s.side!=='g');
+  // ranks facing west: Spartans in front, Thespians behind, allied contingents in the rear
+  for(let r=0;r<9;r++){
+    for(let c=0;c<21;c++){
+      const x=578+r*7+rnd(-1.2,1.2), y=192+c*7.3+rnd(-1.2,1.2);
+      let grp,mat;
+      if(r<3){grp='sp';mat='sp';}
+      else if(r<5){grp='th';mat='gk';}
+      else {grp='gk';mat='gk';}
+      S.soldiers.push(soldier(x,y,'g',grp,mat));
+    }
+  }
+  buildInstances();
+}
+function spawnWave(kind,n){
+  const units=[];
+  for(let i=0;i<n;i++){
+    const u=soldier(rnd(25,135),rnd(185,300),'p',kind==='im'?'im':'pw',kind==='im'?'im':'pe');
+    u.w1y=rnd(192,252);              // funnel through the West Gate, hugging the shore
+    u.w2y=rnd(192,344);              // then fan out across the Middle Gate
+    units.push(u);S.soldiers.push(u);
+  }
+  buildInstances();
+  return units;
+}
+function spawnHydarnes(n){
+  const units=[];
+  for(let i=0;i<n;i++){
+    const u=soldier(PATH[0][0]+rnd(-14,14),PATH[0][1]+rnd(-10,10),'p','hy','im');
+    u.pi=0;u.delay=i*0.28;
+    units.push(u);S.soldiers.push(u);
+  }
+  buildInstances();
+  return units;
+}
+
+/* ================= sim helpers ================= */
+function kill(s){
+  if(!s.alive)return;
+  s.alive=false;
+  if(s.side==='g')S.grkDead++;else S.perDead++;
+  updateCounters();
+}
+function alive(side,grp){return S.soldiers.filter(s=>s.alive&&s.side===side&&(!grp||s.grp===grp));}
+function killRandom(list,n){
+  const pool=list.filter(s=>s.alive);
+  for(let i=0;i<n&&pool.length;i++){
+    const j=Math.floor(Math.random()*pool.length);
+    kill(pool[j]);pool.splice(j,1);
+  }
+}
+function updateCounters(){
+  document.getElementById('grkDead').textContent='~'+(S.grkDead*GRK_PER).toLocaleString();
+  document.getElementById('perDead').textContent='~'+(S.perDead*PER_PER).toLocaleString();
+}
+function moveToward(s,speed,dt){
+  const dx=s.tx-s.x,dy=s.ty-s.y,d=Math.hypot(dx,dy);
+  if(d<1.5){s.moving=false;return true;}
+  s.moving=true;
+  s.x+=(dx/d)*speed*dt*60;s.y+=(dy/d)*speed*dt*60;
+  s.face=Math.atan2(dx,dy)+Math.PI;
+  return false;
+}
+function followPath(s,speed,dt){
+  if(s.pi>=PATH.length)return true;
+  s.tx=PATH[s.pi][0];s.ty=PATH[s.pi][1];
+  if(moveToward(s,speed,dt))s.pi++;
+  return s.pi>=PATH.length;
+}
+function fleeDeaths(dt){
+  for(const s of S.soldiers){
+    if(s.alive&&s.flee&&s.dieAt!=null){
+      s.dieAt-=dt*0.25;
+      if(s.dieAt<=0)kill(s);
+    }
+  }
+}
+function setDay(label){document.getElementById('daytag').textContent=label;}
+function night(on){S.dayTarget=on?0:1;}
+function applyDaylight(dt){
+  S.daylight+=(S.dayTarget-S.daylight)*Math.min(dt*1.2,1);
+  const d=S.daylight;
+  sun.intensity=0.12+1.05*d;
+  hemi.intensity=0.22+0.65*d;
+  scene.background.copy(NIGHT_SKY).lerp(DAY_SKY,d);
+  scene.fog.color.copy(scene.background);
+}
+
+/* ================= the assault machine ================= */
+function beginWave(kind,n,tactic,onEnd){
+  S.wave={units:spawnWave(kind,n),phase:'advance',t:0,tactic,kind};
+  S.onWaveEnd=onEnd;
+  S.stage='assault';S.st=0;
+}
+function updAssault(dt){
+  const w=S.wave;if(!w)return;
+  w.t+=dt;
+  const units=w.units;
+  if(w.phase==='advance'){
+    let engaged=0;
+    for(const u of units){
+      if(!u.alive)continue;
+      if(u.x<420){u.tx=430;u.ty=u.w1y;moveToward(u,0.85,dt);}
+      else if(u.x<556){u.tx=560;u.ty=u.w2y;moveToward(u,0.85,dt);}
+      else{u.tx=FRONT_X-rnd(0,4);u.ty=u.w2y;if(moveToward(u,0.7,dt))u.engaged=true;}
+      if(u.engaged)engaged++;
+    }
+    if(engaged>units.filter(u=>u.alive).length*0.3){w.phase='melee';w.t=0;}
+  }
+  else if(w.phase==='melee'){
+    const eng=units.filter(u=>u.alive&&u.engaged);
+    if(Math.random()<dt*13)killRandom(eng,1);
+    if(Math.random()<dt*(w.tactic==='static'?1.4:0.35))killRandom(alive('g'),1);
+    if(w.tactic==='feint'&&w.t>2.6){
+      w.phase='feint';w.t=0;
+      for(const s of alive('g','sp')){s.tx=s.hx+36;s.ty=s.hy;}
+      for(const u of eng){u.tx=u.x+32;u.ty=u.y+rnd(-3,3);}
+    }
+    else if(w.tactic==='static'&&w.t>6){breakWave();}
+  }
+  else if(w.phase==='feint'){
+    for(const s of S.soldiers){if(s.alive)moveToward(s,0.6,dt);}
+    if(w.t>1.5){
+      w.phase='turn';w.t=0;S.killBurst=Math.min(26,units.filter(u=>u.alive).length);
+      for(const s of alive('g','sp')){s.tx=s.hx;s.ty=s.hy;}
+    }
+  }
+  else if(w.phase==='turn'){
+    for(const s of S.soldiers){if(s.alive)moveToward(s,0.7,dt);}
+    if(S.killBurst>0&&Math.random()<dt*18){killRandom(units,1);S.killBurst--;}
+    if(w.t>1.6)breakWave();
+  }
+  else if(w.phase==='flee'){
+    for(const u of units){if(u.alive)moveToward(u,1.5,dt);}
+    fleeDeaths(dt);
+    for(const u of units){if(u.alive&&u.x<105){u.alive=false;u.escaped=true;}}
+    if(w.t>3.2||units.every(u=>!u.alive)){
+      S.wave=null;
+      // Greeks dress ranks again
+      for(const s of alive('g')){s.tx=s.hx;s.ty=s.hy;}
+      const cb=S.onWaveEnd;S.onWaveEnd=null;
+      if(cb)cb();
+    }
+  }
+}
+function breakWave(){
+  const w=S.wave;w.phase='flee';w.t=0;
+  for(const u of w.units){
+    if(!u.alive)continue;
+    u.flee=true;u.engaged=false;
+    u.tx=rnd(35,95);u.ty=rnd(185,280);
+    if(Math.random()<0.22)u.dieAt=rnd(0.2,0.8);
+  }
+}
+function updRegroup(dt){
+  for(const s of S.soldiers){if(s.alive&&!s.flee)moveToward(s,0.5,dt);}
+}
+
+/* ================= night march ================= */
+function updNightMarch(dt){
+  let arrived=0,total=0;
+  for(const s of S.soldiers){
+    if(s.grp!=='hy'||!s.alive)continue;
+    total++;
+    if(S.st<s.delay)continue;
+    if(followPath(s,1.05,dt))arrived++;
+  }
+  if(total&&arrived>=total*0.5){
+    S.stage='idle';
+    dawnDecision();
+  }
+}
+
+/* ================= counterfactual: the retreat ================= */
+function startRetreatCF(){
+  S.savedGrk=S.grkDead;S.savedPer=S.perDead;
+  S.stage='cfretreat';S.st=0;
+  cine('retreat');
+  night(false);setDay('Day three · dawn');
+  narrate('The betrayal · what if',
+   `<p>You give the order. The whole force abandons the wall and marches east at first light,
+    hoping to slip away down the coast road before the trap closes.</p>
+    <p>But Hydarnes and the Immortals have marched all night precisely to be standing at the East Gate
+    by dawn. And behind you, the moment the wall empties, the Great King's army pours through the pass
+    with its cavalry unopposed on open ground.</p>`);
+  setControls([]);
+  for(const s of alive('g')){s.tx=rnd(860,930);s.ty=rnd(200,340);}
+  // Hydarnes blocks the eastern exit
+  for(const s of S.soldiers){
+    if(s.grp==='hy'&&s.alive){s.pi=PATH.length;s.tx=rnd(800,830);s.ty=rnd(200,340);}
+  }
+  // the horde comes through the empty gates
+  const horde=[];
+  for(let i=0;i<170;i++){
+    const u=soldier(rnd(30,150),rnd(185,320),'p','cfp','pe');
+    horde.push(u);S.soldiers.push(u);
+  }
+  buildInstances();
+  S.cfHorde=horde;
+}
+function updCfRetreat(dt){
+  for(const s of S.soldiers){
+    if(!s.alive)continue;
+    if(s.side==='g')moveToward(s,0.75,dt);
+    else if(s.grp==='hy')moveToward(s,0.9,dt);
+    else if(s.grp==='cfp'){s.tx=rnd(700,780);s.ty=s.ty||rnd(200,340);moveToward(s,1.15,dt);}
+  }
+  if(S.st>2.5){
+    const g=alive('g');
+    if(g.length&&Math.random()<dt*16)killRandom(g,1);
+    if(Math.random()<dt*2)killRandom(alive('p'),1);
+  }
+  if(S.st>7){
+    S.stage='cffrozen';
+    narrate('The betrayal · what if',
+     `<p>Caught between the Immortals and the pursuing army, in the open, without the pass to multiply them,
+      the rearguard of Greece is destroyed to no purpose, and the fleet at Artemisium, its flank suddenly
+      naked, is caught still at anchor.</p>
+      <p class="aside">Leonidas saw this arithmetic at dawn. Somebody has to hold the gate while the others
+      get away, and the fleet gets its signal to withdraw. Sparta's law forbade retreat anyway. He sent the
+      allies home and kept the men who were already under sentence.</p>`);
+    setControls([{label:'Rewind · make Leonidas\u2019s choice', fn:()=>{restoreFromCF();stayAndDie();}}]);
+  }
+}
+function restoreFromCF(){
+  S.grkDead=S.savedGrk;S.perDead=S.savedPer;
+  S.soldiers=S.soldiers.filter(s=>s.grp!=='cfp'&&s.side!=='g');
+  for(const s of S.soldiers){if(s.grp==='hy'&&!s.escaped){s.alive=true;s.flee=false;s.x=PATH[4][0];s.y=PATH[4][1];s.pi=4;}}
+  spawnGreeks();
+  updateCounters();
+}
+
+/* ================= the last stand ================= */
+function stayAndDie(){
+  setPhase(4);setDay('Day three · morning');night(false);
+  S.stage='last';S.st=0;S.sub='dismiss';S.subT=0;
+  cine('fight');
+  narrate('The last stand',
+   `<p>Leonidas dismisses the allied contingents; most march out through the East Gate while the road is
+    still open. The 300 Spartans stay. The 700 Thespians under Demophilus refuse to leave and stay with
+    them, a choice that cost Thespiae every hoplite it had. The Thebans stay too; Herodotus says as
+    hostages, and historians have argued about it ever since.</p>
+    <p>Then Leonidas does the last thing anyone expects: he advances. If they are to die, they will do it
+    out in the wider part of the pass, where they can kill the most, while the killing is good.</p>`);
+  setControls([]);
+  // allies leave
+  for(const s of alive('g','gk')){s.tx=rnd(940,980);s.ty=rnd(210,330);s.leaving=true;}
+  // Spartans and Thespians advance west of the wall
+  for(const s of alive('g','sp')){s.tx=rnd(505,545);s.ty=rnd(200,340);}
+  for(const s of alive('g','th')){s.tx=rnd(545,575);s.ty=rnd(200,340);}
+  // the horde
+  const horde=[];
+  for(let i=0;i<230;i++){
+    const u=soldier(rnd(25,160),rnd(185,310),'p','fw','pe');
+    u.w1y=rnd(192,252);u.w2y=rnd(192,344);
+    horde.push(u);S.soldiers.push(u);
+  }
+  buildInstances();
+}
+function updLast(dt){
+  S.subT+=dt;
+  // allies escaping east
+  for(const s of S.soldiers){
+    if(s.leaving&&s.alive){
+      moveToward(s,1.0,dt);
+      if(s.x>935){s.alive=false;s.escaped=true;}
+    }
+  }
+  // defenders move to their forward line
+  for(const s of alive('g')){if(!s.leaving)moveToward(s,0.55,dt);}
+  // horde advances
+  for(const u of S.soldiers){
+    if(u.grp!=='fw'||!u.alive)continue;
+    if(u.x<420){u.tx=430;u.ty=u.w1y;moveToward(u,0.95,dt);}
+    else{u.tx=495-rnd(0,6);u.ty=u.w2y;moveToward(u,0.8,dt);}
+  }
+  // Hydarnes descends behind them
+  for(const s of S.soldiers){
+    if(s.grp!=='hy'||!s.alive)continue;
+    if(s.pi<PATH.length)followPath(s,1.05,dt);
+    else{s.tx=rnd(640,690);s.ty=rnd(220,330);moveToward(s,0.85,dt);}
+  }
+
+  if(S.sub==='dismiss'&&S.st>4){
+    S.sub='melee';S.subT=0;
+    narrate('The last stand',
+     `<p>The Persians come on under the whips of their officers, Herodotus says, trampling their own dead.
+      The Greek spears shatter one by one and the fight goes to swords. The Immortals are coming down the
+      mountain behind; there is no line to hold anymore, only killing to do.</p>`);
+  }
+  if(S.sub==='melee'){
+    if(Math.random()<dt*9)killRandom(alive('p','fw').filter(u=>u.x>460),1);
+    if(Math.random()<dt*2.6)killRandom(alive('g').filter(s=>!s.leaving),1);
+    if(S.subT>5.5){
+      S.sub='leonidas';S.subT=0;
+      banners.sp.visible=false;
+      narrate('The last stand',
+       `<p>Leonidas falls, fighting, Herodotus writes, as bravely as any man of his time. Four times the
+        Persians surge to take his body and four times the Spartans throw them back and drag their king
+        away, the kind of fighting the <em>Iliad</em> is made of, happening for real.</p>
+        <p>Then the Immortals close in from behind. The survivors pull back through the gate one last time,
+        to a low mound beside the wall.</p>`);
+    }
+  }
+  if(S.sub==='leonidas'){
+    if(Math.random()<dt*6)killRandom(alive('p','fw').filter(u=>u.x>460),1);
+    if(Math.random()<dt*3)killRandom(alive('g').filter(s=>!s.leaving),1);
+    if(S.subT>4){
+      S.sub='hill';S.subT=0;
+      cine('kolonos');
+      // survivors form a ring on the Kolonos
+      const surv=alive('g').filter(s=>!s.leaving);
+      surv.forEach((s,i)=>{
+        const a=(i/Math.max(surv.length,1))*6.283;
+        s.tx=KOLONOS.x+Math.cos(a)*12;s.ty=KOLONOS.y+Math.sin(a)*12;
+      });
+      // the enemy surrounds the mound out of spear reach
+      const per=alive('p');
+      per.forEach((u,i)=>{
+        const a=(i/Math.max(per.length,1))*6.283;
+        u.tx=KOLONOS.x+Math.cos(a)*34+rnd(-4,4);u.ty=KOLONOS.y+Math.sin(a)*34+rnd(-4,4);
+        u.ty=Math.min(Math.max(u.ty,178),400);
+      });
+    }
+  }
+  if(S.sub==='hill'){
+    if(S.subT>2.8){
+      S.sub='arrows';S.subT=0;
+      narrate('The last stand',
+       `<p>Xerxes has lost two brothers in this pass. He is done spending men on it.</p>
+       <p>The order goes out and the arrows come, in clouds. Before the battle a local had warned that when
+        the Persians shoot, their arrows hide the sun. The Spartan Dienekes had answered: <em>good, then
+        we shall fight in the shade.</em> The last of them fight with swords, then hands and teeth, under
+        the shade Dienekes was promised.</p>`);
+    }
+  }
+  if(S.sub==='arrows'){
+    const g=alive('g').filter(s=>!s.leaving);
+    const p=alive('p');
+    for(let i=0;i<3;i++)if(Math.random()<dt*40)fireArrowAt(p,g,0.5);
+    if(g.length&&Math.random()<dt*5)killRandom(g,1);
+    if(!g.length&&S.sub!=='over'){
+      S.sub='over';
+      S.stage='done';
+      setControls([{label:'Go, tell the Spartans', fn:()=>playScene(SC_T_AFTER,gotoAftermath)}]);
+    }
+  }
+}
+
+/* ================= main loop ================= */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05);
+  last=now;perfNow=now;S.st+=dt;
+  switch(S.stage){
+    case 'assault':updAssault(dt);break;
+    case 'regroup':updRegroup(dt);break;
+    case 'nightmarch':updNightMarch(dt);break;
+    case 'cfretreat':updCfRetreat(dt);break;
+    case 'last':updLast(dt);break;
+  }
+  updArrowFlight(dt);
+  sea.position.y=-1.0+Math.sin(now*0.0011)*0.08;
+  applyDaylight(dt);
+  applyCamera(dt);
+  flushInstances();
+  flushArrows();
+  updateBanners();
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+
+/* ================= narration & UI ================= */
+const narrLabel=document.getElementById('narrLabel');
+const narrBody=document.getElementById('narrBody');
+const choiceArea=document.getElementById('choiceArea');
+const controls=document.getElementById('controls');
+function narrate(label,html){
+  narrLabel.textContent=label;
+  narrBody.innerHTML=html;
+  narrBody.classList.remove('fade-in');void narrBody.offsetWidth;
+  narrBody.classList.add('fade-in');
+  choiceArea.innerHTML='';
+}
+function setControls(btns){
+  controls.innerHTML='';
+  for(const b of btns){
+    const el=document.createElement('button');
+    el.className='btn'+(b.ghost?' ghost':'');el.textContent=b.label;el.onclick=b.fn;
+    controls.appendChild(el);
+  }
+}
+function setChoices(items){
+  choiceArea.innerHTML='';
+  const grid=document.createElement('div');grid.className='choices fade-in';
+  for(const it of items){
+    const c=document.createElement('button');c.className='choice';
+    c.innerHTML=`<h3>${it.title}</h3><p>${it.body}</p>`;
+    c.onclick=it.fn;grid.appendChild(c);
+  }
+  choiceArea.appendChild(grid);
+  controls.innerHTML='';
+}
+function setPhase(p){
+  S.phase=p;
+  document.querySelectorAll('.pill').forEach(el=>{
+    const n=+el.dataset.p;
+    el.classList.toggle('active',n===p);
+    el.classList.toggle('done',n<p);
+  });
+}
+function resetAll(){
+  S.soldiers=[];S.arrows=[];S.wave=null;S.onWaveEnd=null;
+  S.grkDead=0;S.perDead=0;S.stage='idle';S.sub='';S.tactic=null;
+  updateCounters();
+  document.getElementById('counters').classList.remove('show');
+  night(false);
+  banners.sp.visible=false;
+  spawnGreeks();
+}
+
+/* ================= dialogue layer ================= */
+const REL={};
+const FLAGSV={};
+function PT(o){
+ const hats={
+  crest:`<path d="M34 46 Q34 24 52 22 Q70 24 70 46 L64 42 Q52 34 40 42 Z" fill="${o.hatC}"/><rect x="47" y="5" width="10" height="20" rx="4" fill="${o.crestC||'#a03028'}"/>`,
+  cap:`<path d="M34 46 Q34 26 52 24 Q70 26 70 46 Q52 36 34 46 Z" fill="${o.hatC}"/>`,
+  band:`<path d="M36 44 Q52 30 68 44 Z" fill="${o.hairC||'#3a2c1a'}"/><rect x="34" y="43" width="36" height="6" rx="2" fill="${o.hatC}"/>`,
+  hood:`<path d="M30 68 Q28 24 52 22 Q76 24 74 68 L66 60 Q52 40 38 60 Z" fill="${o.hatC}"/>`,
+  coif:`<path d="M33 64 Q31 26 52 24 Q73 26 71 64 L64 58 Q52 42 40 58 Z" fill="${o.hatC}"/>`,
+  scholar:`<rect x="36" y="26" width="32" height="11" rx="2" fill="${o.hatC}"/><rect x="48" y="15" width="8" height="13" fill="${o.hatC}"/>`,
+  longhair:`<path d="M32 74 Q28 28 52 26 Q76 28 72 74 L66 70 Q68 40 52 40 Q36 40 38 70 Z" fill="${o.hairC||'#7a5c38'}"/>`,
+  none:`<path d="M34 48 Q34 28 52 26 Q70 28 70 48 Q64 38 52 39 Q40 38 34 48 Z" fill="${o.hairC||'#3a2c1a'}"/>`,
+ };
+ const beard=o.beard?`<path d="M40 84 Q52 96 64 84 L62 ${o.beard==='long'?102:94} Q52 ${o.beard==='long'?110:100} 42 ${o.beard==='long'?102:94} Z" fill="${o.beardC||o.hairC||'#3a2c1a'}"/>`:'';
+ const stache=o.stache?`<path d="M41 76 Q52 71 63 76" stroke="${o.beardC||o.hairC||'#3a2c1a'}" stroke-width="3" fill="none" stroke-linecap="round"/>`:'';
+ return `<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="${o.bg}"/>
+<ellipse cx="52" cy="122" rx="40" ry="26" fill="${o.robe}"/><path d="M14 122 Q52 86 90 122" fill="${o.robe2}"/>
+${o.extra||''}
+<ellipse cx="52" cy="64" rx="20" ry="23" fill="${o.skin||'#c9a075'}"/>
+${hats[o.hat||'none']||''}
+<path d="M40 58 L48 57 M56 57 L64 58" stroke="#2a2012" stroke-width="2.2" stroke-linecap="round"/>
+<circle cx="44" cy="63" r="1.9" fill="#20180e"/><circle cx="60" cy="63" r="1.9" fill="#20180e"/>
+${stache}${beard}
+<path d="M46 80 Q52 ${o.stern?79:84} 58 80" stroke="#8a5a3a" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>`;
+}
+const CAST={
+ die:{name:'Dienekes \u00b7 Spartiate',svg:PT({bg:'#231d16',robe:'#7a2a24',robe2:'#8f342c',hat:'crest',hatC:'#c9a23e',beard:'short',beardC:'#2a2016',stern:1})},
+ dem:{name:'Demophilus \u00b7 commander of the Thespians',svg:PT({bg:'#1f1d18',robe:'#6b6b5a',robe2:'#7c7c68',hat:'band',hatC:'#c9a23e',hairC:'#4a3a26',beard:'short'})},
+ her:{name:'The King\u2019s herald',svg:PT({bg:'#1c1620',robe:'#4a3a66',robe2:'#5c4a7c',hat:'cap',hatC:'#3a2c50',beard:'long',beardC:'#20180e',stern:1})},
+ nar:{name:'',svg:null},
+};
+const vnEl=document.getElementById('vn');
+const vnPortrait=document.getElementById('vnportrait');
+const vnName=document.getElementById('vnname');
+const vnText=document.getElementById('vntext');
+const vnChoices=document.getElementById('vnchoices');
+const vnNextEl=document.getElementById('vnnext');
+const vnToast=document.getElementById('vntoast');
+let vnQueue=[],vnDone=null,vnBusy=false;
+function playScene(steps,done){
+  vnQueue=steps.slice();vnDone=done;
+  choiceArea.innerHTML='';
+  setControls([]);
+  vnEl.style.display='block';
+  vnAdvance();
+}
+function vnAdvance(){
+  while(vnQueue.length&&vnQueue[0].if&&!vnQueue[0].if()){vnQueue.shift();}
+  if(!vnQueue.length){
+    vnEl.style.display='none';
+    const d=vnDone;vnDone=null;
+    if(d)d();
+    return;
+  }
+  renderVn(vnQueue.shift());
+}
+function renderVn(st){
+  const who=CAST[st.who]||CAST.nar;
+  vnPortrait.innerHTML=who.svg||'';
+  vnPortrait.style.display=who.svg?'block':'none';
+  vnName.textContent=who.name;
+  document.getElementById('vnbox').classList.toggle('vn-narr',st.who==='nar');
+  vnText.innerHTML=typeof st.text==='function'?st.text():st.text||'';
+  vnChoices.innerHTML='';
+  if(st.choices){
+    vnNextEl.style.display='none';vnBusy=true;
+    for(const c of st.choices){
+      const b=document.createElement('button');
+      b.className='vn-choice';b.textContent=c.label;
+      b.onclick=(ev)=>{
+        ev.stopPropagation();
+        if(c.d)for(const k in c.d){REL[k]=(REL[k]||0)+c.d[k];}
+        if(c.flag)FLAGSV[c.flag]=true;
+        if(c.toast)vToast(c.toast);
+        if(c.reply)vnQueue=c.reply.concat(vnQueue);
+        vnBusy=false;
+        vnAdvance();
+      };
+      vnChoices.appendChild(b);
+    }
+  }else{vnNextEl.style.display='block';vnBusy=false;}
+}
+document.getElementById('vnbox').addEventListener('click',()=>{if(!vnBusy&&vnEl.style.display==='block')vnAdvance();});
+function vToast(t){
+  vnToast.textContent=t;vnToast.classList.add('show');
+  setTimeout(()=>vnToast.classList.remove('show'),1900);
+}
+const SC_T_OPEN=[
+ {who:'her',text:`The Great King bids me say: he does not desire your deaths. Send earth and water, yield the pass, and keep your lives, your lands, and better lands besides. His second message is shorter. Hand over your weapons.`,choices:[
+  {label:'"\u039c\u03bf\u03bb\u03ce\u03bd \u03bb\u03b1\u03b2\u03ad. Come and take them."',toast:'Two words outlive the wall',reply:[
+   {who:'her',text:`...The King was told your people practise brevity. He was not told it was contagious. You will regret the fashion by sundown tomorrow.`}]},
+  {label:'Say nothing. Turn your back on him, and inspect the wall.',reply:[
+   {who:'her',text:`Silence, then. The King has drowned louder answers than yours.`},
+   {who:'nar',text:`History will put the two words in your mouth anyway. Plutarch wrote them down for you.`}]},
+ ]},
+ {who:'die',text:`Dienekes, king. A trader from Trachis has been terrifying the young ones. Says when the Medes loose their arrows together, the sky goes dark. The sun disappears, he says.`},
+ {who:'die',text:`So I told him: good news, friend. Then we shall fight them in the shade.`},
+];
+const SC_T_IMM=[
+ {who:'dem',text:`Demophilus of Thespiae, king, with our seven hundred. Word is the King of Kings sends his Immortals today. A note on names: my potters and stonemasons have killed a great many men this week who were also called something grand. Perhaps the title is aspirational.`},
+ {who:'die',text:`They wear trousers, king. I have looked from the wall. Whatever else this day brings, we are being attacked by men in trousers, and I decline to be killed by one.`},
+];
+const SC_T_AFTER=[
+ {who:'dem',text:`You released the allies, king, and you could have released Thespiae with them, and I want it marked in whatever the poets make of this place: we were not commanded to stay. Seven hundred free men chose. Thespiae is a small town. After today it will be a small immortal one.`},
+ {who:'die',text:`Shade at last, king.`},
+ {who:'nar',text:`Simonides will cut the words into the stone of the pass: Go, tell the Spartans, stranger passing by, that here, obedient to their laws, we lie. There is no stone for the Thespians. There should have been.`},
+];
+
+/* ================= phases ================= */
+function enterPrologue(){
+  setPhase(0);resetAll();cine('over');setDay('Before the battle');
+  narrate('Prologue',
+   `<p>August, 480 BC. Ten years after Marathon, Xerxes has come to finish what his father started, with the
+    largest invasion force the ancient world ever assembled; Herodotus says millions, modern historians say
+    perhaps 70,000 to 300,000, and either number is more soldiers than Greece has ever seen. He has bridged
+    the Hellespont with boats and dug a canal through a peninsula. Cities are surrendering before he arrives.</p>
+    <p>The Greek plan is geography. Here at Thermopylae the mountains of Kallidromon fall almost into the sea,
+    squeezing the only road south to a strip in places fifteen metres wide, while the fleet blocks the strait
+    at Artemisium beside it. In a gap that narrow, numbers stop counting.</p>
+    <p>Holding the pass: some 7,000 Greeks under the Spartan king Leonidas, with his picked bodyguard of 300,
+    every man chosen because he had a living son. When Xerxes demanded they hand over their weapons, Leonidas
+    sent back two words: <em>molon labe</em>. Come and take them.</p>`);
+  setControls([{label:'Take command at the wall', fn:()=>playScene(SC_T_OPEN,enterDayOne)}]);
+}
+
+function enterDayOne(){
+  setPhase(1);cine('wall');setDay('Day one');
+  document.getElementById('counters').classList.add('show');
+  narrate('Day one · the first assault',
+   `<p>For four days Xerxes waits, expecting the tiny force to run. His scout reports the Spartans stripped
+    for exercise and combing their long hair: their custom, he is told, when they mean to die. On the fifth
+    day, patience gone, he sends in the Medes with orders to take these men alive.</p>
+    <p>You command at the wall. The pass will do the work of ten thousand men, but how you fight in it
+    is your choice.</p>`);
+  setChoices([
+    {title:'Hold the wall',
+     body:'Stand fast in dense ranks at the rebuilt Phocian wall and let them break against your shields. Simple, solid, nothing risked. But the same men will bear the whole weight of the whole day.',
+     fn:()=>{S.tactic='static';dayOneRun();}},
+    {title:'Fight the Spartan way',
+     body:'Rotate contingents so fresh spears meet every wave, and use the drill only Sparta has mastered: turn your backs, feign flight, let them break ranks to chase, then wheel and cut them down.',
+     fn:()=>{S.tactic='feint';dayOneRun();}},
+  ]);
+}
+
+function dayOneRun(){
+  cine('wall');
+  if(S.tactic==='static'){
+    narrate('Day one',
+     `<p>You pack the ranks at the wall and stand fast. The Medes funnel through the West Gate and pile onto
+      your shields.</p>
+      <p>They die in numbers, their short spears and wicker shields helpless against the hoplite panoply.
+      But watch your own losses: every hour, the same exhausted men are holding the same yard of ground.</p>`);
+  }else{
+    narrate('Day one',
+     `<p>The Medes funnel through the West Gate and pile onto the Spartan shields. Long spears over locked
+      shields against wicker and courage.</p>
+      <p>Watch the front rank: at the right moment the Spartans will turn as one man and run, and an army
+      that thinks it is winning will find out what a feigned flight is.</p>`);
+  }
+  setControls([]);
+  beginWave('med',150,S.tactic,()=>{
+    if(S.tactic==='static'){
+      narrate('Day one',
+       `<p>The first wave breaks and reels back. So does something in your own line: the men who held the
+        wall all morning are spent, and there are hundreds of waves behind this one. A battle of pure
+        endurance is the one battle the big army always wins.</p>
+        <p class="aside">The polemarchs quietly switch to the drill Sparta trained for: contingents rotating
+        through the front so every wave meets fresh spears, and the feigned retreat to bait the eager ones.
+        Watch the difference.</p>`);
+      S.tactic='feint';
+    }else{
+      narrate('Day one',
+       `<p>The feint works exactly as drilled. The Medes break ranks to chase what they think is a rout,
+        and the phalanx turns on them mid-stride. Herodotus: <em>they fell in heaps.</em></p>
+        <p>Xerxes sends the Cissians. Same pass, same shields, same arithmetic.</p>`);
+    }
+    S.stage='regroup';
+    setControls([{label:'Meet the next wave', fn:()=>{
+      setControls([]);
+      beginWave('med',150,'feint',()=>{
+        S.stage='regroup';
+        narrate('Day one · evening',
+         `<p>By dusk the Medes and Cissians have been thrown back with losses that embarrass the Great King
+          in front of his own court. Your line has barely bled. The pass is doing what the pass was chosen
+          to do.</p>
+          <p>Xerxes has one card left that always works. Tomorrow he plays it.</p>`);
+        setControls([{label:'Day two · the Immortals', fn:()=>playScene(SC_T_IMM,enterDayTwo)}]);
+      });
+    }}]);
+  });
+}
+
+function enterDayTwo(){
+  setPhase(2);setDay('Day two');cine('per');
+  narrate('Day two · the Immortals',
+   `<p>Hydarnes leads forward the Ten Thousand, the Immortals, the royal guard of the empire, so named
+    because a fallen man is replaced within the day and the number never changes. They have never failed.</p>
+    <p>Herodotus, dryly: they fared no better than the Medes, <em>fighting in a narrow space, using shorter
+    spears, unable to make their numbers count.</em> Watching his finest guard being butchered, Xerxes,
+    seated on his throne on the slope above, leapt to his feet three times in fear for his army.</p>`);
+  setControls([{label:'Receive the Immortals', fn:()=>{
+    setControls([]);
+    cine('wall');
+    beginWave('im',170,'feint',()=>{
+      S.stage='regroup';
+      narrate('Day two · nightfall',
+       `<p>Two days. Two failed armies. The pass cannot be forced from the front, and Xerxes knows it now.</p>
+        <p>That evening a local Greek named Ephialtes of Trachis is brought to the king's tent. For money,
+        he offers the one thing gold can buy that force could not: he knows a goat track, the Anopaia path,
+        that climbs over the mountain and comes down behind the Greek position. Hydarnes and the Immortals
+        march at the hour the lamps are lit.</p>`);
+      setControls([{label:'Night falls', fn:enterBetrayal}]);
+    });
+  }}]);
+}
+
+function enterBetrayal(){
+  setPhase(3);setDay('The night of the betrayal');
+  night(true);
+  cine('path');
+  S.stage='nightmarch';S.st=0;
+  spawnHydarnes(55);
+  narrate('The betrayal',
+   `<p>Follow the torches. All night the Immortals climb through the oak forest by the track Ephialtes shows
+    them, over the shoulder of Kallidromon, moving east above the sleeping armies.</p>
+    <p>Near the summit at dawn they stumble into the 1,000 Phocians Leonidas had posted to guard the path.
+    Surprised, arrowed, expecting a fight to the death, the Phocians pull back to a hilltop to make a stand.
+    Hydarnes does not bother. He marches straight past them, downhill, toward the road behind the Greek rear.</p>`);
+  setControls([]);
+}
+
+function dawnDecision(){
+  setDay('Day three · dawn');
+  narrate('The betrayal · dawn',
+   `<p>Before first light the seer Megistias reads death in the sacrifices. Then runners come down from the
+    heights confirming it: the path is taken. By mid-morning the Immortals will hold the East Gate and the
+    pass will be a trap with 7,000 men inside it.</p>
+    <p>Leonidas calls the allied commanders. There is one hour to decide, and you are holding the council.</p>`);
+  setChoices([
+    {title:'Retreat while the road is open',
+     body:'Save the whole force. March everyone east now, before the Immortals descend, and live to fight at the Isthmus. Every man dead in this pass is a man Greece does not have for the next battle.',
+     fn:startRetreatCF},
+    {title:'Hold the pass',
+     body:'Someone must cover the withdrawal and buy the fleet time to escape Artemisium. Send the allies south. The 300 stay. Spartan law does not recognise the other option.',
+     fn:stayAndDie},
+  ]);
+}
+
+function gotoAftermath(){
+  setPhase(5);S.stage='done';cine('over');setDay('After');
+  narrate('Aftermath',
+   `<p>Herodotus reckons the pass cost Xerxes about 20,000 dead, among them two of his brothers, against
+    roughly 2,000 Greeks killed across the three days and around 1,000 in the last stand. Xerxes buried most
+    of his dead in secret so his army would not learn the price, and had the fallen Leonidas beheaded and
+    crucified, a rage he was later said to regret.</p>
+    <p>The delay mattered less than the demonstration. The fleet slipped away from Artemisium in time.
+    Athens was evacuated and burned. Weeks later at Salamis the Persian navy was shattered; the next summer
+    at Plataea, with the full Spartan army finally in the field, the invasion died for good.</p>
+    <p>On the mound where the last men fell, the Greeks later set a stone for the 300, with two lines by
+    Simonides that may be the most famous epitaph ever written: <em>Go, tell the Spartans, stranger passing
+    by, that here, obedient to their laws, we lie.</em></p>
+    <p class="aside">The pass itself is gone; 2,500 years of silt have pushed the coastline kilometres out
+    to sea, and a highway now runs where the water was. The Kolonos mound is still there, and when it was
+    excavated, it was full of Persian arrowheads.</p>`);
+  setControls([{label:'Fight the three days again', fn:enterPrologue, ghost:true}]);
+}
+
+/* ================= boot ================= */
+resize();
+resetAll();
+enterPrologue();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

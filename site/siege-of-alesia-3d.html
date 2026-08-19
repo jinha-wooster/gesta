@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alesia, 52 BC · 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16120e; --ink-2:#1e1913; --panel:#221c15; --line:#3a3226;
+    --parchment:#e7dcc4; --muted:#a2957c; --faint:#6f6450;
+    --bronze:#d9a441; --bronze-dim:#8f6f2e;
+    --roman:#c4463a; --gaul:#6f9ac4;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{background:var(--ink)}
+  body{background:var(--ink);color:var(--parchment);font-family:'Source Serif 4',Georgia,serif;font-size:17px;line-height:1.65;min-height:100vh}
+  .wrap{max-width:1060px;margin:0 auto;padding:36px 18px 80px}
+
+  header{text-align:center;margin-bottom:26px}
+  .eyebrow{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  h1{font-family:'GFS Didot',serif;font-weight:400;font-size:clamp(44px,8vw,76px);letter-spacing:.06em;line-height:1}
+  .subtitle{color:var(--muted);font-style:italic;margin-top:12px;font-size:16px}
+  .meander{height:14px;margin:24px auto;max-width:520px;opacity:.55}
+
+  .phases{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+  .pill{font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:7px 13px;border:1px solid var(--line);border-radius:2px;color:var(--faint);transition:all .35s;white-space:nowrap}
+  .pill.active{color:var(--bronze);border-color:var(--bronze-dim);background:rgba(217,164,65,.06)}
+  .pill.done{color:var(--muted)}
+
+  .stage{position:relative;border:1px solid var(--line);background:#000;border-radius:3px;overflow:hidden}
+  #view{display:block;width:100%;height:560px;cursor:grab;touch-action:none}
+  #view.dragging{cursor:grabbing}
+  @media(max-width:700px){#view{height:420px}}
+
+  .counters{position:absolute;top:10px;left:12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;font-size:12px;letter-spacing:.08em;opacity:0;transition:opacity .6s}
+  .counters.show{opacity:1}
+  .counter{background:rgba(22,18,14,.72);padding:4px 10px;border-radius:2px;border:1px solid var(--line);width:max-content}
+  .counter b{font-weight:600}
+  .c-rom b{color:#e06a55} .c-gal b{color:#8fb4d8}
+
+  .daytag{position:absolute;bottom:10px;left:12px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(231,220,196,.7);background:rgba(22,18,14,.6);padding:5px 10px;border-radius:2px;pointer-events:none}
+
+  .camctl{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:6px}
+  .cambtn{font-family:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;background:rgba(22,18,14,.72);border:1px solid var(--line);border-radius:2px;color:var(--muted);cursor:pointer;transition:all .2s}
+  .cambtn:hover{color:var(--bronze);border-color:var(--bronze-dim)}
+  .camhint{position:absolute;bottom:10px;right:12px;font-size:11px;letter-spacing:.06em;color:rgba(231,220,196,.55);background:rgba(22,18,14,.6);padding:4px 9px;border-radius:2px;pointer-events:none}
+  @media(max-width:700px){.camhint{display:none}}
+
+  .narration{border:1px solid var(--line);border-top:none;background:var(--panel);padding:26px 30px;border-radius:0 0 3px 3px;min-height:150px}
+  .narr-label{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--bronze);margin-bottom:10px}
+  .narration p{margin-bottom:12px}
+  .narration p:last-child{margin-bottom:0}
+  .narration em{color:var(--muted)}
+  .aside{font-size:14px;color:var(--muted);font-style:italic;border-left:2px solid var(--bronze-dim);padding-left:14px;margin-top:14px}
+
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  @media(max-width:640px){.choices{grid-template-columns:1fr}}
+  .choice{border:1px solid var(--line);border-radius:3px;padding:20px;background:var(--ink-2);cursor:pointer;text-align:left;color:var(--parchment);font-family:inherit;font-size:16px;transition:border-color .25s,background .25s}
+  .choice:hover{border-color:var(--bronze-dim);background:#26201780}
+  .choice h3{font-family:'GFS Didot',serif;font-weight:400;font-size:20px;letter-spacing:.04em;margin-bottom:8px;color:var(--bronze)}
+  .choice p{font-size:14.5px;color:var(--muted);line-height:1.55}
+
+  .controls{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn{font-family:inherit;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:13px 28px;background:transparent;color:var(--bronze);border:1px solid var(--bronze-dim);border-radius:2px;cursor:pointer;transition:all .25s}
+  .btn:hover{background:rgba(217,164,65,.1);border-color:var(--bronze)}
+  .btn.ghost{color:var(--muted);border-color:var(--line)}
+  .btn.ghost:hover{color:var(--parchment);background:rgba(255,255,255,.04)}
+
+  #vn{display:none;position:absolute;left:0;right:0;bottom:0;padding:14px 16px 16px;
+      background:linear-gradient(transparent, rgba(12,12,10,.55) 18%, rgba(12,12,10,.92) 60%);z-index:5}
+  .vn-box{display:flex;gap:16px;max-width:860px;margin:0 auto;align-items:flex-end;cursor:pointer}
+  .vn-portrait{width:104px;height:128px;flex:0 0 auto;border:1px solid var(--bronze-dim);
+      border-radius:3px;background:#1c1814;overflow:hidden}
+  .vn-portrait svg{width:100%;height:100%;display:block}
+  .vn-main{flex:1;min-width:0}
+  .vn-name{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--bronze);margin-bottom:7px}
+  .vn-text{font-size:16.5px;line-height:1.6;color:var(--parchment);min-height:52px}
+  .vn-text em{color:var(--muted)}
+  .vn-next{font-size:11px;letter-spacing:.2em;color:var(--faint);margin-top:8px;text-transform:uppercase}
+  .vn-choices{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .vn-choice{font-family:inherit;font-size:14.5px;text-align:left;padding:11px 16px;background:rgba(24,22,18,.9);
+      border:1px solid var(--line);border-radius:2px;color:var(--parchment);cursor:pointer;transition:all .2s}
+  .vn-choice:hover{border-color:var(--bronze-dim);background:rgba(32,29,23,.95)}
+  #vntoast{position:absolute;right:16px;bottom:100%;margin-bottom:8px;font-size:11px;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--bronze);background:rgba(18,16,13,.85);border:1px solid var(--bronze-dim);
+      padding:6px 12px;border-radius:2px;opacity:0;transition:opacity .5s;pointer-events:none}
+  #vntoast.show{opacity:1}
+  .vn-narr .vn-text{font-style:italic;color:var(--muted)}
+  @media(max-width:640px){.vn-portrait{width:76px;height:96px}.vn-text{font-size:15px}}
+  /* decision dock overlaid on the simulation */
+  #dock{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:10px 14px 12px;
+      background:linear-gradient(transparent, rgba(12,12,10,.45) 18%, rgba(12,12,10,.9) 72%)}
+  #dock:not(:has(button)){display:none}
+  #dock .choices{max-width:880px;margin:0 auto;gap:10px}
+  #dock .choice{padding:12px 14px;background:rgba(24,22,18,.93)}
+  #dock .choice h3{font-size:17px;margin-bottom:5px}
+  #dock .choice p{font-size:13px;line-height:1.45}
+  #dock .controls{margin-top:0;padding-top:8px}
+  @media(max-width:640px){#dock .choice{padding:10px 12px}#dock .choice p{font-size:12px}}
+  footer{margin-top:44px;text-align:center;font-size:13px;color:var(--faint);line-height:1.7}
+  .fade-in{animation:fadeIn .6s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">52 BC · The oppidum of Alesia · Gaul</div>
+    <h1>ALESIA</h1>
+    <p class="subtitle">Caesar besieges an army, and is besieged by another. The wall must face both ways.</p>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true">
+      <defs><pattern id="key" width="26" height="14" patternUnits="userSpaceOnUse">
+        <path d="M0 12 H10 V2 H20 V8 H14 V6 H18 V4 H12 V10 H22 V0 H26" fill="none" stroke="#d9a441" stroke-width="1.4"/>
+      </pattern></defs>
+      <rect width="520" height="14" fill="url(#key)"/>
+    </svg>
+  </header>
+
+  <nav class="phases" aria-label="Siege phases">
+    <span class="pill" data-p="0">Prologue</span>
+    <span class="pill" data-p="1">The works</span>
+    <span class="pill" data-p="2">Hunger</span>
+    <span class="pill" data-p="3">The relief</span>
+    <span class="pill" data-p="4">The last battle</span>
+    <span class="pill" data-p="5">Aftermath</span>
+  </nav>
+
+  <div class="stage">
+    <div id="view" role="img" aria-label="3D battlefield of the siege of Alesia"></div>
+    <div class="counters" id="counters">
+      <span class="counter c-rom">Roman fallen&nbsp; <b id="romDead">0</b></span>
+      <span class="counter c-gal">Gallic fallen&nbsp; <b id="galDead">0</b></span>
+    </div>
+    <div class="daytag" id="daytag">Late summer, 52 BC</div>
+    <div class="camctl">
+      <button class="cambtn" data-cam="over">Overview</button>
+      <button class="cambtn" data-cam="opp">The oppidum</button>
+      <button class="cambtn" data-cam="gap">Mont Réa camp</button>
+      <button class="cambtn" data-cam="plain">The plain</button>
+    </div>
+    <div class="camhint">drag · rotate&ensp;|&ensp;scroll · zoom&ensp;|&ensp;right-drag · pan</div>
+    <div id="dock"><div id="choiceArea"></div><div class="controls" id="controls"></div></div>
+    <div id="vn"><div id="vntoast"></div>
+      <div class="vn-box" id="vnbox">
+        <div class="vn-portrait" id="vnportrait"></div>
+        <div class="vn-main">
+          <div class="vn-name" id="vnname"></div>
+          <div class="vn-text" id="vntext"></div>
+          <div class="vn-choices" id="vnchoices"></div>
+          <div class="vn-next" id="vnnext">tap to continue &#9656;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="narration">
+    <div class="narr-label" id="narrLabel">Prologue</div>
+    <div id="narrBody"></div>
+  </div>
+
+
+  <footer>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true"><rect width="520" height="14" fill="url(#key)"/></svg>
+    Grounded in Caesar's <em>Gallic War</em> VII, with the caveat that the main source is the victor's own
+    memoir. His quarter-million relief army is rejected by modern historians (likely 80,000 to 100,000);
+    losses on both sides are uncertain. The double fortification is not legend: Napoleon III's excavations
+    at Alise-Sainte-Reine found the ditches, the traps, and the towers where Caesar said they were.
+    One figure represents roughly 200 to 500 men.
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+
+/* ================= geography =================
+   Sim space 1000 x 620. The oppidum crowns the hill at centre.
+   Two Roman lines ring it: circumvallation (inner, facing the town)
+   and contravallation (outer, facing Gaul). The plain of Laumes is west (low x). */
+const sx2w=x=>(x-500)*0.2, sy2w=y=>(y-310)*0.2;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const smooth=(x,a,b)=>THREE.MathUtils.smoothstep(x,a,b);
+const C={x:500,y:310};
+const HILL={rx:152,ry:96};                 // Mont Auxois
+const R1={rx:232,ry:168};                  // circumvallation
+const R2={rx:302,ry:226};                  // contravallation
+const REA={x:250,y:112,s:78};              // Mont Réa, the weak corner
+const GAP_TH=-2.45;                        // the vulnerable sector (northwest)
+function ringPos(R,th){return {x:C.x+Math.cos(th)*R.rx, y:C.y+Math.sin(th)*R.ry};}
+function uOf(R,x,y){const dx=(x-C.x)/R.rx, dy=(y-C.y)/R.ry; return Math.hypot(dx,dy);}
+function thOf(x,y){return Math.atan2((y-C.y)/1,(x-C.x)/1);}
+
+const S={
+  phase:0, stage:'idle', sub:'', subT:0, st:0,
+  soldiers:[], arrows:[],
+  romDead:0, galDead:0,
+  buildP:0,
+  savedRom:0, savedGal:0,
+  daylight:1, dayTarget:1,
+};
+const ROM_PER=200, GAL_PER=450;
+
+/* ================= three.js ================= */
+const view=document.getElementById('view');
+const scene=new THREE.Scene();
+const DAY_SKY=new THREE.Color(0xa3b5ac), NIGHT_SKY=new THREE.Color(0x141c2b);
+scene.background=DAY_SKY.clone();
+scene.fog=new THREE.Fog(0xa3b5ac,170,460);
+
+const camera=new THREE.PerspectiveCamera(52,1,0.5,950);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const SHADOWS=window.innerWidth>700;
+if(SHADOWS){renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;}
+view.appendChild(renderer.domElement);
+function resize(){const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+
+const hemi=new THREE.HemisphereLight(0xd4dfd8,0x5a5138,0.85);
+scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xfff0cf,1.1);
+sun.position.set(-60,100,60);
+if(SHADOWS){
+  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+  const sc=sun.shadow.camera;
+  sc.left=-135;sc.right=135;sc.top=135;sc.bottom=-135;sc.far=380;
+  sc.updateProjectionMatrix();
+  sun.shadow.bias=-0.0008;
+}
+scene.add(sun);
+
+/* ---------- terrain ---------- */
+function terrainH(wx,wz){
+  const x=wx/0.2+500, y=wz/0.2+310;
+  let h=Math.sin(wx*0.1)*0.3+Math.cos(wz*0.12+wx*0.05)*0.3;
+  const u=uOf(HILL,x,y);
+  h+=14*(1-smooth(u,0.62,1.12));                                 // Mont Auxois plateau
+  const rdx=(x-REA.x)/REA.s, rdy=(y-REA.y)/REA.s;
+  h+=9.5*Math.exp(-(rdx*rdx+rdy*rdy));                            // Mont Réa
+  if(x>910) h+=(x-910)*0.05*(1+Math.sin(y*0.02));                 // eastern heights
+  if(y>560) h+=(y-560)*0.06;
+  if(y<58 && x>330) h+=(58-y)*0.06;                               // northern rim (east of Réa)
+  if(x<52) h+=(52-x)*0.055;                                       // the relief army's hill, far west
+  return h;
+}
+{
+  const g=new THREE.PlaneGeometry(230,150,160,110);
+  g.rotateX(-Math.PI/2);
+  const pos=g.attributes.position,colors=[];
+  const cPlain=new THREE.Color(0x7f8452),cField=new THREE.Color(0x8f8a56),
+        cRock=new THREE.Color(0x6f6449),cHigh=new THREE.Color(0x5d553f),tmp=new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const wx=pos.getX(i),wz=pos.getZ(i),h=terrainH(wx,wz);
+    pos.setY(i,h);
+    tmp.copy(cPlain);
+    tmp.lerp(cField,smooth(Math.sin(wx*0.35)*Math.sin(wz*0.3),0,1)*0.5);
+    tmp.lerp(cRock,smooth(h,4,10));
+    tmp.lerp(cHigh,smooth(h,10,18));
+    tmp.offsetHSL(0,0,(Math.sin(wx*1.5)*Math.sin(wz*1.9))*0.04);
+    colors.push(tmp.r,tmp.g,tmp.b);
+  }
+  g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  g.computeVertexNormals();
+  const terrain=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}));
+  terrain.receiveShadow=SHADOWS;
+  scene.add(terrain);
+}
+/* the two rivers of the plain */
+for(const ry of [212,408]){
+  const pts=[];
+  for(let x=390;x>-10;x-=25) pts.push(new THREE.Vector3(sx2w(x),0,sy2w(ry+Math.sin(x*0.02)*14)));
+  for(let i=0;i<pts.length;i++){const p=pts[i];p.y=terrainH(p.x,p.z)+0.12;}
+  const geo=new THREE.BufferGeometry().setFromPoints(pts);
+  const line=new THREE.Line(geo,new THREE.LineBasicMaterial({color:0x4d7d8a,transparent:true,opacity:0.8}));
+  scene.add(line);
+}
+
+/* ---------- static structures ---------- */
+const woodMat=new THREE.MeshLambertMaterial({color:0x6b5638});
+const stoneMat=new THREE.MeshLambertMaterial({color:0x77705f});
+const trapMat=new THREE.MeshLambertMaterial({color:0x3c3527});
+
+/* the oppidum: Gallic wall and huts on the plateau */
+{
+  const segs=44;
+  for(let i=0;i<segs;i++){
+    const th=i/segs*6.283;
+    const p=ringPos({rx:HILL.rx*0.66,ry:HILL.ry*0.66},th);
+    const wx=sx2w(p.x),wz=sy2w(p.y);
+    const seg=new THREE.Mesh(new THREE.BoxGeometry(3.2,1.7,0.9),stoneMat);
+    seg.position.set(wx,terrainH(wx,wz)+0.8,wz);
+    seg.rotation.y=Math.atan2(HILL.ry*0.66*Math.cos(th), HILL.rx*0.66*Math.sin(th));
+    seg.castShadow=SHADOWS;
+    scene.add(seg);
+  }
+  const hutMat=new THREE.MeshLambertMaterial({color:0x9c8a63});
+  for(let i=0;i<16;i++){
+    const hut=new THREE.Mesh(new THREE.ConeGeometry(1.3,1.9,6),hutMat);
+    const x=C.x+rnd(-80,80),y=C.y+rnd(-46,46);
+    const wx=sx2w(x),wz=sy2w(y);
+    hut.position.set(wx,terrainH(wx,wz)+0.9,wz);
+    hut.castShadow=SHADOWS;
+    scene.add(hut);
+  }
+}
+
+/* the two Roman lines: instanced, and grown during the build phase */
+function makeRing(R,segCount,towerEvery){
+  const walls=new THREE.InstancedMesh(new THREE.BoxGeometry(4.4,2.1,0.8),woodMat,segCount);
+  const nTow=Math.floor(segCount/towerEvery);
+  const towers=new THREE.InstancedMesh(new THREE.BoxGeometry(2,5,2),woodMat,nTow);
+  walls.castShadow=SHADOWS;towers.castShadow=SHADOWS;
+  const items=[],titems=[];
+  for(let i=0;i<segCount;i++){
+    const th=i/segCount*6.283;
+    const p=ringPos(R,th);
+    const wx=sx2w(p.x),wz=sy2w(p.y);
+    const rot=Math.atan2(R.ry*Math.cos(th),R.rx*Math.sin(th));
+    items.push({wx,wz,rot,h:terrainH(wx,wz)});
+    if(i%towerEvery===0)titems.push({wx,wz,rot,h:terrainH(wx,wz)});
+  }
+  scene.add(walls);scene.add(towers);
+  return {walls,towers,items,titems,segCount,towerEvery,progress:0};
+}
+const RING1=makeRing(R1,62,8), RING2=makeRing(R2,82,8);
+const _m=new THREE.Matrix4(),_q=new THREE.Quaternion(),_v=new THREE.Vector3(),_s=new THREE.Vector3(),_e=new THREE.Euler();
+function paintRing(ring){
+  const p=ring.progress;
+  ring.items.forEach((it,i)=>{
+    const local=THREE.MathUtils.clamp((p*ring.segCount-i)*0.5,0,1);
+    _v.set(it.wx,it.h+1.05*local,it.wz);
+    _e.set(0,it.rot,0);_q.setFromEuler(_e);
+    _s.set(1,Math.max(local,0.0001),1);
+    _m.compose(_v,_q,_s);
+    ring.walls.setMatrixAt(i,_m);
+  });
+  ring.titems.forEach((it,i)=>{
+    const idx=i*ring.towerEvery;
+    const local=THREE.MathUtils.clamp((p*ring.segCount-idx)*0.5,0,1);
+    _v.set(it.wx,it.h+2.5*local,it.wz);
+    _e.set(0,it.rot,0);_q.setFromEuler(_e);
+    _s.set(1,Math.max(local,0.0001),1);
+    _m.compose(_v,_q,_s);
+    ring.towers.setMatrixAt(i,_m);
+  });
+  ring.walls.instanceMatrix.needsUpdate=true;
+  ring.towers.instanceMatrix.needsUpdate=true;
+}
+paintRing(RING1);paintRing(RING2);
+
+/* the killing fields: lilia, cippi, stimuli */
+const TRAPS=new THREE.InstancedMesh(new THREE.ConeGeometry(0.28,1.0,4),trapMat,300);
+scene.add(TRAPS);
+const trapPts=[];
+for(let i=0;i<300;i++){
+  let th=rnd(0,6.283);
+  let R,u;
+  if(i<150){R=R1;u=rnd(0.82,0.93);}        // inner belt, facing the town
+  else{R=R2;u=rnd(1.07,1.2);}              // outer belt, facing Gaul
+  const x=C.x+Math.cos(th)*R.rx*u, y=C.y+Math.sin(th)*R.ry*u;
+  trapPts.push({wx:sx2w(x),wz:sy2w(y),r:rnd(0,6.28)});
+}
+function paintTraps(p){
+  trapPts.forEach((t,i)=>{
+    const local=THREE.MathUtils.clamp(p*3-i/100,0,1);
+    _v.set(t.wx,terrainH(t.wx,t.wz)+0.5*local,t.wz);
+    _e.set(0,t.r,0);_q.setFromEuler(_e);
+    _s.set(1,Math.max(local,0.0001),1);
+    _m.compose(_v,_q,_s);
+    TRAPS.setMatrixAt(i,_m);
+  });
+  TRAPS.instanceMatrix.needsUpdate=true;
+}
+paintTraps(0);
+
+/* camps */
+function tentCluster(cx,cy,n,color,big){
+  const mat=new THREE.MeshLambertMaterial({color});
+  for(let i=0;i<n;i++){
+    const t=new THREE.Mesh(new THREE.ConeGeometry(big&&i===0?2.6:1.4,big&&i===0?3.4:2,5),mat);
+    const x=cx+rnd(-26,26),y=cy+rnd(-18,18);
+    const wx=sx2w(x),wz=sy2w(y);
+    t.position.set(wx,terrainH(wx,wz)+1,wz);
+    t.rotation.y=rnd(0,1);t.castShadow=SHADOWS;
+    scene.add(t);
+  }
+}
+tentCluster(795,470,8,0xb9a887,true);          // Caesar's headquarters camp, southeast
+const gapMid=(()=>{const a=ringPos(R1,GAP_TH),b=ringPos(R2,GAP_TH);return {x:(a.x+b.x)/2,y:(a.y+b.y)/2};})();
+tentCluster(gapMid.x,gapMid.y,6,0xb9a887,false);   // the camp under Mont Réa
+let reliefTents=false;
+function spawnReliefCamp(){
+  if(reliefTents)return;reliefTents=true;
+  tentCluster(58,300,10,0x9aa383,true);
+}
+
+/* ---------- unit geometry ---------- */
+function mergeGeos(geos){
+  let vC=0,iC=0;
+  for(const g of geos){vC+=g.attributes.position.count;iC+=g.index.count;}
+  const P=new Float32Array(vC*3),N=new Float32Array(vC*3),I=new Uint16Array(iC);
+  let vO=0,iO=0;
+  for(const g of geos){
+    P.set(g.attributes.position.array,vO*3);
+    N.set(g.attributes.normal.array,vO*3);
+    const idx=g.index.array;
+    for(let i=0;i<idx.length;i++)I[iO+i]=idx[i]+vO;
+    vO+=g.attributes.position.count;iO+=idx.length;
+  }
+  const out=new THREE.BufferGeometry();
+  out.setAttribute('position',new THREE.BufferAttribute(P,3));
+  out.setAttribute('normal',new THREE.BufferAttribute(N,3));
+  out.setIndex(new THREE.BufferAttribute(I,1));
+  return out;
+}
+const footGeo=(()=>{
+  const body=new THREE.CylinderGeometry(0.32,0.42,1.5,6);body.translate(0,0.75,0);
+  const head=new THREE.SphereGeometry(0.26,6,5);head.translate(0,1.72,0);
+  const spear=new THREE.CylinderGeometry(0.04,0.04,2.6,4);spear.translate(0,1.5,0.42);
+  return mergeGeos([body,head,spear]);
+})();
+const cavGeo=(()=>{
+  const barrel=new THREE.BoxGeometry(1.8,0.62,0.56);barrel.translate(0,1.05,0);
+  const neck=new THREE.BoxGeometry(0.5,0.66,0.4);neck.translate(0.95,1.45,0);
+  const hd=new THREE.BoxGeometry(0.42,0.3,0.32);hd.translate(1.28,1.62,0);
+  const legs=new THREE.BoxGeometry(0.18,1.0,0.5);legs.translate(-0.6,0.5,0);
+  const legs2=new THREE.BoxGeometry(0.18,1.0,0.5);legs2.translate(0.6,0.5,0);
+  const rider=new THREE.CylinderGeometry(0.24,0.3,1.0,6);rider.translate(-0.1,1.95,0);
+  const rhead=new THREE.SphereGeometry(0.22,6,5);rhead.translate(-0.1,2.6,0);
+  return mergeGeos([barrel,neck,hd,legs,legs2,rider,rhead]);
+})();
+
+const KINDS={
+  rm:{geo:footGeo,color:0xb63f33},    // legionaries
+  cz:{geo:footGeo,color:0xe85438},    // Caesar, the scarlet cloak
+  rc:{geo:cavGeo, color:0xc79a45},    // Roman & Germanic horse
+  gd:{geo:footGeo,color:0x4f7bb0},    // Vercingetorix's army
+  gr:{geo:footGeo,color:0x5e9a63},    // the relief army
+  gc:{geo:cavGeo, color:0x6fae74},    // relief cavalry
+  vx:{geo:cavGeo, color:0xd9b23e},    // Vercingetorix
+  cv:{geo:footGeo,color:0x8f887d},    // the Mandubii
+};
+const MATS={};for(const k in KINDS)MATS[k]=new THREE.MeshLambertMaterial({color:KINDS[k].color});
+let MESH={};
+function soldier(x,y,side,grp,kind){
+  return {x,y,tx:x,ty:y,hx:x,hy:y,side,grp,kind,alive:true,flee:false,dieAt:null,
+          jit:rnd(0,6.28),face:rnd(0,6.28),moving:false,escaped:false,
+          pi:0,wps:null,trapVuln:false,sector:false,leaving:false};
+}
+function buildInstances(){
+  for(const k in MESH)scene.remove(MESH[k]);
+  MESH={};
+  for(const k in KINDS){
+    const list=S.soldiers.filter(s=>s.kind===k);
+    const m=new THREE.InstancedMesh(KINDS[k].geo,MATS[k],Math.max(list.length,1));
+    m.castShadow=SHADOWS;
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    _s.setScalar(0.0001);_v.set(0,-60,0);_q.set(0,0,0,1);_m.compose(_v,_q,_s);
+    for(let i=0;i<m.count;i++)m.setMatrixAt(i,_m);
+    m.instanceMatrix.needsUpdate=true;
+    list.forEach((s,i)=>{s.idx=i;s.mesh=m;});
+    scene.add(m);MESH[k]=m;
+  }
+}
+let perfNow=0;
+function writeInstance(s){
+  const wx=sx2w(s.x),wz=sy2w(s.y);
+  if(s.escaped){_s.setScalar(0.0001);_v.set(wx,-60,wz);_q.set(0,0,0,1);}
+  else if(!s.alive){
+    _v.set(wx,terrainH(wx,wz)+0.22,wz);
+    _e.set(Math.PI/2,s.jit,0);_q.setFromEuler(_e);
+    _s.set(1,1,0.35);
+  }else{
+    const bob=s.moving?Math.abs(Math.sin(perfNow*0.012+s.jit))*0.13:0;
+    _v.set(wx,terrainH(wx,wz)+bob,wz);
+    _e.set(0,s.face,0);_q.setFromEuler(_e);
+    _s.setScalar(1);
+  }
+  _m.compose(_v,_q,_s);
+  s.mesh.setMatrixAt(s.idx,_m);
+}
+function flushInstances(){
+  for(const s of S.soldiers)writeInstance(s);
+  for(const k in MESH)MESH[k].instanceMatrix.needsUpdate=true;
+}
+
+/* banners */
+const banners={};
+function makeBanner(color){
+  const g=new THREE.Group();
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,5.4,5),new THREE.MeshLambertMaterial({color:0x4a3b26}));
+  pole.position.y=2.7;
+  const flag=new THREE.Mesh(new THREE.PlaneGeometry(2.2,1.3),new THREE.MeshLambertMaterial({color,side:THREE.DoubleSide}));
+  flag.position.set(1.15,4.5,0);
+  g.add(pole,flag);g.userData.flag=flag;
+  scene.add(g);g.visible=false;
+  return g;
+}
+banners.rr=makeBanner(0xc4463a);
+banners.gd=makeBanner(0x4f7bb0);
+banners.gr=makeBanner(0x5e9a63);
+function updateBanners(){
+  const groups={rr:s=>s.grp==='rr', gd:s=>s.kind==='gd'&&!s.flee, gr:s=>(s.kind==='gr')&&!s.flee};
+  for(const k in banners){
+    const list=S.soldiers.filter(s=>s.alive&&groups[k](s));
+    const b=banners[k];
+    if(list.length<5){b.visible=false;continue;}
+    let mx=0,my=0;for(const s of list){mx+=s.x;my+=s.y;}
+    mx/=list.length;my/=list.length;
+    const wx=sx2w(mx),wz=sy2w(my);
+    b.position.set(wx,terrainH(wx,wz),wz);
+    b.userData.flag.rotation.y=Math.sin(perfNow*0.002)*0.35;
+    b.visible=true;
+  }
+}
+
+/* arrows / pila */
+const ARROW_MAX=300;
+const arrowMesh=new THREE.InstancedMesh(
+  new THREE.CylinderGeometry(0.05,0.05,1.5,4),
+  new THREE.MeshLambertMaterial({color:0x2d251a}),ARROW_MAX);
+arrowMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(arrowMesh);
+const UP=new THREE.Vector3(0,1,0),DIR=new THREE.Vector3();
+function fireArrowAt(fromList,targetList,hitChance){
+  if(!fromList.length||!targetList.length)return;
+  const from=fromList[Math.floor(Math.random()*fromList.length)];
+  const t=targetList[Math.floor(Math.random()*targetList.length)];
+  const fx=sx2w(from.x),fz=sy2w(from.y),tx=sx2w(t.x+rnd(-3,3)),tz=sy2w(t.y+rnd(-3,3));
+  const fy=terrainH(fx,fz)+1.9,ty=terrainH(tx,tz)+0.3;
+  S.arrows.push({fx,fy,fz,tx,ty,tz,t:0,dur:rnd(0.7,1.05),arc:rnd(4,8),
+    simx:t.x,simy:t.y,px:fx,py:fy,pz:fz,vx:0,vy:1,vz:0,side:t.side,hit:hitChance});
+}
+function updArrowFlight(dt){
+  for(let i=S.arrows.length-1;i>=0;i--){
+    const a=S.arrows[i];a.t+=dt;
+    const u=Math.min(a.t/a.dur,1);
+    const nx=a.fx+(a.tx-a.fx)*u,nz=a.fz+(a.tz-a.fz)*u;
+    const ny=a.fy+(a.ty-a.fy)*u+Math.sin(u*Math.PI)*a.arc;
+    a.vx=nx-a.px;a.vy=ny-a.py;a.vz=nz-a.pz;
+    a.px=nx;a.py=ny;a.pz=nz;
+    if(u>=1){
+      if(Math.random()<a.hit){
+        const near=aliveSide(a.side).filter(s=>Math.hypot(s.x-a.simx,s.y-a.simy)<10);
+        if(near.length)kill(near[0]);
+      }
+      S.arrows.splice(i,1);
+    }
+  }
+}
+function flushArrows(){
+  let i=0;
+  for(const a of S.arrows){
+    if(i>=ARROW_MAX)break;
+    _v.set(a.px,a.py,a.pz);
+    DIR.set(a.vx,a.vy,a.vz).normalize();
+    _q.setFromUnitVectors(UP,DIR);
+    _s.setScalar(1);_m.compose(_v,_q,_s);
+    arrowMesh.setMatrixAt(i++,_m);
+  }
+  for(;i<ARROW_MAX;i++){_s.setScalar(0.0001);_v.set(0,-60,0);_q.set(0,0,0,1);_m.compose(_v,_q,_s);arrowMesh.setMatrixAt(i,_m);}
+  arrowMesh.instanceMatrix.needsUpdate=true;
+}
+
+/* ================= camera ================= */
+const cam={yaw:0.5,pitch:0.95,dist:205,tx:0,ty:3,tz:0,auto:null};
+function applyCamera(dt){
+  if(cam.auto){
+    const a=cam.auto,k=1-Math.pow(0.001,dt);
+    cam.yaw+=(a.yaw-cam.yaw)*k;cam.pitch+=(a.pitch-cam.pitch)*k;cam.dist+=(a.dist-cam.dist)*k;
+    cam.tx+=(a.tx-cam.tx)*k;cam.ty+=(a.ty-cam.ty)*k;cam.tz+=(a.tz-cam.tz)*k;
+    if(Math.abs(a.dist-cam.dist)<0.5&&Math.abs(a.yaw-cam.yaw)<0.01)cam.auto=null;
+  }
+  cam.pitch=THREE.MathUtils.clamp(cam.pitch,0.14,1.42);
+  cam.dist=THREE.MathUtils.clamp(cam.dist,20,300);
+  const cp=Math.cos(cam.pitch);
+  camera.position.set(
+    cam.tx+Math.sin(cam.yaw)*cp*cam.dist,
+    cam.ty+Math.sin(cam.pitch)*cam.dist,
+    cam.tz+Math.cos(cam.yaw)*cp*cam.dist);
+  camera.lookAt(cam.tx,cam.ty,cam.tz);
+}
+const gapW={x:sx2w(gapMid.x),z:sy2w(gapMid.y)};
+const PRESETS={
+  over:{yaw:0.5,pitch:0.95,dist:205,tx:0,ty:3,tz:0},
+  opp:{yaw:0.6,pitch:0.5,dist:88,tx:0,ty:13,tz:0},
+  gap:{yaw:0.85,pitch:0.45,dist:62,tx:gapW.x,ty:3,tz:gapW.z},
+  plain:{yaw:1.5,pitch:0.5,dist:95,tx:-72,ty:1,tz:0},
+  build:{yaw:0.9,pitch:0.8,dist:150,tx:-10,ty:3,tz:-6},
+  surr:{yaw:1.2,pitch:0.36,dist:42,tx:sx2w(330),ty:1,tz:sy2w(342)},
+};
+document.querySelectorAll('.cambtn').forEach(b=>b.onclick=()=>{cam.auto={...PRESETS[b.dataset.cam]};});
+function cine(name){cam.auto={...PRESETS[name]};}
+
+let drag=null;
+view.addEventListener('pointerdown',e=>{view.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,btn:e.button,shift:e.shiftKey};view.classList.add('dragging');cam.auto=null;});
+view.addEventListener('pointermove',e=>{
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  drag.x=e.clientX;drag.y=e.clientY;
+  if(drag.btn===2||drag.shift){
+    const cp=Math.cos(cam.yaw),sp=Math.sin(cam.yaw),k=cam.dist*0.0016;
+    cam.tx-=(dx*cp-dy*sp)*k;
+    cam.tz-=(-dx*sp-dy*cp)*k;
+    cam.tx=THREE.MathUtils.clamp(cam.tx,-105,105);
+    cam.tz=THREE.MathUtils.clamp(cam.tz,-66,66);
+  }else{cam.yaw-=dx*0.0055;cam.pitch+=dy*0.0045;}
+});
+const endDrag=()=>{drag=null;view.classList.remove('dragging');};
+view.addEventListener('pointerup',endDrag);
+view.addEventListener('pointercancel',endDrag);
+view.addEventListener('wheel',e=>{e.preventDefault();cam.auto=null;cam.dist*=(1+Math.sign(e.deltaY)*0.09);},{passive:false});
+view.addEventListener('contextmenu',e=>e.preventDefault());
+let pinch=null;
+view.addEventListener('touchstart',e=>{if(e.touches.length===2)pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);});
+view.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&pinch){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    cam.dist*=pinch/d;pinch=d;cam.auto=null;
+  }
+},{passive:true});
+view.addEventListener('touchend',()=>pinch=null);
+
+/* ================= sim helpers ================= */
+function kill(s){
+  if(!s.alive||s.side==='c')return;
+  s.alive=false;
+  if(s.side==='r')S.romDead++;else S.galDead++;
+  updateCounters();
+}
+function aliveSide(side){return S.soldiers.filter(s=>s.alive&&s.side===side);}
+function aliveGrp(grp){return S.soldiers.filter(s=>s.alive&&s.grp===grp);}
+function killRandom(list,n){
+  const pool=list.filter(s=>s.alive);
+  for(let i=0;i<n&&pool.length;i++){
+    const j=Math.floor(Math.random()*pool.length);
+    kill(pool[j]);pool.splice(j,1);
+  }
+}
+function updateCounters(){
+  document.getElementById('romDead').textContent='~'+(S.romDead*ROM_PER).toLocaleString();
+  document.getElementById('galDead').textContent='~'+(S.galDead*GAL_PER).toLocaleString();
+}
+function moveToward(s,speed,dt){
+  const dx=s.tx-s.x,dy=s.ty-s.y,d=Math.hypot(dx,dy);
+  if(d<1.5){s.moving=false;return true;}
+  s.moving=true;
+  s.x+=(dx/d)*speed*dt*60;s.y+=(dy/d)*speed*dt*60;
+  s.face=Math.atan2(-dy,dx);
+  return false;
+}
+function followWps(s,speed,dt){
+  if(!s.wps||s.pi>=s.wps.length)return true;
+  s.tx=s.wps[s.pi][0];s.ty=s.wps[s.pi][1];
+  if(moveToward(s,speed,dt))s.pi++;
+  return s.pi>=s.wps.length;
+}
+function fleeDeaths(dt){
+  for(const s of S.soldiers){
+    if(s.alive&&s.flee&&s.dieAt!=null){
+      s.dieAt-=dt*0.25;
+      if(s.dieAt<=0)kill(s);
+    }
+  }
+}
+function applyTraps(dt){
+  for(const s of S.soldiers){
+    if(!s.alive||!s.trapVuln)continue;
+    const u2=uOf(R2,s.x,s.y),u1=uOf(R1,s.x,s.y);
+    const inOuter=u2>1.06&&u2<1.21, inInner=u1>0.81&&u1<0.94;
+    if((inOuter||inInner)&&Math.random()<dt*0.5)kill(s);
+    if(u2<1.05&&s.side==='g'&&s.grp!=='gd')s.trapVuln=false;
+    if(u1>0.95&&s.grp==='gd')s.trapVuln=false;
+  }
+}
+function faceTo(s,x,y){s.face=Math.atan2(-(y-s.y),x-s.x);}
+function setDay(t){document.getElementById('daytag').textContent=t;}
+function night(on){S.dayTarget=on?0:1;}
+function applyDaylight(dt){
+  S.daylight+=(S.dayTarget-S.daylight)*Math.min(dt*1.2,1);
+  const d=S.daylight;
+  sun.intensity=0.1+1.0*d;
+  hemi.intensity=0.2+0.65*d;
+  scene.background.copy(NIGHT_SKY).lerp(DAY_SKY,d);
+  scene.fog.color.copy(scene.background);
+}
+
+/* ================= armies ================= */
+let caesar=null,verc=null;
+function spawnAll(){
+  S.soldiers=[];
+  // Vercingetorix's army on the plateau
+  for(let i=0;i<130;i++){
+    const th=rnd(0,6.283),u=rnd(0.15,0.6);
+    const x=C.x+Math.cos(th)*HILL.rx*u,y=C.y+Math.sin(th)*HILL.ry*u;
+    S.soldiers.push(soldier(x,y,'g','gd','gd'));
+  }
+  verc=soldier(C.x,C.y,'g','vx','vx');
+  S.soldiers.push(verc);
+  // the legions, mustered in field blocks south and east
+  const blocks=[[770,430],[820,340],[700,500],[840,250]];
+  for(let b=0;b<4;b++){
+    for(let i=0;i<45;i++){
+      const x=blocks[b][0]+(i%9)*6-24+rnd(-1,1),y=blocks[b][1]+Math.floor(i/9)*6-12+rnd(-1,1);
+      S.soldiers.push(soldier(x,y,'r','fld','rm'));
+    }
+  }
+  // Germanic and Roman horse, by the headquarters camp
+  for(let i=0;i<26;i++){
+    S.soldiers.push(soldier(790+rnd(-20,20),500+rnd(-12,12),'r','rc','rc'));
+  }
+  caesar=soldier(795,468,'r','rr','cz');
+  S.soldiers.push(caesar);
+  buildInstances();
+}
+function assignGarrisons(stage){
+  const field=S.soldiers.filter(s=>s.alive&&s.grp==='fld');
+  if(stage===1){
+    for(let i=0;i<62&&field.length;i++){
+      const s=field.pop();
+      const th=i/62*6.283;
+      const p=ringPos({rx:R1.rx*0.955,ry:R1.ry*0.955},th);
+      s.grp='ri';s.tx=s.hx=p.x;s.ty=s.hy=p.y;s.homeTh=th;
+    }
+  }else{
+    let i=0;
+    for(const s of field){
+      if(i<66){
+        const th=i/66*6.283;
+        const p=ringPos({rx:R2.rx*0.965,ry:R2.ry*0.965},th);
+        s.grp='ro';s.tx=s.hx=p.x;s.ty=s.hy=p.y;s.homeTh=th;
+      }else if(i<90){
+        s.grp='rcp';
+        s.tx=s.hx=gapMid.x+rnd(-16,16);s.ty=s.hy=gapMid.y+rnd(-12,12);
+      }else{
+        s.grp='rr';
+        s.tx=s.hx=778+rnd(-16,16);s.ty=s.hy=452+rnd(-12,12);
+      }
+      i++;
+    }
+  }
+}
+function updWalk(dt){
+  for(const s of S.soldiers){
+    if(!s.alive||s.side==='c')continue;
+    if(!moveToward(s,0.6,dt)){continue;}
+    // at rest: garrisons face their duty side
+    if(s.grp==='ri')faceTo(s,C.x,C.y);
+    else if(s.grp==='ro'||s.grp==='rcp')faceTo(s,s.x*2-C.x,s.y*2-C.y);
+  }
+}
+
+/* ================= stage logic ================= */
+
+/* --- counterfactual: storm the hill --- */
+function startAssaultCF(){
+  S.savedRom=S.romDead;S.savedGal=S.galDead;
+  S.stage='cfassault';S.st=0;
+  cine('opp');
+  document.getElementById('counters').classList.add('show');
+  narrate('Prologue · what if',
+   `<p>You order the legions up the slopes. It is what Vercingetorix wants: he chose this hill because
+    walls and gravity multiply his 80,000, and because a month ago at Gergovia the same decision cost
+    Caesar 700 legionaries and 46 centurions in an afternoon, his worst defeat of the whole war.</p>`);
+  setControls([]);
+  for(const s of S.soldiers){
+    if(s.grp!=='fld'||!s.alive)continue;
+    const th=thOf(s.x,s.y);
+    const p=ringPos({rx:HILL.rx*0.8,ry:HILL.ry*0.8},th+rnd(-0.2,0.2));
+    s.tx=p.x;s.ty=p.y;s.charging=true;
+  }
+}
+function updCfAssault(dt){
+  for(const s of S.soldiers){if(s.alive&&s.charging)moveToward(s,0.7,dt);}
+  const chargers=S.soldiers.filter(s=>s.alive&&s.charging&&uOf(HILL,s.x,s.y)<1.15);
+  const def=aliveGrp('gd');
+  for(let i=0;i<2;i++)if(Math.random()<dt*22)fireArrowAt(def,chargers,0.45);
+  if(chargers.length&&Math.random()<dt*10)killRandom(chargers,1);
+  if(Math.random()<dt*1.2)killRandom(def,1);
+  if(S.st>6.5){
+    S.stage='cffrozen';
+    narrate('Prologue · what if',
+     `<p>The escalade dies on the slope, the way escalades against a held wall usually die. Another Gergovia,
+      and this time in the heart of hostile Gaul, with winter coming and every tribe watching for one more
+      Roman stumble.</p>
+      <p class="aside">Caesar did not attack the hill. He reached for the tool his legions carried next to the
+      sword: the spade. If the town could not be stormed, it would be sealed.</p>`);
+    setControls([{label:'Rewind · reach for the spade', fn:()=>{restoreAssault();chooseWorks();}}]);
+  }
+}
+function restoreAssault(){
+  S.romDead=S.savedRom;S.galDead=S.savedGal;
+  for(const s of S.soldiers){
+    if(s.grp==='fld'){s.alive=true;s.charging=false;s.x=s.hx;s.y=s.hy;s.tx=s.hx;s.ty=s.hy;}
+    if(s.grp==='gd'&&!s.escaped)s.alive=true;
+  }
+  updateCounters();
+}
+
+/* --- the works --- */
+function chooseWorks(){
+  setPhase(1);setDay('Weeks one and two');
+  document.getElementById('counters').classList.add('show');
+  cine('build');
+  S.stage='build1';S.st=0;
+  narrate('The works · circumvallation',
+   `<p>Eleven miles of fortification go up around the hill: a trench twenty feet wide with vertical sides,
+    then two more ditches, the inner one flooded from the rivers, then a rampart and palisade twelve feet
+    high with towers every eighty feet and twenty-three forts. Fifty thousand men dig while half their
+    comrades stand guard.</p>
+    <p>Vercingetorix sees what the wall means before it closes. In the last open night he sends his entire
+    cavalry out through the gaps, riding for every tribe in Gaul with one message: raise everything,
+    and come.</p>`);
+  setControls([]);
+}
+function updBuild1(dt){
+  RING1.progress=Math.min(RING1.progress+dt*0.18,1);
+  paintRing(RING1);
+  updWalk(dt);
+  if(RING1.progress>=1&&S.stage==='build1'){
+    S.stage='walk';
+    assignGarrisons(1);
+    narrate('The works · the news',
+     `<p>The circumvallation closes and the legions man it, facing the hill. Then deserters and scouts bring
+      word of what Vercingetorix's riders have raised: a relief army gathering from forty-three tribes.
+      Caesar claims a quarter of a million men; modern historians say 80,000 to 100,000. Either way it is
+      the largest force Gaul has ever put in one place, and it is marching here.</p>
+      <p>Caesar's answer is the strangest order of the war: build it all again, facing the other way.</p>`);
+    setControls([{label:'Build the contravallation', fn:()=>{
+      setDay('Weeks three and four');
+      S.stage='build2';S.st=0;
+      narrate('The works · contravallation',
+       `<p>Fourteen more miles of wall now rise facing outward, and between the two lines the army stocks
+        thirty days of grain and fodder: a fortified ring with a city inside it and all of Gaul outside.</p>
+        <p>In front of both walls the legionaries plant their gardens. Rows of sharpened boughs woven together,
+        which they call <em>cippi</em>, gravestones. Pits hiding fire-hardened stakes, arranged in a quincunx
+        like the petals of a flower: <em>lilia</em>, lilies. And scattered everywhere, barbed iron hooks set
+        in wood: <em>stimuli</em>, goads. Soldiers name things the way soldiers always have.</p>`);
+      setControls([]);
+    }}]);
+  }
+}
+function updBuild2(dt){
+  RING2.progress=Math.min(RING2.progress+dt*0.16,1);
+  paintRing(RING2);
+  paintTraps(RING2.progress);
+  updWalk(dt);
+  if(RING2.progress>=1&&S.stage==='build2'){
+    S.stage='walk';
+    assignGarrisons(2);
+    setControls([{label:'The town begins to starve', fn:()=>playScene(SC_A_MAND,enterHunger)}]);
+  }
+}
+
+/* --- hunger --- */
+function enterHunger(){
+  setPhase(2);setDay('Week five');
+  cine('opp');
+  narrate('Hunger',
+   `<p>Thirty days pass. The grain in Alesia runs out and the relief army does not come. In the town the
+    chiefs hold a council that Caesar recorded in detail: one voice, the Arvernian noble Critognatus, argues
+    for holding out by the oldest and worst means a besieged city knows, feeding on those who cannot fight.
+    The council refuses. It chooses something it can tell itself is gentler.</p>
+    <p>The Mandubii, the town's own people, those too old, too young, too weak to bear arms, are put outside
+    the walls with their wives and children, so the warriors' rations stretch. They come down the hill to
+    the Roman line and beg to be let through, offering themselves as slaves in exchange for bread.</p>
+    <p>You stand on the wall. The decision is Caesar's, which today means it is yours.</p>`);
+  // the Mandubii walk down
+  for(let i=0;i<34;i++){
+    const th=rnd(2.6,3.7);
+    const p0=ringPos({rx:HILL.rx*0.7,ry:HILL.ry*0.7},th);
+    const cvu=soldier(p0.x,p0.y,'c','cv','cv');
+    const p1=ringPos({rx:HILL.rx*1.35,ry:HILL.ry*1.35},th+rnd(-0.15,0.15));
+    cvu.tx=p1.x;cvu.ty=p1.y;
+    S.soldiers.push(cvu);
+  }
+  buildInstances();
+  S.stage='civwalk';S.st=0;
+  setControls([]);
+  setTimeout(()=>{
+    setChoices([
+      {title:'Open the lines',
+       body:'They are not soldiers. Pass them through, feed them what can be spared, let them walk out of this war. No victory needs this.',
+       fn:()=>{
+         narrate('Hunger · what if',
+          `<p>It is the human answer, and Caesar's officers surely felt its pull. It is also, in the cold
+           grammar of a blockade, a gift to Vercingetorix: every mouth released is a day added to the food
+           inside the walls, and the whole design of these ten miles of timber is to make the food run out
+           before the relief arrives. Open the line for pity and you teach every besieged town in Gaul that
+           Caesar's ring can be opened by pity.</p>
+           <p class="aside">Caesar refused. Posts were set on the rampart to turn them back. The Mandubii
+           remained in the no-man's-land between the town they were expelled from and the wall that would
+           not part, and there, Caesar writes without adornment, they died. It is the coldest sentence in
+           his book, and he chose to publish it.</p>`);
+         setControls([{label:'The horizon fills with spears', fn:enterRelief}]);
+       }},
+      {title:'Hold the blockade',
+       body:'The ring exists to make hunger fight for Rome. It admits no exceptions, or it is not a ring. Turn them back.',
+       fn:()=>{
+         narrate('Hunger',
+          `<p>The order Caesar actually gave. Posts on the rampart turn the Mandubii back; the town's gates
+           stay shut behind them. They remain between the lines, and Caesar records their end in one bare
+           sentence. Whatever else the Gallic War is, its author never pretended this part was glorious.</p>
+           <p>Days later, watchfires answer watchfires from the western hills. Gaul has come.</p>`);
+         setControls([{label:'The horizon fills with spears', fn:enterRelief}]);
+       }},
+    ]);
+  },2600);
+}
+function updCivWalk(dt){
+  for(const s of S.soldiers){
+    if(s.kind==='cv'&&s.alive)moveToward(s,0.35,dt);
+  }
+  updWalk(dt);
+}
+
+/* --- the relief --- */
+function enterRelief(){
+  setPhase(3);setDay('Week six');
+  cine('plain');
+  spawnReliefCamp();
+  for(let i=0;i<190;i++){
+    S.soldiers.push(soldier(rnd(45,165),rnd(210,420),'g','gr','gr'));
+  }
+  for(let i=0;i<30;i++){
+    S.soldiers.push(soldier(rnd(70,130),rnd(280,350),'g','gc','gc'));
+  }
+  buildInstances();
+  S.stage='walk';
+  narrate('The relief',
+   `<p>The army of united Gaul camps on the hills a mile west: Commius the Atrebatian, once Caesar's own
+    ally; the Aeduan lords Viridomarus and Eporedorix; and Vercassivellaunus, Vercingetorix's cousin. On the
+    walls of Alesia, starving men who had given up hope crowd to look at the campfires.</p>
+    <p>The Romans between their two walls are now what no textbook recommends: besiegers who are themselves
+    besieged, outnumbered perhaps four to one counting both Gallic armies, with thirty days of grain and
+    nowhere to retreat.</p>
+    <p>It opens, as ancient battles often do, with the horse.</p>`);
+  setControls([{label:'The cavalry battle', fn:()=>playScene(SC_A_EVE,startCavBattle)}]);
+}
+function startCavBattle(){
+  S.stage='cav';S.st=0;S.sub='clash';
+  cine('plain');
+  narrate('The relief · the cavalry battle',
+   `<p>The Gallic horse pours onto the plain of Laumes with archers mixed among the squadrons; Caesar sends
+    out his own cavalry, including the Germanic riders he recruited from across the Rhine, wild men on rough
+    horses whom the Gauls have learned to dread. For hours the fight sways in full view of both armies,
+    every man on every wall shouting.</p>`);
+  setControls([]);
+  for(const s of aliveGrp('rc')){
+    s.wps=[[640,540],[420,540],[240,470],[190,380]];s.pi=0;s.fighting=false;
+  }
+  for(const s of aliveGrp('gc')){
+    s.tx=rnd(150,210);s.ty=rnd(280,380);
+  }
+}
+function updCav(dt){
+  const rc=aliveGrp('rc'),gc=aliveGrp('gc');
+  if(S.sub==='clash'){
+    let arrived=0;
+    for(const s of rc){if(followWps(s,1.7,dt))arrived++;}
+    for(const s of gc)moveToward(s,1.4,dt);
+    if(arrived>rc.length*0.5){S.sub='swirl';S.subT=0;}
+  }
+  else if(S.sub==='swirl'){
+    S.subT+=dt;
+    // a wheeling melee on the plain
+    for(const s of [...rc,...gc]){
+      if(Math.hypot(s.tx-s.x,s.ty-s.y)<4){
+        const a=rnd(0,6.28),r=rnd(6,42);
+        s.tx=178+Math.cos(a)*r;s.ty=330+Math.sin(a)*r*0.8;
+      }
+      moveToward(s,1.5,dt);
+    }
+    if(Math.random()<dt*2.2)killRandom(gc,1);
+    if(Math.random()<dt*1.0)killRandom(rc,1);
+    if(S.subT>6){
+      S.sub='rout';S.subT=0;
+      narrate('The relief · the cavalry battle',
+       `<p>Late in the day the Germans mass on one flank and charge home. The Gallic horse breaks and is
+        ridden down all the way to its own camp; the archers among them are caught on foot and killed.
+        Round one to the ring.</p>`);
+      for(const s of aliveGrp('gc')){s.flee=true;s.tx=rnd(50,90);s.ty=rnd(260,360);if(Math.random()<0.3)s.dieAt=rnd(0.2,0.8);}
+      for(const s of aliveGrp('rc')){s.wps=[[240,400],[420,530],[640,540],[790,500]];s.pi=0;}
+    }
+  }
+  else if(S.sub==='rout'){
+    S.subT+=dt;
+    for(const s of aliveGrp('gc')){if(s.alive)moveToward(s,1.8,dt);}
+    for(const s of aliveGrp('rc'))followWps(s,1.6,dt);
+    fleeDeaths(dt);
+    if(S.subT>4){
+      S.stage='walk';
+      setControls([{label:'The night assault', fn:startNight}]);
+    }
+  }
+}
+function startNight(){
+  S.stage='nightatk';S.st=0;S.sub='advance';
+  night(true);setDay('The night assault');
+  cine('gap');
+  narrate('The relief · midnight',
+   `<p>A day of silence, spent making ladders and grappling hooks. Then, at midnight, the relief army rushes
+    the western wall with a great shout, raised so the men in the town will hear it and sally at the same
+    moment against the inner line. The Romans stand to both ramparts at once, slingers and engines working
+    in the dark.</p>
+    <p>Watch the ground in front of the walls do its work. The Gauls cannot see the lilies in the dark.</p>`);
+  setControls([]);
+  // relief foot advances on the west face of the outer line
+  const gr=aliveGrp('gr');
+  gr.forEach((s,i)=>{
+    if(i>120)return;
+    const th=Math.PI+rnd(-0.55,0.55);
+    const p=ringPos({rx:R2.rx*1.045,ry:R2.ry*1.045},th);
+    s.tx=p.x;s.ty=p.y;s.trapVuln=true;s.attacking=true;
+  });
+  // the town sallies against the inner line, southwest
+  const gd=aliveGrp('gd');
+  gd.forEach((s,i)=>{
+    if(i>55)return;
+    const th=2.6+rnd(-0.35,0.35);
+    const p=ringPos({rx:R1.rx*0.955,ry:R1.ry*0.955},th);
+    s.tx=p.x;s.ty=p.y;s.trapVuln=true;s.attacking=true;
+  });
+}
+function updNight(dt){
+  for(const s of S.soldiers){if(s.alive&&s.attacking)moveToward(s,0.7,dt);}
+  applyTraps(dt);
+  const wallOut=aliveGrp('ro'),wallIn=aliveGrp('ri');
+  const atkOut=S.soldiers.filter(s=>s.alive&&s.attacking&&s.grp==='gr');
+  const atkIn=S.soldiers.filter(s=>s.alive&&s.attacking&&s.grp==='gd');
+  for(let i=0;i<2;i++){
+    if(Math.random()<dt*20)fireArrowAt(wallOut,atkOut,0.4);
+    if(Math.random()<dt*12)fireArrowAt(wallIn,atkIn,0.4);
+  }
+  if(Math.random()<dt*0.5)killRandom(wallOut,1);
+  if(S.st>7&&S.sub==='advance'){
+    S.sub='repulse';
+    narrate('The relief · before dawn',
+     `<p>The attack drowns in the trap belt. Men staked through the foot scream in the dark; the ones who
+      reach the ditches are shot down from towers they cannot see. Toward dawn, afraid of a sortie against
+      their open flank, the relief army pulls back. Vercingetorix's men, who spent the night filling ditches
+      that would not fill, hear the retreat sound outside and trudge back up their hill having never
+      reached the Roman wall.</p>
+      <p>Two attacks, two failures. But the Gauls have spent the day talking to men who know this ground,
+      and they have found what every wall sixteen miles long must have somewhere: a flaw.</p>`);
+    for(const s of S.soldiers){
+      if(!s.attacking||!s.alive)continue;
+      s.attacking=false;s.flee=true;s.trapVuln=false;
+      if(s.grp==='gr'){s.tx=rnd(60,140);s.ty=rnd(240,400);}
+      else{const th=thOf(s.x,s.y);const p=ringPos({rx:HILL.rx*0.6,ry:HILL.ry*0.6},th);s.tx=p.x;s.ty=p.y;}
+      if(Math.random()<0.12)s.dieAt=rnd(0.3,0.9);
+    }
+    setControls([{label:'The last battle', fn:()=>playScene(SC_A_CRISIS,startFinal)}]);
+  }
+  if(S.sub==='repulse'){
+    for(const s of S.soldiers){if(s.alive&&s.flee)moveToward(s,1.1,dt);}
+    fleeDeaths(dt);
+  }
+}
+
+/* --- the last battle --- */
+function startFinal(){
+  setPhase(4);setDay('The last day · noon');
+  night(false);
+  S.savedRom=S.romDead;S.savedGal=S.galDead;
+  S.stage='final';S.st=0;S.sub='assault';S.subT=0;
+  cine('gap');
+  for(const s of S.soldiers){if(s.flee&&s.alive){s.flee=false;}}
+  narrate('The last battle',
+   `<p>North of the town, Mont Réa stands so close that the Roman line could not be run along its crest;
+    the camp of Reginus and Rebilus sits on sloping ground below it, the one place on sixteen miles of wall
+    where an attacker comes downhill. The locals knew it. Now Vercassivellaunus knows it.</p>
+    <p>He marched out in the night with 60,000 picked men and lay hidden behind the mountain. At noon he
+    falls on the camp from above, while the whole relief army demonstrates against the plain and
+    Vercingetorix throws everything he has left at the inner wall. Every yard of the ring is under attack
+    at once. This is the hour the double wall was built for, and the hour it nearly fails.</p>`);
+  setControls([]);
+  // Vercassivellaunus's column, hidden behind Mont Réa
+  for(let i=0;i<130;i++){
+    const u=soldier(REA.x+rnd(-55,25),REA.y+rnd(-50,-6),'g','ga','gr');
+    u.tx=gapMid.x+rnd(-24,24);u.ty=gapMid.y+rnd(-18,18);
+    u.trapVuln=Math.random()<0.4;   // the slope shortens the trap belt here
+    S.soldiers.push(u);
+  }
+  // the town's last sortie, against the inner line southwest
+  for(const s of aliveGrp('gd')){
+    const th=2.5+rnd(-0.4,0.4);
+    const p=ringPos({rx:R1.rx*0.955,ry:R1.ry*0.955},th);
+    s.tx=p.x;s.ty=p.y;s.attacking=true;s.trapVuln=true;
+  }
+  // the relief demonstrates on the plain
+  for(const s of aliveGrp('gr')){
+    const th=Math.PI+rnd(-0.5,0.5);
+    const p=ringPos({rx:R2.rx*1.12,ry:R2.ry*1.12},th);
+    s.tx=p.x;s.ty=p.y;
+  }
+  // mark the sector garrison
+  for(const s of S.soldiers){
+    if((s.grp==='ro'||s.grp==='ri')&&s.homeTh!==undefined){
+      const d=Math.abs(Math.atan2(Math.sin(s.homeTh-GAP_TH),Math.cos(s.homeTh-GAP_TH)));
+      s.sector=d<0.5;
+    }
+    if(s.grp==='rcp')s.sector=true;
+  }
+  buildInstances();
+}
+function updFinal(dt){
+  S.subT+=dt;
+  for(const s of S.soldiers){
+    if(!s.alive)continue;
+    if(s.grp==='ga'||s.attacking)moveToward(s,0.75,dt);
+    else if(s.grp==='gr')moveToward(s,0.6,dt);
+  }
+  applyTraps(dt);
+  const sectorRom=S.soldiers.filter(s=>s.alive&&s.sector);
+  const ga=aliveGrp('ga');
+  const gdAtk=S.soldiers.filter(s=>s.alive&&s.grp==='gd'&&s.attacking);
+  const ri=aliveGrp('ri');
+
+  if(S.sub==='assault'||S.sub==='cfhold'){
+    const rate=S.sub==='cfhold'?4.2:2.0;
+    if(Math.random()<dt*rate)killRandom(sectorRom,1);
+    if(Math.random()<dt*3.2)killRandom(ga,1);
+    if(Math.random()<dt*0.9)killRandom(ri,1);
+    if(Math.random()<dt*2.2)killRandom(gdAtk,1);
+  }
+
+  if(S.sub==='assault'&&S.subT>7){
+    S.sub='decide';
+    narrate('The last battle · the crisis',
+     `<p>The camp under Mont Réa is coming apart. The Gauls fill the ditches with earth and hurdles, tear at
+      the palisade with hooks, and there are always fresh men behind the fallen; the defenders' javelins are
+      spent and the messages coming down the line all say the same word. Inside, Vercingetorix's men are on
+      the inner rampart at the same moment.</p>
+      <p>Labienus has gone to the camp with six cohorts and sent back word that holding is no longer enough.
+      The last reserves stand at headquarters. You are wearing the scarlet cloak, and both armies can see it.</p>`);
+    setChoices([
+      {title:'Hold every man on the walls',
+       body:'The lines are the whole strategy; stripping the reserve to gamble at one corner risks the entire ring. Feed cohorts into the gap as they can be spared and trust the works.',
+       fn:()=>{S.sub='cfhold';S.subT=0;
+         narrate('The last battle · what if',
+          `<p>You dole the reserve out piecemeal and hold everywhere. Which means holding nowhere in
+           particular, least of all the one place being attacked downhill by 60,000 men.</p>`);
+         setControls([]);
+       }},
+      {title:'The scarlet cloak',
+       body:'What Caesar did: take the last cohorts in person, visible to every man on both sides, and send the Germanic horse out of the ring to swing wide around Mont Réa and strike the attackers from behind.',
+       fn:startCounter},
+    ]);
+  }
+  if(S.sub==='cfhold'&&sectorRom.length<6){
+    S.sub='cffrozen';S.stage='cffinal';
+    narrate('The last battle · what if',
+     `<p>The camp falls, and a mile of the double line falls with it. Vercassivellaunus's men pour into the
+      corridor between the walls; the inner garrison, fighting Vercingetorix to its front, is struck from
+      behind. There is no second position. An army that builds a ring and loses one arc of it has built
+      its own trap, and ten legions die in it, and with them the Roman future of Europe.</p>
+      <p class="aside">Caesar's own account is blunt about how close this was. His answer was not to hold
+      the line. It was to be seen refusing to lose it.</p>`);
+    setControls([{label:'Rewind · take up the scarlet cloak', fn:()=>{restoreFinal();startCounter();}}]);
+  }
+}
+function restoreFinal(){
+  S.romDead=S.savedRom;S.galDead=S.savedGal;
+  for(const s of S.soldiers){
+    if(s.side==='r'&&!s.escaped){s.alive=true;s.x=s.hx;s.y=s.hy;s.tx=s.hx;s.ty=s.hy;}
+    if(s.grp==='ga'&&!s.escaped){s.alive=true;s.flee=false;
+      s.x=gapMid.x+rnd(-24,24);s.y=gapMid.y+rnd(-18,18);s.tx=s.x;s.ty=s.y;s.trapVuln=false;}
+    if(s.grp==='gd'&&!s.escaped){s.alive=true;s.flee=false;}
+  }
+  updateCounters();
+  S.stage='final';S.sub='counter';S.subT=0;
+}
+function startCounter(){
+  S.stage='final';S.sub='counter';S.subT=0;
+  cine('gap');
+  narrate('The last battle · the scarlet cloak',
+   `<p>Caesar takes the last four cohorts and part of the horse and goes himself, along the corridor between
+    the walls, the paludamentum announcing him to friend and enemy alike. Caesar writes of Caesar: <em>his
+    coming was known by the colour of his cloak.</em> The line steadies where he passes.</p>
+    <p>And outside the ring, unseen, the Germanic cavalry is riding the long way around Mont Réa.</p>`);
+  setControls([]);
+  // Caesar and the reserve move up the corridor
+  const midR={rx:(R1.rx+R2.rx)/2,ry:(R1.ry+R2.ry)/2};
+  const corridor=[0.6,0,-0.6,-1.2,-1.8,GAP_TH].map(th=>{const p=ringPos(midR,th);return [p.x,p.y];});
+  for(const s of aliveGrp('rr')){
+    s.wps=corridor.map(w=>[w[0]+rnd(-8,8),w[1]+rnd(-6,6)]);s.pi=0;s.counter=true;
+  }
+  caesar.wps=corridor.map(w=>[w[0],w[1]]);caesar.pi=0;caesar.counter=true;
+  // the cavalry sweep, outside everything
+  const sweep=[0.2,-0.5,-1.1,-1.7,-2.2].map(th=>{const p=ringPos({rx:R2.rx*1.3,ry:R2.ry*1.3},th);return [p.x,p.y];});
+  sweep.push([REA.x-30,REA.y+10]);
+  for(const s of aliveGrp('rc')){
+    s.wps=sweep.map(w=>[w[0]+rnd(-8,8),w[1]+rnd(-8,8)]);s.pi=0;s.sweeping=true;
+  }
+}
+let counterKicked=false;
+function updCounter(dt){
+  S.subT+=dt;
+  let cavArrived=0,cavTotal=0;
+  for(const s of S.soldiers){
+    if(!s.alive)continue;
+    if(s.counter){if(followWps(s,1.0,dt)){s.tx=gapMid.x+rnd(-18,18);s.ty=gapMid.y+rnd(-14,14);moveToward(s,0.8,dt);}}
+    else if(s.sweeping){cavTotal++;if(followWps(s,1.9,dt))cavArrived++;}
+    else if(s.grp==='ga'||s.attacking)moveToward(s,0.6,dt);
+  }
+  const sectorRom=S.soldiers.filter(s=>s.alive&&(s.sector||s.counter));
+  const ga=aliveGrp('ga');
+  if(Math.random()<dt*0.9)killRandom(sectorRom,1);
+  if(Math.random()<dt*6)killRandom(ga,1);
+  if(Math.random()<dt*2)killRandom(S.soldiers.filter(s=>s.alive&&s.grp==='gd'&&s.attacking),1);
+
+  if(cavTotal&&cavArrived>cavTotal*0.6&&!counterKicked){
+    counterKicked=true;
+    narrate('The last battle · the break',
+     `<p>The Germanic horse appears at the enemy's back, and the sight does what the sight of cavalry behind
+      infantry has always done. The assault on the camp dissolves in a moment, from army into crowd. The
+      legionaries come over their own rampart with the sword; the horsemen do the rest. Seventy-four war
+      standards are carried to Caesar before nightfall. Vercassivellaunus is taken alive.</p>
+      <p>On the plain, the relief army watches its best men destroyed and simply melts away in the night,
+      each contingent for its own country. From the wall of Alesia, Vercingetorix watches the same thing.</p>`);
+    for(const s of aliveGrp('ga')){
+      s.flee=true;s.tx=rnd(40,120);s.ty=rnd(80,260);
+      if(Math.random()<0.4)s.dieAt=rnd(0.2,1.0);
+    }
+    for(const s of aliveGrp('gr')){
+      s.flee=true;s.tx=rnd(30,90);s.ty=rnd(220,420);
+      if(Math.random()<0.15)s.dieAt=rnd(0.3,1.0);
+    }
+    for(const s of S.soldiers){
+      if(s.grp==='gd'&&s.alive){
+        s.attacking=false;const th=thOf(s.x,s.y);
+        const p=ringPos({rx:HILL.rx*0.55,ry:HILL.ry*0.55},th);
+        s.tx=p.x;s.ty=p.y;
+      }
+    }
+  }
+  if(counterKicked){
+    for(const s of S.soldiers){if(s.alive&&s.flee)moveToward(s,1.4,dt);}
+    fleeDeaths(dt);
+    if(S.subT>14){
+      S.stage='walk';
+      setControls([{label:'The next morning', fn:()=>playScene(SC_A_VERC,startSurrender)}]);
+    }
+  }
+}
+
+/* --- surrender --- */
+function startSurrender(){
+  setDay('The morning after');
+  S.stage='surrender';S.st=0;
+  cine('surr');
+  narrate('The surrender',
+   `<p>In Alesia there is nothing left to decide. Vercingetorix calls the chiefs and says, in Caesar's
+    telling, that he had made this war not for himself but for the freedom of Gaul, and that they should
+    hand him over, alive or dead, as Rome preferred.</p>
+    <p>Caesar sits on the fortification in front of his camp. The weapons come over the wall first, in heaps.
+    Then the gates open.</p>`);
+  setControls([]);
+  verc.wps=[[C.x-90,C.y+8],[C.x-160,C.y+22],[360,338],[336,341]];
+  verc.pi=0;
+  // Caesar takes his seat at the inner line, west
+  caesar.counter=false;caesar.wps=[[322,342]];caesar.pi=0;
+  for(const s of aliveGrp('rr')){s.counter=false;s.wps=[[318+rnd(-12,12),352+rnd(-4,10)]];s.pi=0;}
+}
+function updSurrender(dt){
+  for(const s of aliveGrp('rr'))followWps(s,0.9,dt);
+  followWps(caesar,0.9,dt);
+  const done=followWps(verc,1.1,dt);
+  if(done&&S.stage==='surrender'){
+    S.stage='walk';
+    faceTo(verc,caesar.x,caesar.y);faceTo(caesar,verc.x,verc.y);
+    narrate('The surrender',
+     `<p>Plutarch, writing later, gives the scene its legend: Vercingetorix in his finest armour rode a circle
+      around the seated Caesar, threw down his arms, and sat at his feet without a word. Caesar's own account
+      spends one flat clause on it: <em>Vercingetorix is handed over.</em> Between those two sentences lies
+      most of what anyone needs to know about the two men.</p>`);
+    setControls([{label:'What it cost, and what it bought', fn:()=>playScene(SC_A_AFTER,gotoAftermath)}]);
+  }
+}
+
+/* ================= main loop ================= */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05);
+  last=now;perfNow=now;S.st+=dt;
+  switch(S.stage){
+    case 'cfassault':updCfAssault(dt);break;
+    case 'build1':updBuild1(dt);break;
+    case 'build2':updBuild2(dt);break;
+    case 'walk':updWalk(dt);break;
+    case 'civwalk':updCivWalk(dt);break;
+    case 'cav':updCav(dt);updWalk(0);break;
+    case 'nightatk':updNight(dt);break;
+    case 'final':S.sub==='counter'?updCounter(dt):updFinal(dt);break;
+    case 'surrender':updSurrender(dt);break;
+  }
+  updArrowFlight(dt);
+  applyDaylight(dt);
+  applyCamera(dt);
+  flushInstances();
+  flushArrows();
+  updateBanners();
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+
+/* ================= narration & UI ================= */
+const narrLabel=document.getElementById('narrLabel');
+const narrBody=document.getElementById('narrBody');
+const choiceArea=document.getElementById('choiceArea');
+const controls=document.getElementById('controls');
+function narrate(label,html){
+  narrLabel.textContent=label;
+  narrBody.innerHTML=html;
+  narrBody.classList.remove('fade-in');void narrBody.offsetWidth;
+  narrBody.classList.add('fade-in');
+  choiceArea.innerHTML='';
+}
+function setControls(btns){
+  controls.innerHTML='';
+  for(const b of btns){
+    const el=document.createElement('button');
+    el.className='btn'+(b.ghost?' ghost':'');el.textContent=b.label;el.onclick=b.fn;
+    controls.appendChild(el);
+  }
+}
+function setChoices(items){
+  choiceArea.innerHTML='';
+  const grid=document.createElement('div');grid.className='choices fade-in';
+  for(const it of items){
+    const c=document.createElement('button');c.className='choice';
+    c.innerHTML=`<h3>${it.title}</h3><p>${it.body}</p>`;
+    c.onclick=it.fn;grid.appendChild(c);
+  }
+  choiceArea.appendChild(grid);
+  controls.innerHTML='';
+}
+function setPhase(p){
+  S.phase=p;
+  document.querySelectorAll('.pill').forEach(el=>{
+    const n=+el.dataset.p;
+    el.classList.toggle('active',n===p);
+    el.classList.toggle('done',n<p);
+  });
+}
+
+/* ================= dialogue layer ================= */
+const REL={};
+const FLAGSV={};
+function PT(o){
+ const hats={
+  crest:`<path d="M34 46 Q34 24 52 22 Q70 24 70 46 L64 42 Q52 34 40 42 Z" fill="${o.hatC}"/><rect x="47" y="5" width="10" height="20" rx="4" fill="${o.crestC||'#a03028'}"/>`,
+  cap:`<path d="M34 46 Q34 26 52 24 Q70 26 70 46 Q52 36 34 46 Z" fill="${o.hatC}"/>`,
+  band:`<path d="M36 44 Q52 30 68 44 Z" fill="${o.hairC||'#3a2c1a'}"/><rect x="34" y="43" width="36" height="6" rx="2" fill="${o.hatC}"/>`,
+  hood:`<path d="M30 68 Q28 24 52 22 Q76 24 74 68 L66 60 Q52 40 38 60 Z" fill="${o.hatC}"/>`,
+  coif:`<path d="M33 64 Q31 26 52 24 Q73 26 71 64 L64 58 Q52 42 40 58 Z" fill="${o.hatC}"/>`,
+  scholar:`<rect x="36" y="26" width="32" height="11" rx="2" fill="${o.hatC}"/><rect x="48" y="15" width="8" height="13" fill="${o.hatC}"/>`,
+  longhair:`<path d="M32 74 Q28 28 52 26 Q76 28 72 74 L66 70 Q68 40 52 40 Q36 40 38 70 Z" fill="${o.hairC||'#7a5c38'}"/>`,
+  none:`<path d="M34 48 Q34 28 52 26 Q70 28 70 48 Q64 38 52 39 Q40 38 34 48 Z" fill="${o.hairC||'#3a2c1a'}"/>`,
+ };
+ const beard=o.beard?`<path d="M40 84 Q52 96 64 84 L62 ${o.beard==='long'?102:94} Q52 ${o.beard==='long'?110:100} 42 ${o.beard==='long'?102:94} Z" fill="${o.beardC||o.hairC||'#3a2c1a'}"/>`:'';
+ const stache=o.stache?`<path d="M41 76 Q52 71 63 76" stroke="${o.beardC||o.hairC||'#3a2c1a'}" stroke-width="3" fill="none" stroke-linecap="round"/>`:'';
+ return `<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="${o.bg}"/>
+<ellipse cx="52" cy="122" rx="40" ry="26" fill="${o.robe}"/><path d="M14 122 Q52 86 90 122" fill="${o.robe2}"/>
+${o.extra||''}
+<ellipse cx="52" cy="64" rx="20" ry="23" fill="${o.skin||'#c9a075'}"/>
+${hats[o.hat||'none']||''}
+<path d="M40 58 L48 57 M56 57 L64 58" stroke="#2a2012" stroke-width="2.2" stroke-linecap="round"/>
+<circle cx="44" cy="63" r="1.9" fill="#20180e"/><circle cx="60" cy="63" r="1.9" fill="#20180e"/>
+${stache}${beard}
+<path d="M46 80 Q52 ${o.stern?79:84} 58 80" stroke="#8a5a3a" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>`;
+}
+const CAST={
+ lab:{name:'Titus Labienus \u00b7 legate',svg:PT({bg:'#1d1a16',robe:'#8c2f2a',robe2:'#a03830',hat:'crest',hatC:'#9a9aa2',crestC:'#8c2f2a',stern:1})},
+ ant:{name:'Marcus Antonius \u00b7 officer of cavalry',svg:PT({bg:'#1c1a18',robe:'#8c2f2a',robe2:'#a03830',hat:'none',hairC:'#2c2014'})},
+ verc:{name:'Vercingetorix \u00b7 king of the Arverni',svg:PT({bg:'#1a1c18',robe:'#4a5c3a',robe2:'#5a6e46',hat:'longhair',hairC:'#8a5c34',stache:1,beard:'short',beardC:'#8a5c34',stern:1})},
+ nar:{name:'',svg:null},
+};
+const vnEl=document.getElementById('vn');
+const vnPortrait=document.getElementById('vnportrait');
+const vnName=document.getElementById('vnname');
+const vnText=document.getElementById('vntext');
+const vnChoices=document.getElementById('vnchoices');
+const vnNextEl=document.getElementById('vnnext');
+const vnToast=document.getElementById('vntoast');
+let vnQueue=[],vnDone=null,vnBusy=false;
+function playScene(steps,done){
+  vnQueue=steps.slice();vnDone=done;
+  choiceArea.innerHTML='';
+  setControls([]);
+  vnEl.style.display='block';
+  vnAdvance();
+}
+function vnAdvance(){
+  while(vnQueue.length&&vnQueue[0].if&&!vnQueue[0].if()){vnQueue.shift();}
+  if(!vnQueue.length){
+    vnEl.style.display='none';
+    const d=vnDone;vnDone=null;
+    if(d)d();
+    return;
+  }
+  renderVn(vnQueue.shift());
+}
+function renderVn(st){
+  const who=CAST[st.who]||CAST.nar;
+  vnPortrait.innerHTML=who.svg||'';
+  vnPortrait.style.display=who.svg?'block':'none';
+  vnName.textContent=who.name;
+  document.getElementById('vnbox').classList.toggle('vn-narr',st.who==='nar');
+  vnText.innerHTML=typeof st.text==='function'?st.text():st.text||'';
+  vnChoices.innerHTML='';
+  if(st.choices){
+    vnNextEl.style.display='none';vnBusy=true;
+    for(const c of st.choices){
+      const b=document.createElement('button');
+      b.className='vn-choice';b.textContent=c.label;
+      b.onclick=(ev)=>{
+        ev.stopPropagation();
+        if(c.d)for(const k in c.d){REL[k]=(REL[k]||0)+c.d[k];}
+        if(c.flag)FLAGSV[c.flag]=true;
+        if(c.toast)vToast(c.toast);
+        if(c.reply)vnQueue=c.reply.concat(vnQueue);
+        vnBusy=false;
+        vnAdvance();
+      };
+      vnChoices.appendChild(b);
+    }
+  }else{vnNextEl.style.display='block';vnBusy=false;}
+}
+document.getElementById('vnbox').addEventListener('click',()=>{if(!vnBusy&&vnEl.style.display==='block')vnAdvance();});
+function vToast(t){
+  vnToast.textContent=t;vnToast.classList.add('show');
+  setTimeout(()=>vnToast.classList.remove('show'),1900);
+}
+const SC_A_EVE=[
+ {who:'lab',text:`Labienus, imperator. The works will hold or they will not, and there is no third thing. I have commanded your left through eight years of this war, so take it as professional admiration when I say: only you would answer being outnumbered on both sides of a wall by building a second wall.`},
+ {who:'ant',text:`Antonius, imperator, with the cavalry, and the men's arithmetic runs simpler than the legate's: a quarter of a million Gauls outside, eighty thousand inside, and one of you. They have concluded the odds are roughly even.`,choices:[
+  {label:'"Flattery, Antonius, is a cavalry weapon: loud, fast, and spent by the second charge."',d:{ant:1},toast:'Antonius grins',reply:[
+   {who:'ant',text:`Then I shall resupply nightly, imperator.`}]},
+  {label:'"Save the wit for the men. They will need it before they need the wheat."',reply:[
+   {who:'lab',text:`He is already spending it on the men, imperator. That is the alarming part: it works.`}]},
+ ]},
+];
+const SC_A_CRISIS=[
+ {who:'lab',text:`Imperator. Vercassivellaunus has found the seam at Mont R\u00e9a: sixty thousand picked men against our worst ground. I can hold the sector with what I have for one hour. I report it precisely because I do not believe it.`},
+ {who:'ant',text:`The men on the north wall are fighting looking over both shoulders, imperator. What they need now is not another cohort. It is a colour they recognise, in the exact place the dying is worst. You know the cloak I mean.`},
+];
+const SC_A_VERC=[
+ {who:'nar',text:`In the starving town, the last council of free Gaul. The report of it will come out with the prisoners.`},
+ {who:'verc',text:`I did not make this war for my own need, but for the liberty of all. Since fortune has decided, I offer you myself: appease the Romans with my death, or hand me over living, whichever serves the nation better. To me the price is one price.`},
+];
+const SC_A_AFTER=[
+ {who:'ant',text:`Rome will vote you twenty days of public thanksgiving, imperator. I have drunk ten of them already, on credit.`},
+ {who:'lab',text:`Eight years, imperator. I have served you through every mile of it, and there is civil weather coming that will ask every officer of this army one question. I tell you now, with a clean face: I do not yet know my answer.`},
+ {who:'nar',text:`Five years on, Labienus chose Pompey, and died at Munda fighting the man he had served best. Antonius's story ran longer, and worse, and required a queen. Vercingetorix waited six years in the Tullianum for the triumph, and the garrote at the end of it. The victory outlived every man in this scene except the one who wrote it down.`},
+];
+
+const SC_A_OPEN=[
+ {who:'nar',text:`Below the walls, your officers gather at the standard.`},
+ {who:'lab',text:`Labienus, imperator. Eight years in this country, and this is the first year all Gaul has had one head instead of forty. Vercingetorix burned Avaricum's whole countryside to starve us, and at Gergovia he showed he can bleed us on a hill. Whatever we do beneath this one, do it as though he were watching. He is.`,choices:[
+  {label:'"Then we make the hill answer for him. Your counsel, Titus: storm, or spade?"',d:{lab:1},toast:'Labienus weighs it',reply:[
+   {who:'lab',text:`You know my counsel, imperator. I have carried your left through this entire war with a spade as often as a sword. And Gergovia... Gergovia was a storm.`}]},
+  {label:'"Eight years, and you still brief me like a new tribune."',reply:[
+   {who:'lab',text:`Because in eight years, imperator, you have never once told me to stop. The habit has earned its keep.`}]},
+ ]},
+ {who:'ant',text:`Antonius, imperator, with the cavalry. The men held a vote on whether the hill can be stormed, which they are not allowed to do, so they called it a wager, which they are. Three to one that it cannot. And every man who bet against it has volunteered to prove himself wrong. I love this army.`},
+];
+const SC_A_MAND=[
+ {who:'nar',text:`From deserters: inside the walls the grain is now counted by the day, and the council of the tribes has heard the Arvernian noble Critognatus argue for a remedy so terrible that Caesar will later copy the speech into his book entire, so that Rome could read what desperation sounds like.`},
+ {who:'lab',text:`They have put the Mandubii out, imperator. The town's own people. The old, the wives, the children, expelled down the slope to save the grain for fighting men. They stand now between their walls and ours, asking both sides for bread. I need an order. And I am glad past all telling that I am not the man who must give it.`},
+ {who:'ant',text:`Whatever the order is to be, imperator, give it quickly. The men on the rampart can hear the children. Orders survive anything except delay.`},
+];
+/* ================= phases ================= */
+function enterPrologue(){
+  setPhase(0);setDay('Late summer, 52 BC');
+  S.soldiers=[];S.arrows=[];S.romDead=0;S.galDead=0;updateCounters();
+  document.getElementById('counters').classList.remove('show');
+  RING1.progress=0;RING2.progress=0;paintRing(RING1);paintRing(RING2);paintTraps(0);
+  counterKicked=false;night(false);
+  spawnAll();
+  cine('over');
+  narrate('Prologue',
+   `<p>For six years Caesar has been conquering Gaul tribe by tribe. This year Gaul finally answered as one
+    thing: a young Arvernian noble, Vercingetorix, has united peoples who spent centuries fighting each
+    other, burned their own towns to starve the legions, and at Gergovia handed Caesar the worst defeat of
+    his career. Rome's grip on the whole country, and Caesar's political survival, hang on this campaign.</p>
+    <p>After a cavalry disaster, Vercingetorix has pulled his 80,000 men into Alesia, the hilltop town of
+    the Mandubii, walls above cliffs above rivers, a fortress everyone agrees cannot be taken by storm.
+    Caesar arrives below it with around 50,000 legionaries, deep in hostile country, at the end of a long
+    supply line.</p>
+    <p>You wear the general's cloak. The hill is in front of you.</p>`);
+  setControls([{label:'The legates come to the standard', fn:()=>playScene(SC_A_OPEN,prologueChoice)}]);
+}
+function prologueChoice(){
+  narrate('Prologue \u00b7 the first order',
+   `<p>Storm, or spade. The whole campaign, and several careers, fit inside one word.</p>`);
+  setChoices([
+    {title:'Storm the hill',
+     body:'Momentum is a weapon. The Gauls are demoralised from the cavalry defeat; a determined escalade now, before they settle, ends the revolt in an afternoon.',
+     fn:startAssaultCF},
+    {title:'Seal the hill',
+     body:'No assault, no risk, no glory. Dig. Build a wall around the entire mountain and let arithmetic do the fighting: 80,000 mouths, thirty days of grain.',
+     fn:chooseWorks},
+  ]);
+}
+
+function gotoAftermath(){
+  setPhase(5);setDay('After');
+  S.stage='walk';cine('over');
+  narrate('Aftermath',
+   `<p>The prisoners were given out as plunder, one to each legionary, except the Aedui and Arverni, returned
+    to buy their tribes' loyalty. Of the Mandubii, Caesar records nothing further. Gallic losses across the
+    siege are unknown but enormous; Caesar's own, he does not say. Vercingetorix was kept alive for six
+    years, walked in Caesar's triumph through Rome in 46 BC, and was then, in the Roman manner with such
+    ornaments, strangled in the Tullianum.</p>
+    <p>The revolt died with the siege; within two years Gaul was quiet, and it stayed Roman for five
+    centuries, which is why a Celtic country today speaks a language descended from Latin. The war made
+    Caesar rich beyond audit and gave him ten veteran legions that answered to him rather than to Rome.
+    Three years after Alesia he led one of them across a small river called the Rubicon, and the Republic
+    ended. It is not too much to say the road runs from this hill to that river.</p>
+    <p class="aside">The account you have been inside is Caesar's own, written in the third person by a man
+    running for his political life; read it with that in mind. But the wall was real: at Alise-Sainte-Reine,
+    Napoleon III's excavators found the ditches, the lilia pits, and the stimuli hooks exactly where the
+    book says. Above the site today stands a colossal statue of Vercingetorix, with Napoleon III's face,
+    because nations need heroes and France chose the man who lost.</p>`);
+  setControls([{label:'Lay siege again', fn:enterPrologue, ghost:true}]);
+}
+
+/* ================= boot ================= */
+resize();
+enterPrologue();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

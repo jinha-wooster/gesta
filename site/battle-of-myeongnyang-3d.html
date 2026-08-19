@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Myeongnyang, 1597 · 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#131512; --ink-2:#1a1d19; --panel:#1e211d; --line:#333a32;
+    --parchment:#e5ddc8; --muted:#9aa08a; --faint:#666d5e;
+    --bronze:#d9a441; --bronze-dim:#8f6f2e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{background:var(--ink)}
+  body{background:var(--ink);color:var(--parchment);font-family:'Source Serif 4',Georgia,serif;font-size:17px;line-height:1.65;min-height:100vh}
+  .wrap{max-width:1060px;margin:0 auto;padding:36px 18px 80px}
+
+  header{text-align:center;margin-bottom:26px}
+  .eyebrow{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  h1{font-family:'GFS Didot',serif;font-weight:400;font-size:clamp(38px,7vw,68px);letter-spacing:.06em;line-height:1}
+  .subtitle{color:var(--muted);font-style:italic;margin-top:12px;font-size:16px}
+  .meander{height:14px;margin:24px auto;max-width:520px;opacity:.55}
+
+  .phases{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+  .pill{font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:7px 13px;border:1px solid var(--line);border-radius:2px;color:var(--faint);transition:all .35s;white-space:nowrap}
+  .pill.active{color:var(--bronze);border-color:var(--bronze-dim);background:rgba(217,164,65,.06)}
+  .pill.done{color:var(--muted)}
+
+  .stage{position:relative;border:1px solid var(--line);background:#000;border-radius:3px;overflow:hidden}
+  #view{display:block;width:100%;height:560px;cursor:grab;touch-action:none}
+  #view.dragging{cursor:grabbing}
+  @media(max-width:700px){#view{height:420px}}
+
+  .counters{position:absolute;top:10px;left:12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;font-size:12px;letter-spacing:.08em;opacity:0;transition:opacity .6s}
+  .counters.show{opacity:1}
+  .counter{background:rgba(19,21,18,.74);padding:4px 10px;border-radius:2px;border:1px solid var(--line);width:max-content}
+  .counter b{font-weight:600}
+  .c-jp b{color:#e0b055} .c-kr b{color:#7fb0d8}
+
+  .daytag{position:absolute;bottom:10px;left:12px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(229,221,200,.7);background:rgba(19,21,18,.6);padding:5px 10px;border-radius:2px;pointer-events:none}
+  .tidetag{position:absolute;top:10px;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--bronze);background:rgba(19,21,18,.74);border:1px solid var(--line);padding:5px 12px;border-radius:2px;pointer-events:none;opacity:0;transition:opacity .6s;white-space:nowrap}
+  .tidetag.show{opacity:1}
+
+  .camctl{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:6px}
+  .cambtn{font-family:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;background:rgba(19,21,18,.74);border:1px solid var(--line);border-radius:2px;color:var(--muted);cursor:pointer;transition:all .2s}
+  .cambtn:hover{color:var(--bronze);border-color:var(--bronze-dim)}
+  .camhint{position:absolute;bottom:10px;right:12px;font-size:11px;letter-spacing:.06em;color:rgba(229,221,200,.55);background:rgba(19,21,18,.6);padding:4px 9px;border-radius:2px;pointer-events:none}
+  @media(max-width:700px){.camhint{display:none}}
+
+  .narration{border:1px solid var(--line);border-top:none;background:var(--panel);padding:26px 30px;border-radius:0 0 3px 3px;min-height:150px}
+  .narr-label{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--bronze);margin-bottom:10px}
+  .narration p{margin-bottom:12px}
+  .narration p:last-child{margin-bottom:0}
+  .narration em{color:var(--muted)}
+  .aside{font-size:14px;color:var(--muted);font-style:italic;border-left:2px solid var(--bronze-dim);padding-left:14px;margin-top:14px}
+
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  @media(max-width:640px){.choices{grid-template-columns:1fr}}
+  .choice{border:1px solid var(--line);border-radius:3px;padding:20px;background:var(--ink-2);cursor:pointer;text-align:left;color:var(--parchment);font-family:inherit;font-size:16px;transition:border-color .25s,background .25s}
+  .choice:hover{border-color:var(--bronze-dim);background:#22261f80}
+  .choice h3{font-family:'GFS Didot',serif;font-weight:400;font-size:20px;letter-spacing:.04em;margin-bottom:8px;color:var(--bronze)}
+  .choice p{font-size:14.5px;color:var(--muted);line-height:1.55}
+
+  .controls{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn{font-family:inherit;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:13px 28px;background:transparent;color:var(--bronze);border:1px solid var(--bronze-dim);border-radius:2px;cursor:pointer;transition:all .25s}
+  .btn:hover{background:rgba(217,164,65,.1);border-color:var(--bronze)}
+  .btn.ghost{color:var(--muted);border-color:var(--line)}
+  .btn.ghost:hover{color:var(--parchment);background:rgba(255,255,255,.04)}
+
+  /* dialogue layer */
+  #vn{display:none;position:absolute;left:0;right:0;bottom:0;padding:14px 16px 16px;
+      background:linear-gradient(transparent, rgba(12,14,12,.55) 18%, rgba(12,14,12,.92) 60%);z-index:5}
+  .vn-box{display:flex;gap:16px;max-width:860px;margin:0 auto;align-items:flex-end;cursor:pointer}
+  .vn-portrait{width:104px;height:128px;flex:0 0 auto;border:1px solid var(--bronze-dim);
+      border-radius:3px;background:#1a1d19;overflow:hidden}
+  .vn-portrait svg{width:100%;height:100%;display:block}
+  .vn-main{flex:1;min-width:0}
+  .vn-name{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--bronze);margin-bottom:7px}
+  .vn-text{font-size:16.5px;line-height:1.6;color:var(--parchment);min-height:52px}
+  .vn-text em{color:var(--muted)}
+  .vn-next{font-size:11px;letter-spacing:.2em;color:var(--faint);margin-top:8px;text-transform:uppercase}
+  .vn-choices{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .vn-choice{font-family:inherit;font-size:14.5px;text-align:left;padding:11px 16px;background:rgba(26,29,25,.9);
+      border:1px solid var(--line);border-radius:2px;color:var(--parchment);cursor:pointer;transition:all .2s}
+  .vn-choice:hover{border-color:var(--bronze-dim);background:rgba(34,38,32,.95)}
+  #vntoast{position:absolute;right:16px;bottom:100%;margin-bottom:8px;font-size:11px;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--bronze);background:rgba(19,21,18,.85);border:1px solid var(--bronze-dim);
+      padding:6px 12px;border-radius:2px;opacity:0;transition:opacity .5s;pointer-events:none}
+  #vntoast.show{opacity:1}
+  .vn-narr .vn-text{font-style:italic;color:var(--muted)}
+  @media(max-width:640px){.vn-portrait{width:76px;height:96px}.vn-text{font-size:15px}}
+  /* decision dock overlaid on the simulation */
+  #dock{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:10px 14px 12px;
+      background:linear-gradient(transparent, rgba(12,12,10,.45) 18%, rgba(12,12,10,.9) 72%)}
+  #dock:not(:has(button)){display:none}
+  #dock .choices{max-width:880px;margin:0 auto;gap:10px}
+  #dock .choice{padding:12px 14px;background:rgba(24,22,18,.93)}
+  #dock .choice h3{font-size:17px;margin-bottom:5px}
+  #dock .choice p{font-size:13px;line-height:1.45}
+  #dock .controls{margin-top:0;padding-top:8px}
+  @media(max-width:640px){#dock .choice{padding:10px 12px}#dock .choice p{font-size:12px}}
+  footer{margin-top:44px;text-align:center;font-size:13px;color:var(--faint);line-height:1.7}
+  .fade-in{animation:fadeIn .6s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">26 October 1597 · The Myeongnyang Strait · The Roaring Channel</div>
+    <h1>MYEONGNYANG</h1>
+    <p class="subtitle">Thirteen ships against a hundred and thirty three, and a channel that fights back</p>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true">
+      <defs><pattern id="key" width="26" height="14" patternUnits="userSpaceOnUse">
+        <path d="M0 12 H10 V2 H20 V8 H14 V6 H18 V4 H12 V10 H22 V0 H26" fill="none" stroke="#d9a441" stroke-width="1.4"/>
+      </pattern></defs>
+      <rect width="520" height="14" fill="url(#key)"/>
+    </svg>
+  </header>
+
+  <nav class="phases" aria-label="Battle phases">
+    <span class="pill" data-p="0">Prologue</span>
+    <span class="pill" data-p="1">Twelve ships</span>
+    <span class="pill" data-p="2">The strait</span>
+    <span class="pill" data-p="3">Alone</span>
+    <span class="pill" data-p="4">The tide turns</span>
+    <span class="pill" data-p="5">Aftermath</span>
+  </nav>
+
+  <div class="stage">
+    <div id="view" role="img" aria-label="3D scene of the Myeongnyang Strait between Jindo and the mainland"></div>
+    <div class="counters" id="counters">
+      <span class="counter c-jp">Japanese warships lost&nbsp; <b id="jpCt">0 of 133</b></span>
+      <span class="counter c-kr">Joseon warships lost&nbsp; <b id="krCt">0 of 13</b></span>
+    </div>
+    <div class="daytag" id="daytag">Dawn</div>
+    <div class="tidetag" id="tidetag">Tide · flooding west, with the Japanese</div>
+    <div class="camctl">
+      <button class="cambtn" data-cam="over">Overview</button>
+      <button class="cambtn" data-cam="line">The line</button>
+      <button class="cambtn" data-cam="strait">The narrows</button>
+      <button class="cambtn" data-cam="armada">The armada</button>
+    </div>
+    <div class="camhint">drag · rotate&ensp;|&ensp;scroll · zoom&ensp;|&ensp;right-drag · pan</div>
+    <div id="dock"><div id="choiceArea"></div><div class="controls" id="controls"></div></div>
+    <div id="vn"><div id="vntoast"></div>
+      <div class="vn-box" id="vnbox">
+        <div class="vn-portrait" id="vnportrait"></div>
+        <div class="vn-main">
+          <div class="vn-name" id="vnname"></div>
+          <div class="vn-text" id="vntext"></div>
+          <div class="vn-choices" id="vnchoices"></div>
+          <div class="vn-next" id="vnnext">tap to continue &#9656;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="narration">
+    <div class="narr-label" id="narrLabel">Prologue</div>
+    <div id="narrBody"></div>
+  </div>
+
+
+  <footer>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true"><rect width="520" height="14" fill="url(#key)"/></svg>
+    Grounded in Yi Sun-sin's own war diary, the <em>Nanjung Ilgi</em>, and the battle report to the throne.
+    The iron chain across the strait is later legend; the current, the count of ships, and the sentence
+    about twelve of them are not.
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+
+/* ================= geography =================
+   Sim space 1000 x 620. The channel runs east-west between the mainland
+   (north) and the island of Jindo (south), pinching to the Uldolmok narrows
+   at centre, where the tide runs like a river and the water roars. The
+   Japanese armada enters from the east; the open Yellow Sea lies west. */
+const sx2w=x=>(x-500)*0.2, sy2w=y=>(y-310)*0.2;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const smooth=(x,a,b)=>THREE.MathUtils.smoothstep(x,a,b);
+function shoreN(x){return 150+95*Math.exp(-(((x-500)/140)**2));}
+function shoreS(x){return 470-95*Math.exp(-(((x-500)/140)**2));}
+function inWater(x,y){return y>shoreN(x)+6&&y<shoreS(x)-6;}
+
+const S={
+  phase:0, stage:'idle', sub:'', subT:0, st:0,
+  ships:[], balls:[], splashes:[],
+  jpLost:0, krLost:0,
+  tide:-1, tideCur:-1,        /* -1 flood (westward, with Japan), +1 ebb (eastward, with Joseon) */
+};
+
+/* ================= three.js ================= */
+const view=document.getElementById('view');
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x9fae9e);
+scene.fog=new THREE.Fog(0x9fae9e,170,470);
+
+const camera=new THREE.PerspectiveCamera(52,1,0.5,950);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const SHADOWS=window.innerWidth>700;
+if(SHADOWS){renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;}
+view.appendChild(renderer.domElement);
+function resize(){const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+
+scene.add(new THREE.HemisphereLight(0xd8e0d4,0x54604e,0.85));
+const sun=new THREE.DirectionalLight(0xfff0cf,1.05);
+sun.position.set(-60,95,55);
+if(SHADOWS){
+  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+  const sc=sun.shadow.camera;
+  sc.left=-135;sc.right=135;sc.top=135;sc.bottom=-135;sc.far=380;
+  sc.updateProjectionMatrix();
+  sun.shadow.bias=-0.0008;
+}
+scene.add(sun);
+
+/* ---------- terrain ---------- */
+function terrainH(wx,wz){
+  const x=wx/0.2+500,y=wz/0.2+310;
+  const n=shoreN(x),s=shoreS(x);
+  if(y>n&&y<s){          /* the channel */
+    const d=Math.min(y-n,s-y);
+    return -2.6+Math.max(0,(8-d))*0.18;
+  }
+  let h=0.4+Math.sin(x*0.05)*0.3+Math.cos(y*0.06)*0.3;
+  const inl=y<=n?(n-y):(y-s);
+  h+=Math.min(inl*0.09,9);
+  const b1=(x-260)/110,b1y=(y-70)/70;   h+=6*Math.exp(-(b1*b1+b1y*b1y));
+  const b2=(x-760)/120,b2y=(y-560)/70;  h+=7*Math.exp(-(b2*b2+b2y*b2y));
+  const b3=(x-520)/90,b3y=(y-585)/60;   h+=5*Math.exp(-(b3*b3+b3y*b3y));
+  return h;
+}
+{
+  const g=new THREE.PlaneGeometry(230,150,170,116);
+  g.rotateX(-Math.PI/2);
+  const pos=g.attributes.position,colors=[];
+  const cPine=new THREE.Color(0x546b4a),cGrass=new THREE.Color(0x77855a),
+        cSand=new THREE.Color(0xa89a72),cRock=new THREE.Color(0x6a705f),
+        cBed=new THREE.Color(0x2c4448),tmp=new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const wx=pos.getX(i),wz=pos.getZ(i),h=terrainH(wx,wz);
+    const x=wx/0.2+500,y=wz/0.2+310;
+    pos.setY(i,h);
+    if(h<-0.5){tmp.copy(cBed);}
+    else{
+      tmp.copy(cGrass);
+      tmp.lerp(cPine,smooth(Math.sin(x*0.2)*Math.sin(y*0.24),-.2,1)*0.6);
+      tmp.lerp(cSand,smooth(-Math.abs(h-0.6),-1.2,-0.1)*0.8);
+      tmp.lerp(cRock,smooth(h,6,10));
+    }
+    tmp.offsetHSL(0,0,(Math.sin(wx*1.5)*Math.sin(wz*1.9))*0.04);
+    colors.push(tmp.r,tmp.g,tmp.b);
+  }
+  g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  g.computeVertexNormals();
+  const terrain=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}));
+  terrain.receiveShadow=SHADOWS;
+  scene.add(terrain);
+}
+/* the water */
+const sea=new THREE.Mesh(
+  new THREE.PlaneGeometry(230,150),
+  new THREE.MeshLambertMaterial({color:0x2e5560,transparent:true,opacity:0.94}));
+sea.rotation.x=-Math.PI/2;
+sea.position.y=-0.45;
+scene.add(sea);
+/* the current, made visible: streaks riding the tide */
+const STREAKS=90;
+const streakMesh=new THREE.InstancedMesh(
+  new THREE.BoxGeometry(1.8,0.03,0.1),
+  new THREE.MeshBasicMaterial({color:0xbcd6d4,transparent:true,opacity:0.35}),STREAKS);
+streakMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(streakMesh);
+const streaks=[];
+for(let i=0;i<STREAKS;i++){
+  let x,y;
+  do{x=rnd(60,940);y=rnd(160,460);}while(!inWater(x,y));
+  streaks.push({x,y,ph:rnd(0,6.28)});
+}
+function currentSpeed(x){return 1+1.6*Math.exp(-(((x-500)/130)**2));}
+const M4=new THREE.Matrix4(),QT=new THREE.Quaternion(),V3=new THREE.Vector3(),SC=new THREE.Vector3(),EUL=new THREE.Euler();
+let perfNow=0;
+function updStreaks(dt){
+  for(let i=0;i<STREAKS;i++){
+    const st=streaks[i];
+    st.x+=S.tideCur*currentSpeed(st.x)*dt*26;
+    if(st.x>960)st.x=60;if(st.x<60)st.x=960;
+    if(!inWater(st.x,st.y)){do{st.y=rnd(160,460);}while(!inWater(st.x,st.y));}
+    V3.set(sx2w(st.x),-0.32+Math.sin(perfNow*0.003+st.ph)*0.05,sy2w(st.y));
+    QT.set(0,0,0,1);SC.setScalar(1);
+    M4.compose(V3,QT,SC);
+    streakMesh.setMatrixAt(i,M4);
+  }
+  streakMesh.instanceMatrix.needsUpdate=true;
+}
+
+/* ---------- ship geometry, vertex colored ---------- */
+function buildFigure(parts){
+  let vC=0,iC=0;
+  for(const p of parts){vC+=p.g.attributes.position.count;iC+=p.g.index.count;}
+  const P=new Float32Array(vC*3),N=new Float32Array(vC*3),C=new Float32Array(vC*3),I=new Uint16Array(iC);
+  const col=new THREE.Color();
+  let vO=0,iO=0;
+  for(const p of parts){
+    P.set(p.g.attributes.position.array,vO*3);
+    N.set(p.g.attributes.normal.array,vO*3);
+    col.set(p.c);
+    const n=p.g.attributes.position.count;
+    for(let i=0;i<n;i++){C[(vO+i)*3]=col.r;C[(vO+i)*3+1]=col.g;C[(vO+i)*3+2]=col.b;}
+    const idx=p.g.index.array;
+    for(let i=0;i<idx.length;i++)I[iO+i]=idx[i]+vO;
+    vO+=n;iO+=idx.length;
+  }
+  const out=new THREE.BufferGeometry();
+  out.setAttribute('position',new THREE.BufferAttribute(P,3));
+  out.setAttribute('normal',new THREE.BufferAttribute(N,3));
+  out.setAttribute('color',new THREE.BufferAttribute(C,3));
+  out.setIndex(new THREE.BufferAttribute(I,1));
+  return out;
+}
+function box(w,h,d,x,y,z){const g=new THREE.BoxGeometry(w,h,d);g.translate(x,y,z);return g;}
+function cylg(r1,r2,h,seg,x,y,z){const g=new THREE.CylinderGeometry(r1,r2,h,seg);g.translate(x,y,z);return g;}
+
+/* the panokseon: flat-bottomed, high-walled, a floating gun platform */
+function buildPanokseon(bannerColor){
+  const T=0x7a5c38,TD=0x5c452c,RF=0x38322c,SAIL=0xd8ccb0;
+  return buildFigure([
+    {g:box(8,1.5,2.7, 0,0.75,0),c:T},
+    {g:box(8.3,0.6,0.35, 0,1.85,-1.35),c:TD},   /* bulwarks */
+    {g:box(8.3,0.6,0.35, 0,1.85, 1.35),c:TD},
+    {g:box(1.2,1.2,2.2, 3.9,1.1,0),c:TD},       /* blunt bow */
+    {g:box(3.2,1.3,2.1, -0.4,2.6,0),c:T},       /* deck castle */
+    {g:box(3.7,0.3,2.5, -0.4,3.4,0),c:RF},
+    {g:cylg(.1,.13,3.8,5, -2.2,4.2,0),c:TD},
+    {g:cylg(.1,.13,4.2,5, 1.4,4.5,0),c:TD},
+    {g:box(.12,2.2,2.2, -2.2,4.6,0),c:SAIL},
+    {g:box(.12,2.5,2.4, 1.4,5.0,0),c:SAIL},
+    {g:box(.06,1.1,0.8, 1.4,6.6,0),c:bannerColor},
+  ]);
+}
+/* the sekibune: lighter, faster, made for closing and boarding */
+function buildSekibune(bannerColor){
+  const T=0x4a3c30,TD=0x3a2f26,SAIL=0xe0dcd0;
+  return buildFigure([
+    {g:box(7,1.3,2.2, 0,0.65,0),c:T},
+    {g:box(.35,2.1,1.7, 3.4,1.5,0),c:TD},       /* tall vertical prow */
+    {g:box(2.6,1.1,1.8, -0.3,1.9,0),c:TD},      /* fighting cabin */
+    {g:cylg(.09,.12,4.2,5, 0.6,4.0,0),c:TD},
+    {g:box(.12,2.2,2.0, 0.6,4.4,0),c:SAIL},
+    {g:box(.05,1.9,0.55, -2.8,3.4,0),c:bannerColor},  /* the nobori */
+  ]);
+}
+const krGeo=buildPanokseon(0x3f5a9c);
+const jpGeo=buildSekibune(0xd8d4c8);
+const MATS={kr:new THREE.MeshLambertMaterial({vertexColors:true}),jp:new THREE.MeshLambertMaterial({vertexColors:true})};
+/* Yi's flagship and Kurushima's, singled out */
+const flagYi=new THREE.Mesh(buildPanokseon(0xc9a032),MATS.kr);flagYi.scale.setScalar(1.22);flagYi.castShadow=SHADOWS;scene.add(flagYi);
+const flagKu=new THREE.Mesh(buildSekibune(0xb03030),MATS.jp);flagKu.scale.setScalar(1.15);flagKu.castShadow=SHADOWS;scene.add(flagKu);
+
+let krMesh=null,jpMesh=null;
+function ship(x,y,side){
+  return {x,y,tx:x,ty:y,face:side==='k'?0:Math.PI,side,alive:true,hp:side==='k'?6:2,
+          sink:0,jit:rnd(0,6.28),idx:0,special:null,drift:side==='j',hold:false,pi:0,wps:null,lane:0};
+}
+function spawnFleets(){
+  S.ships=[];
+  /* thirteen: twelve survivors of Chilcheollyang and one that joined after */
+  for(let i=0;i<13;i++){
+    const s=ship(300,240+i*11.5,'k');
+    if(i===6)s.special='yi';
+    if(i===4)s.special='anwi';
+    S.ships.push(s);
+  }
+  /* one hundred and thirty three */
+  let n=0;
+  for(let r=0;r<12&&n<133;r++)for(let c=0;c<12&&n<133;c++){
+    const s=ship(690+r*24+rnd(-5,5),200+c*19+rnd(-5,5),'j');
+    if(n===0)s.special='ku';
+    S.ships.push(s);n++;
+  }
+  const kr=S.ships.filter(s=>s.side==='k'&&!s.special).length;
+  const jp=S.ships.filter(s=>s.side==='j'&&s.special!=='ku').length;
+  if(krMesh)scene.remove(krMesh);
+  if(jpMesh)scene.remove(jpMesh);
+  krMesh=new THREE.InstancedMesh(krGeo,MATS.kr,Math.max(kr,1));
+  jpMesh=new THREE.InstancedMesh(jpGeo,MATS.jp,Math.max(jp,1));
+  for(const m of [krMesh,jpMesh]){
+    m.castShadow=SHADOWS;
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    scene.add(m);
+  }
+  let ki=0,ji=0;
+  for(const s of S.ships){
+    if(s.special==='yi'||s.special==='ku')continue;
+    if(s.side==='k'){s.mesh=krMesh;s.idx=ki++;}
+    else{s.mesh=jpMesh;s.idx=ji++;}
+  }
+}
+function writeShip(s){
+  const wx=sx2w(s.x),wz=sy2w(s.y);
+  const bob=Math.sin(perfNow*0.0016+s.jit)*0.09*(1-s.sink);
+  const y=-0.35+bob-s.sink*2.1;
+  const roll=Math.sin(perfNow*0.0013+s.jit)*0.035+s.sink*0.55;
+  if(s.special==='yi'){flagYi.position.set(wx,y,wz);flagYi.rotation.set(0,s.face,roll);return;}
+  if(s.special==='ku'){flagKu.position.set(wx,y,wz);flagKu.rotation.set(0,s.face,roll);return;}
+  V3.set(wx,y,wz);
+  EUL.set(0,s.face,roll);QT.setFromEuler(EUL);
+  SC.setScalar(1);
+  M4.compose(V3,QT,SC);
+  s.mesh.setMatrixAt(s.idx,M4);
+}
+function flushShips(){
+  for(const s of S.ships)writeShip(s);
+  krMesh.instanceMatrix.needsUpdate=true;
+  jpMesh.instanceMatrix.needsUpdate=true;
+}
+function shipMove(s,speed,dt){
+  const dx=s.tx-s.x,dy=s.ty-s.y,d=Math.hypot(dx,dy);
+  if(d<2)return true;
+  const cur=S.tideCur*currentSpeed(s.x)*0.13;
+  let vx=(dx/d)*speed,vy=(dy/d)*speed;
+  vx+=cur*(s.side==='j'?1:0.8);
+  s.x+=vx*dt*60;s.y+=vy*dt*60;
+  const t=Math.atan2(-vy,vx);
+  let diff=t-s.face;
+  while(diff>Math.PI)diff-=6.283;while(diff<-Math.PI)diff+=6.283;
+  s.face+=diff*Math.min(dt*2.2,1);
+  return false;
+}
+function damage(s,n){
+  if(!s.alive)return;
+  s.hp-=n;
+  if(s.hp<=0){
+    s.alive=false;
+    if(s.side==='j'){S.jpLost++;}else{S.krLost++;}
+    updateCounters();
+  }
+}
+function aliveShips(side){return S.ships.filter(s=>s.alive&&s.side===side);}
+function updSinking(dt){
+  for(const s of S.ships){
+    if(!s.alive&&s.sink<1)s.sink=Math.min(s.sink+dt*0.35,1);
+  }
+}
+function updateCounters(){
+  document.getElementById('jpCt').textContent=S.jpLost+' of 133';
+  document.getElementById('krCt').textContent=S.krLost+' of 13';
+}
+function setDay(t){document.getElementById('daytag').textContent=t;}
+function setTide(t,label){
+  S.tide=t;
+  const el=document.getElementById('tidetag');
+  el.textContent='Tide \u00b7 '+label;
+  el.classList.add('show');
+}
+
+/* ---------- cannon fire ---------- */
+const BALL_MAX=90;
+const ballMesh=new THREE.InstancedMesh(
+  new THREE.SphereGeometry(0.16,5,4),
+  new THREE.MeshBasicMaterial({color:0x1c1a16}),BALL_MAX);
+ballMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(ballMesh);
+const splashGeo=new THREE.CircleGeometry(1,14);
+function fireAt(from,to,hit){
+  if(!from||!to)return;
+  S.balls.push({fx:from.x,fy:from.y,tx:to.x+rnd(-4,4),ty:to.y+rnd(-4,4),
+    t:0,dur:rnd(0.6,0.9),arc:rnd(3.5,5.5),target:to,hit});
+}
+function updBalls(dt){
+  for(let i=S.balls.length-1;i>=0;i--){
+    const b=S.balls[i];b.t+=dt;
+    const u=Math.min(b.t/b.dur,1);
+    b.px=b.fx+(b.tx-b.fx)*u;b.py=b.fy+(b.ty-b.fy)*u;
+    b.h=1.6+Math.sin(u*Math.PI)*b.arc;
+    if(u>=1){
+      if(Math.random()<b.hit&&b.target.alive){damage(b.target,1);}
+      else{
+        const sp=new THREE.Mesh(splashGeo,new THREE.MeshBasicMaterial({color:0xd8e4de,transparent:true,opacity:0.7}));
+        sp.rotation.x=-Math.PI/2;
+        sp.position.set(sx2w(b.px),-0.28,sy2w(b.py));
+        scene.add(sp);
+        S.splashes.push({mesh:sp,t:0});
+      }
+      S.balls.splice(i,1);
+    }
+  }
+  for(let i=S.splashes.length-1;i>=0;i--){
+    const sp=S.splashes[i];sp.t+=dt;
+    sp.mesh.scale.setScalar(1+sp.t*7);
+    sp.mesh.material.opacity=0.7*(1-sp.t/0.9);
+    if(sp.t>0.9){scene.remove(sp.mesh);S.splashes.splice(i,1);}
+  }
+}
+function flushBalls(){
+  let i=0;
+  for(const b of S.balls){
+    if(i>=BALL_MAX)break;
+    V3.set(sx2w(b.px),b.h,sy2w(b.py));
+    QT.set(0,0,0,1);SC.setScalar(1);
+    M4.compose(V3,QT,SC);
+    ballMesh.setMatrixAt(i++,M4);
+  }
+  for(;i<BALL_MAX;i++){SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);ballMesh.setMatrixAt(i,M4);}
+  ballMesh.instanceMatrix.needsUpdate=true;
+}
+
+/* ================= camera ================= */
+const cam={yaw:1.5,pitch:0.9,dist:205,tx:0,ty:2,tz:0,auto:null};
+function applyCamera(dt){
+  if(cam.auto){
+    const a=cam.auto,k=1-Math.pow(0.001,dt);
+    cam.yaw+=(a.yaw-cam.yaw)*k;cam.pitch+=(a.pitch-cam.pitch)*k;cam.dist+=(a.dist-cam.dist)*k;
+    cam.tx+=(a.tx-cam.tx)*k;cam.ty+=(a.ty-cam.ty)*k;cam.tz+=(a.tz-cam.tz)*k;
+    if(Math.abs(a.dist-cam.dist)<0.5&&Math.abs(a.yaw-cam.yaw)<0.01)cam.auto=null;
+  }
+  cam.pitch=THREE.MathUtils.clamp(cam.pitch,0.14,1.42);
+  cam.dist=THREE.MathUtils.clamp(cam.dist,20,300);
+  const cp=Math.cos(cam.pitch);
+  camera.position.set(
+    cam.tx+Math.sin(cam.yaw)*cp*cam.dist,
+    cam.ty+Math.sin(cam.pitch)*cam.dist,
+    cam.tz+Math.cos(cam.yaw)*cp*cam.dist);
+  camera.lookAt(cam.tx,cam.ty,cam.tz);
+}
+const PRESETS={
+  over:{yaw:1.5,pitch:0.9,dist:205,tx:0,ty:2,tz:0},
+  line:{yaw:2.2,pitch:0.42,dist:62,tx:sx2w(330),ty:1,tz:sy2w(310)},
+  strait:{yaw:1.5,pitch:0.55,dist:85,tx:sx2w(500),ty:1,tz:sy2w(310)},
+  armada:{yaw:0.8,pitch:0.5,dist:110,tx:sx2w(780),ty:1,tz:sy2w(310)},
+};
+document.querySelectorAll('.cambtn').forEach(b=>b.onclick=()=>{cam.auto={...PRESETS[b.dataset.cam]};});
+function cine(name){cam.auto={...PRESETS[name]};}
+
+let drag=null;
+view.addEventListener('pointerdown',e=>{view.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,btn:e.button,shift:e.shiftKey};view.classList.add('dragging');cam.auto=null;});
+view.addEventListener('pointermove',e=>{
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  drag.x=e.clientX;drag.y=e.clientY;
+  if(drag.btn===2||drag.shift){
+    const cp=Math.cos(cam.yaw),sp=Math.sin(cam.yaw),k=cam.dist*0.0016;
+    cam.tx-=(dx*cp-dy*sp)*k;
+    cam.tz-=(-dx*sp-dy*cp)*k;
+    cam.tx=THREE.MathUtils.clamp(cam.tx,-105,105);
+    cam.tz=THREE.MathUtils.clamp(cam.tz,-66,66);
+  }else{cam.yaw-=dx*0.0055;cam.pitch+=dy*0.0045;}
+});
+const endDrag=()=>{drag=null;view.classList.remove('dragging');};
+view.addEventListener('pointerup',e=>{
+  if(drag&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<12)tryPick(e);
+  endDrag();
+});
+view.addEventListener('pointercancel',endDrag);
+view.addEventListener('wheel',e=>{e.preventDefault();cam.auto=null;cam.dist*=(1+Math.sign(e.deltaY)*0.09);},{passive:false});
+view.addEventListener('contextmenu',e=>e.preventDefault());
+let pinch=null;
+view.addEventListener('touchstart',e=>{if(e.touches.length===2)pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);});
+view.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&pinch){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    cam.dist*=pinch/d;pinch=d;cam.auto=null;
+  }
+},{passive:true});
+view.addEventListener('touchend',()=>pinch=null);
+
+/* ================= command rings ================= */
+const raycaster=new THREE.Raycaster();
+const ndc=new THREE.Vector2();
+function castAt(e,objects){
+  const r=renderer.domElement.getBoundingClientRect();
+  ndc.x=((e.clientX-r.left)/r.width)*2-1;
+  ndc.y=-((e.clientY-r.top)/r.height)*2+1;
+  raycaster.setFromCamera(ndc,camera);
+  return raycaster.intersectObjects(objects,false);
+}
+function ringMesh(color){
+  const m=new THREE.Mesh(new THREE.TorusGeometry(10,0.5,8,32),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.85}));
+  m.rotation.x=-Math.PI/2;m.visible=false;
+  const hit=new THREE.Mesh(new THREE.CircleGeometry(19,16),
+    new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
+  hit.rotation.x=-Math.PI/2;hit.visible=false;hit.userData.owner=m;
+  m.userData.hit=hit;
+  const fill=new THREE.Mesh(new THREE.CircleGeometry(9.2,24),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.13,depthWrite:false,side:THREE.DoubleSide}));
+  fill.position.z=0.02;
+  m.add(fill);
+  scene.add(m);scene.add(hit);
+  return m;
+}
+const ringA=ringMesh(0xd9a441);   /* the historical order */
+const ringB=ringMesh(0xc45540);   /* the counterfactual */
+const RINGS=[ringA,ringB];
+let ringT=0,pickMode=null;
+function updRings(dt){
+  ringT+=dt;
+  for(const r of [ringA,ringB]){
+    if(!r.visible)continue;
+    const k=1+Math.sin(ringT*3.4)*0.08;
+    r.scale.setScalar(k);
+    r.material.opacity=0.55+Math.sin(ringT*3.4)*0.3;
+  }
+}
+function placeRing(r,sx,sy){
+  r.position.set(sx2w(sx),0.3,sy2w(sy));
+  r.visible=true;
+  const h=r.userData.hit;
+  h.position.set(sx2w(sx),0.2,sy2w(sy));
+  h.visible=true;
+}
+function hideRings(){for(const r of RINGS){r.visible=false;r.userData.hit.visible=false;}pickMode=null;}
+function pickRing(e){
+  const rect=renderer.domElement.getBoundingClientRect();
+  let best=null,bestD=1e9;
+  for(const r of RINGS){
+    if(!r.visible)continue;
+    V3.copy(r.position).project(camera);
+    if(V3.z>1)continue;
+    const px=(V3.x*0.5+0.5)*rect.width+rect.left;
+    const py=(-V3.y*0.5+0.5)*rect.height+rect.top;
+    const d=Math.hypot(e.clientX-px,e.clientY-py);
+    if(d<bestD){bestD=d;best=r;}
+  }
+  return bestD<Math.max(56,rect.width*0.08)?best:null;
+}
+function tryPick(e){
+  if(!pickMode)return;
+  const r=pickRing(e);
+  if(!r)return;
+  const choice=r===ringA?'a':'b';
+  const mode=pickMode;
+  hideRings();
+  if(mode==='ground'){choice==='a'?chooseStrait():chooseOpenCF();}
+  else if(mode==='tide'){choice==='a'?pressAttack():holdCF();}
+}
+
+/* ================= the dialogue layer ================= */
+const REL={anwi:0,junsa:0,pilot:0};
+const FLAGSV={harsh:false,wary:false};
+
+const SVG_ANWI=`<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="#1c2026"/>
+<ellipse cx="52" cy="122" rx="40" ry="26" fill="#2e3a54"/><path d="M14 122 Q52 84 90 122" fill="#3a4a6a"/>
+<ellipse cx="52" cy="66" rx="20" ry="23" fill="#c9a075"/>
+<path d="M38 44 Q38 24 52 23 Q66 24 66 44 Z" fill="#14161a"/>
+<ellipse cx="52" cy="44" rx="29" ry="8" fill="#14161a"/>
+<circle cx="52" cy="21" r="3" fill="#b03030"/>
+<path d="M68 46 q10 12 7 24" stroke="#b03030" stroke-width="2.4" fill="none"/>
+<path d="M40 60 L48 58 M56 58 L64 60" stroke="#2a2012" stroke-width="2.2" stroke-linecap="round"/>
+<circle cx="44" cy="64" r="1.9" fill="#20180e"/><circle cx="60" cy="64" r="1.9" fill="#20180e"/>
+<path d="M44 88 Q52 96 60 88 L58 95 Q52 100 46 95 Z" fill="#1a1410"/>
+<path d="M45 80 Q52 84 59 80" stroke="#8a5a3a" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
+const SVG_JUNSA=`<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="#20211e"/>
+<ellipse cx="52" cy="122" rx="38" ry="25" fill="#4c4c48"/><path d="M16 122 Q52 88 88 122" fill="#5c5c56"/>
+<path d="M34 122 L52 96 L70 122" fill="#3a3a36"/>
+<ellipse cx="52" cy="64" rx="20" ry="23" fill="#c9a075"/>
+<path d="M32 56 Q32 40 40 34 L40 52 Z" fill="#20180e"/><path d="M72 56 Q72 40 64 34 L64 52 Z" fill="#20180e"/>
+<rect x="47" y="16" width="10" height="12" rx="4" fill="#20180e"/>
+<path d="M40 58 L48 57 M56 57 L64 58" stroke="#2a2012" stroke-width="2" stroke-linecap="round"/>
+<circle cx="44" cy="62" r="1.8" fill="#20180e"/><circle cx="60" cy="62" r="1.8" fill="#20180e"/>
+<path d="M46 78 L58 78" stroke="#8a5a3a" stroke-width="2" stroke-linecap="round"/></svg>`;
+const SVG_MA=`<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="#1e211d"/>
+<ellipse cx="52" cy="122" rx="38" ry="25" fill="#7a6c4e"/><path d="M16 122 Q52 90 88 122" fill="#8c7c5a"/>
+<ellipse cx="52" cy="64" rx="21" ry="24" fill="#a97c50"/>
+<path d="M30 48 Q52 38 74 48 L74 56 Q52 46 30 56 Z" fill="#e0dcd0"/>
+<path d="M34 42 Q52 30 70 42 Q52 36 34 42 Z" fill="#cfc8b8"/>
+<path d="M38 58 L47 57 M57 57 L66 58" stroke="#d8d4c8" stroke-width="2.4" stroke-linecap="round"/>
+<circle cx="43" cy="62" r="1.8" fill="#20180e"/><circle cx="61" cy="62" r="1.8" fill="#20180e"/>
+<path d="M40 84 Q52 98 64 84 L62 100 Q52 110 42 100 Z" fill="#d8d4c8"/>
+<path d="M45 78 Q52 82 59 78" stroke="#7a4a2a" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
+const SVG_KURU=`<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="#1a1512"/>
+<ellipse cx="52" cy="124" rx="42" ry="27" fill="#5c2020"/><path d="M12 124 Q52 86 92 124" fill="#742828"/>
+<path d="M20 116 H84 M22 108 H82 M26 100 H78" stroke="#3a1414" stroke-width="3"/>
+<ellipse cx="52" cy="68" rx="19" ry="21" fill="#b98a5e"/>
+<path d="M30 54 Q30 30 52 28 Q74 30 74 54 L70 58 Q52 44 34 58 Z" fill="#4c1a1a"/>
+<path d="M46 24 Q52 8 58 24 L52 30 Z" fill="#d0a040"/>
+<path d="M38 60 L48 58 M56 58 L66 60" stroke="#20140e" stroke-width="2.6" stroke-linecap="round"/>
+<circle cx="44" cy="64" r="1.9" fill="#180e0a"/><circle cx="60" cy="64" r="1.9" fill="#180e0a"/>
+<path d="M42 76 Q52 72 62 76" stroke="#2a1a10" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+<path d="M46 82 L58 82" stroke="#6e3a24" stroke-width="2" stroke-linecap="round"/></svg>`;
+const CAST={
+  anwi:{name:'An Wi \u00b7 captain of the fleet',svg:SVG_ANWI},
+  junsa:{name:'Junsa \u00b7 the defector',svg:SVG_JUNSA},
+  ma:{name:'Ma \u00b7 pilot of the Uldolmok',svg:SVG_MA},
+  kuru:{name:'Kurushima Michifusa \u00b7 lord of the vanguard',svg:SVG_KURU},
+  nar:{name:'',svg:null},
+};
+const vnEl=document.getElementById('vn');
+const vnPortrait=document.getElementById('vnportrait');
+const vnName=document.getElementById('vnname');
+const vnText=document.getElementById('vntext');
+const vnChoices=document.getElementById('vnchoices');
+const vnNextEl=document.getElementById('vnnext');
+const vnToast=document.getElementById('vntoast');
+let vnQueue=[],vnDone=null,vnBusy=false;
+function playScene(steps,done){
+  vnQueue=steps.slice();vnDone=done;
+  choiceArea.innerHTML='';
+  setControls([]);
+  vnEl.style.display='block';
+  vnAdvance();
+}
+function vnAdvance(){
+  while(vnQueue.length&&vnQueue[0].if&&!vnQueue[0].if()){vnQueue.shift();}
+  if(!vnQueue.length){
+    vnEl.style.display='none';
+    const d=vnDone;vnDone=null;
+    if(d)d();
+    return;
+  }
+  renderVn(vnQueue.shift());
+}
+function renderVn(st){
+  const who=CAST[st.who]||CAST.nar;
+  vnPortrait.innerHTML=who.svg||'';
+  vnPortrait.style.display=who.svg?'block':'none';
+  vnName.textContent=who.name;
+  document.getElementById('vnbox').classList.toggle('vn-narr',st.who==='nar');
+  vnText.innerHTML=typeof st.text==='function'?st.text():st.text||'';
+  vnChoices.innerHTML='';
+  if(st.choices){
+    vnNextEl.style.display='none';vnBusy=true;
+    for(const c of st.choices){
+      const b=document.createElement('button');
+      b.className='vn-choice';b.textContent=c.label;
+      b.onclick=(ev)=>{
+        ev.stopPropagation();
+        if(c.d)for(const k in c.d){REL[k]=Math.max(0,REL[k]+c.d[k]);}
+        if(c.flag)FLAGSV[c.flag]=true;
+        if(c.toast)vToast(c.toast);
+        if(c.reply)vnQueue=c.reply.concat(vnQueue);
+        vnBusy=false;
+        vnAdvance();
+      };
+      vnChoices.appendChild(b);
+    }
+  }else{vnNextEl.style.display='block';vnBusy=false;}
+}
+document.getElementById('vnbox').addEventListener('click',()=>{if(!vnBusy&&vnEl.style.display==='block')vnAdvance();});
+function vToast(t){
+  vnToast.textContent=t;vnToast.classList.add('show');
+  setTimeout(()=>vnToast.classList.remove('show'),1900);
+}
+
+/* ---- the scenes ---- */
+const SC_COMMAND=[
+ {who:'nar',text:`The Uldolmok waits three days west. Tonight the surviving captains crowd your cabin, and not one of them meets your eyes for long.`},
+ {who:'anwi',text:`Admiral. Give the order and it will be obeyed. Only... I was at Chilcheollyang. When the fireships came out of the dark, men beside me with twenty years at sea screamed like children. I brought my ship out through the wrecks of our own fleet. I want you to know what you are taking into a fight.`,choices:[
+   {label:'"You brought your ship out. That is why you stand here tonight."',d:{anwi:2},toast:'Bond \u00b7 An Wi',reply:[
+     {who:'anwi',text:`...Then I will try to be the man in that sentence, admiral. I make no promise past the trying.`}]},
+   {label:'"Twelve ships ran. Say it plainly, captain, and be done carrying it."',flag:'harsh',reply:[
+     {who:'anwi',text:`...Yes. We ran. Plainly said. And still afloat to be ashamed of it, which is more than three hundred ships can say.`},
+     {who:'nar',text:`The cabin goes very quiet, and stays that way.`}]},
+   {label:'"Then tell me what you learned there that I can use."',d:{anwi:1},reply:[
+     {who:'anwi',text:`That their whole way of war is the swarm and the grapple, admiral. Keep them off the hull and they are only wood and pride. Let one alongside, and ten follow it.`}]},
+ ]},
+ {who:'nar',text:`By the door stands a man the marines never stop watching: Junsa, born across the water, who came over to your side a year ago and has asked to serve aboard the flagship itself.`},
+ {who:'junsa',text:`The vanguard will be Kurushima Michifusa, admiral. He petitioned for the honour. Your cannon killed his brother at Tangpo in the war's first year, and he has crossed the sea to collect the debt. Grief makes commanders arrive early. Use that.`,choices:[
+   {label:'"Why does a man serve against his own, Junsa?"',d:{junsa:2},toast:'Bond \u00b7 Junsa',reply:[
+     {who:'junsa',text:`This war emptied my village to fill Hideyoshi's muster rolls, admiral. My own are not the ones sending fleets. I chose to stand behind the commander who counts his sailors' lives like coin. Let me earn the watching eyes away.`}]},
+   {label:'"You will stand where I can see you, and speak when I ask."',flag:'wary',reply:[
+     {who:'junsa',text:`Where you can see me. A fair price, admiral, and cheaper than the one I have already paid.`}]},
+ ]},
+ {who:'nar',text:`And last, unbidden, an old Jindo fisherman the coast levies sent up: Ma the pilot, salt-white and unbowed, who was working the Roaring Channel before your captains were born.`},
+ {who:'ma',text:`Begging the admiral's pardon, but the gentlemen keep discussing the Uldolmok as if it were water. It is not water. It is a beast on a leash, and the leash is the moon. Six hours it runs one way, and then it turns, all at once, roaring, and it does not ask whose keels are riding it when it does.`,choices:[
+   {label:'"Stand at my shoulder tomorrow, pilot. The beast and I should be introduced."',d:{pilot:2},toast:'Bond \u00b7 Pilot Ma',reply:[
+     {who:'ma',text:`At your shoulder, then. My father always said the channel would make a fool of a great man one day. I would rather it made a great man of a fisherman's fool son.`}]},
+   {label:'"Mark the turning hours on the sailing master\u2019s charts."',d:{pilot:1},reply:[
+     {who:'ma',text:`Charts. Aye, admiral. Though the channel has eaten men who could read them, and spared plenty who could not.`}]},
+ ]},
+];
+const SC_PLAN=[
+ {who:'ma',text:`Thirteen ships, one channel. At the narrows, three hundred paces shore to shore, and the flood under their keels the whole way in. They cannot stop, they cannot turn, and they can only come at you a mouthful at a time.`},
+ {who:'junsa',text:`And they will still come, admiral. A hundred and thirty three captains, each one watched by the others for the first sign of hanging back. Todo. Kato. Wakisaka. Pride will row that fleet into anything.`},
+ {who:'anwi',text:`Thirteen against the horizon. Whichever water you choose, admiral, choose it soon. The men do better with orders than with arithmetic.`},
+];
+const SC_DAWN=[
+ {who:'nar',text:`First light, and the watch fires on Jindo answer one another down the coast: the enemy is in the channel.`},
+ {who:'anwi',text:`Admiral. There is no end of them. The strait is white with banners from shore to shore.`},
+ {who:'junsa',text:`The red banners in the van, admiral. The anchor crest. That is Kurushima, exactly where I told you grief would put him.`},
+];
+function SC_ANWI(){
+ const steps=[];
+ steps.push({who:'nar',text:`Your signal flags go up with An Wi's name on them, and the whole strait waits to learn what kind of navy this still is.`});
+ if(REL.anwi>=2){
+   steps.push({who:'anwi',text:`You said bringing my ship out is why I stand here. Then watch what stands, admiral. AN WI ANSWERS. Oars, double time! Lay me alongside the enemies of Joseon!`});
+ }else if(FLAGSV.harsh){
+   steps.push({who:'anwi',text:`Better to die of the enemy than of the law, and better of either than of shame twice over. Oars! Take us IN!`});
+ }else{
+   steps.push({who:'anwi',text:`The flags... Gods forgive the length of my hesitation, and shorten the memory of it. Oars! Take us in!`});
+ }
+ steps.push({who:'nar',text:`An Wi's panokseon surges out of the line, straight into the vanguard.`});
+ return steps;
+}
+const SC_KURU=[
+ {who:'kuru',text:`ADMIRAL YI. My brother has waited five years at the bottom of your sea. I have crossed it to send him company. Come out of your channel, and be introduced.`},
+ {who:'nar',text:`His ship drives for the flagship through the storm of shot, and the storm answers. Timbers burst, the banners go into the water, and the red brocade goes with them.`},
+ {who:'junsa',text:`There. In the water by the broken mast. Red brocade, the anchor crest on the shoulder... Admiral. That is Kurushima Michifusa himself.`},
+ {who:'nar',text:`The body is taken up, and what the vanguard sees at your masthead a minute later takes the war out of a thousand men at once.`},
+];
+function SC_TIDE(){
+ const steps=[];
+ steps.push({who:'ma',text:`Admiral. Listen past the guns. The roar is changing key. That is the throat of the channel closing on the flood... there. It stands still... and TURNS. The beast has changed sides, and it is under THEIR keels now.`});
+ if(REL.pilot>=2){
+   steps.push({who:'ma',text:`Fifty years my father fished this water and never once saw it take the right side. Give your order, admiral, while the moon is paying its debts.`});
+ }
+ return steps;
+}
+function SC_AFTER(){
+ const steps=[];
+ if(REL.anwi>=2){
+   steps.push({who:'anwi',text:`Thirty-one of theirs. None of ours. Admiral, at Chilcheollyang I learned what a fleet dying sounds like. Today I learned the other sound. I mean to keep them both.`});
+ }else if(FLAGSV.harsh){
+   steps.push({who:'anwi',text:`You shamed me once in the cabin and once with signal flags, admiral, and I find I am still afloat both times. I can live inside that arithmetic.`});
+ }else{
+   steps.push({who:'anwi',text:`None lost. Somebody say it again, slowly. None. Lost.`});
+ }
+ if(FLAGSV.wary){
+   steps.push({who:'junsa',text:`You watched me all day, admiral, and I would not have it otherwise. But let the log mark it: today Junsa's guns spoke Joseon.`});
+ }else{
+   steps.push({who:'junsa',text:`Kurushima has his introduction, and my village a fraction of its answer. I will serve while the war lasts, admiral. And after it, let there be no more musters for anyone, anywhere.`});
+ }
+ if(REL.pilot>=2){
+   steps.push({who:'ma',text:`Thirteen ships, one channel, and the sea itself drawing wages. My father would call me a liar at his own table. I mean to let him.`});
+ }
+ return steps;
+}
+
+/* ================= phases ================= */
+function enterPrologue(){
+  setPhase(0);setDay('Autumn 1597 \u00b7 after the disaster');
+  S.jpLost=0;S.krLost=0;updateCounters();
+  document.getElementById('counters').classList.remove('show');
+  document.getElementById('tidetag').classList.remove('show');
+  S.tideCur=-1;S.tide=-1;S.stage='idle';S.balls=[];
+  REL.anwi=0;REL.junsa=0;REL.pilot=0;FLAGSV.harsh=false;FLAGSV.wary=false;
+  hideRings();
+  spawnFleets();
+  cine('over');
+  narrate('Prologue',
+   `<p>Two months ago, at Chilcheollyang, the Joseon navy died in a single night. Its commander Won Gyun,
+    who had taken the fleet after court intrigue put its real admiral in chains, sailed three hundred
+    ships into a Japanese trap and lost all but twelve of them, and his life. The sea route around the
+    peninsula, which one man had kept closed for five years, now lies open: Japanese supply fleets can
+    round the coast, feed the armies marching north, and end the war.</p>
+    <p>You are Yi Sun-sin. You were that admiral. You were arrested this spring for refusing to sail into
+    an earlier version of the same trap, stripped of rank, tortured, and released to serve as a common
+    soldier; the court that broke you has now, without apology, given you back the sea, because there is
+    no one else. Your fleet is twelve ships that survived by running, joined by one more. The court's
+    letter suggests, gently, that with so few ships you should abandon the sea and fight on land.</p>`);
+  setControls([{label:'The captains come aboard', fn:()=>playScene(SC_COMMAND,courtChoice)}]);
+}
+function courtChoice(){
+  narrate('Prologue \u00b7 the answer',
+   `<p>The court's letter waits for an answer, and the harbour waits on the letter.</p>`);
+  setChoices([
+    {title:'Take the army ashore',
+     body:'The court\u2019s counsel: twelve ships cannot be a navy. Merge the sailors into the land armies defending the road to the capital, and salvage something from the wreck.',
+     fn:()=>{
+       S.stage='cfsail';S.st=0;
+       for(const s of aliveShips('j')){s.tx=-60;s.ty=THREE.MathUtils.clamp(s.y,270,350);}
+       narrate('Prologue \u00b7 what if',
+        `<p>The fleet is beached, the crews folded into the hills, and the western sea becomes a Japanese
+         road. Watch it happen: the transports round the coast unopposed, the armies in the north are fed
+         and reinforced by water faster than any land force can march to meet them, and the war stops
+         being a war of fronts and becomes a delivery schedule.</p>`);
+       setControls([]);
+     }},
+    {title:'"Your servant still has twelve warships"',
+     body:'The memorial Yi actually sent: the fleet, however small, is the only thing between the enemy and the western sea. While he lives, the enemy will not despise it.',
+     fn:twelveShips},
+  ]);
+}
+function updCfSail(dt){
+  for(const s of S.ships){if(s.alive&&s.side==='j')shipMove(s,0.5,dt);}
+  if(S.st>6){
+    S.stage='idle';
+    narrate('Prologue \u00b7 what if',
+     `<p>Everything after follows from logistics: the capital falls or is starved to terms within seasons,
+      not years. It is the clearest case in military history of a fleet in being: twelve ships that fight
+      are worth more than twelve thousand soldiers who march, because they sit on the one road the enemy
+      cannot do without.</p>
+      <p class="aside">Yi's actual reply to the court survives, and it is twelve words in the original:
+      \uC2E0\uC5D0\uAC8C\uB294 \uC544\uC9C1\uB3C4 \uC5F4\uB450 \uCC99\uC758 \uBC30\uAC00 \uC788\uC0AC\uC635\uB2C8\uB2E4.
+      Your servant still has twelve warships.</p>`);
+    setControls([{label:'Rewind \u00b7 keep the sea', fn:()=>{spawnFleets();twelveShips();}}]);
+  }
+}
+function twelveShips(){
+  setPhase(1);setDay('25 October \u00b7 the eve');
+  S.stage='idle';
+  cine('over');
+  narrate('Twelve ships',
+   `<p>Thirteen, in the end: one more joined. Against you, coming up the coast, a fleet of one hundred
+    and thirty three warships and perhaps two hundred more in support, under Todo Takatora and a vanguard
+    led by Kurushima Michifusa, a pirate lord whose brother you killed in the war's first year and who
+    has asked for the honour of the front for that reason. Your captains are brave men who have seen
+    what happened at Chilcheollyang, which is to say: they are brave men who no longer believe.</p>
+    <p>You cannot fight them on water where numbers deploy. But you have spent five years learning this
+    coast, and you know a place where the sea itself takes a side: the Myeongnyang strait, the Uldolmok,
+    the Roaring Channel, three hundred paces of water between Jindo and the mainland where the tide runs
+    faster than a rowed ship and reverses, roaring, every six hours.</p>
+    <p><em>Choose your water. Tap the narrows to make your stand in the strait. Tap the open bay to meet
+    them at sea.</em></p>`);
+  setControls([{label:'Council of war', fn:()=>playScene(SC_PLAN,groundChoice)}]);
+}
+function groundChoice(){
+  narrate('Twelve ships \u00b7 choose your water',
+   `<p><em>Tap the narrows to make your stand in the strait. Tap the open bay to meet them at sea.</em></p>`);
+  placeRing(ringA,500,310);
+  placeRing(ringB,790,310);
+  pickMode='ground';
+  setControls([]);
+}
+function chooseOpenCF(){
+  S.stage='cfopen';S.st=0;
+  for(const s of aliveShips('k')){s.tx=730+rnd(-14,14);s.ty=300+rnd(-22,22);}
+  let i=0;
+  for(const s of aliveShips('j')){
+    const a=(i/Math.max(aliveShips('j').length-1,1))*6.283;
+    s.tx=760+Math.cos(a)*95;s.ty=310+Math.sin(a)*80;i++;
+  }
+  narrate('Twelve ships \u00b7 what if',
+   `<p>You stand out into the bay, and the enemy does the only thing a ten-to-one fleet needs to do on
+    open water: it opens its arms. Wings you cannot match fold around wings you do not have.</p>`);
+  setControls([]);
+}
+function updCfOpen(dt){
+  for(const s of S.ships){if(s.alive)shipMove(s,0.5,dt);}
+  if(S.st>3&&Math.random()<dt*3)damage(aliveShips('k').filter(s=>!s.special)[0]||aliveShips('k')[0],1);
+  if(S.st>6.5){
+    S.stage='idle';
+    narrate('Twelve ships \u00b7 what if',
+     `<p>Surrounded, boarded from all sides at once, the fleet dies the way fleets die when the arithmetic
+      is honest. Numbers are a weapon of open water. The whole art of the outnumbered is to find water
+      that refuses to hold numbers: a channel so narrow the enemy arrives a handful at a time, and so
+      violent that arriving is half the fight.</p>`);
+    setControls([{label:'Rewind \u00b7 to the Roaring Channel', fn:()=>{spawnFleets();S.jpLost=0;S.krLost=0;updateCounters();chooseStrait();}}]);
+  }
+}
+function chooseStrait(){
+  setPhase(2);setDay('26 October \u00b7 dawn');
+  S.stage='form';S.st=0;
+  document.getElementById('counters').classList.add('show');
+  setTide(-1,'flooding west, with the Japanese');
+  const kr=aliveShips('k');
+  kr.forEach((s,i)=>{s.tx=430;s.ty=245+i*10.5;});
+  cine('strait');
+  narrate('The strait',
+   `<p>Dawn on the twenty-sixth, and the watchtowers report what you already hear: the enemy is entering
+    the channel on the flood tide, the current under his keels doing his rowing for him. You take the
+    thirteen out and anchor them in a single line abreast across the western mouth of the narrows, where
+    the strait is too tight for more than a handful of ships to come at you together, and every one of
+    them arrives riding a mill-race they cannot stop or turn in.</p>
+    <p>The panokseon under your feet is the reason this is a plan and not a gesture: flat-bottomed and
+    high-walled, it holds this water like a fortress holds ground, and it carries cannon. The enemy's
+    ships are lighter, faster, and made for one thing, closing and boarding, which is the one thing the
+    current will not let them choose the moment for.</p>`);
+  setControls([{label:'They enter the narrows', fn:()=>playScene(SC_DAWN,jpEnter)}]);
+}
+function jpEnter(){
+  S.stage='funnel';S.st=0;
+  const jp=aliveShips('j');
+  jp.forEach((s,i)=>{
+    s.lane=i;
+    const row=Math.floor(i/6);
+    s.wps=[[640-row*3,270+(i%6)*16],[560-row*2,285+(i%6)*10]];
+    if(i<18)s.wps.push([505-((i%6)*4),295+(i%6)*6]);
+    s.pi=0;
+  });
+  setControls([]);
+  narrate('The strait',
+   `<p>They come on in file after file, funnelling down from a fleet into a column, the roar of the
+    Uldolmok under everything. The vanguard is Kurushima's, and it comes fast, riding the flood, banners
+    crowding the channel from shore to shore.</p>`);
+}
+function updFunnel(dt){
+  for(const s of S.ships){
+    if(!s.alive)continue;
+    if(s.side==='j'){
+      if(s.wps&&s.pi<s.wps.length){
+        s.tx=s.wps[s.pi][0];s.ty=s.wps[s.pi][1];
+        if(shipMove(s,0.42,dt))s.pi++;
+      }
+    }
+  }
+  if(S.st>5.5)startAlone();
+}
+function startAlone(){
+  setPhase(3);S.stage='alone';S.st=0;
+  /* the twelve fall back; the flagship stays */
+  for(const s of aliveShips('k')){
+    if(s.special==='yi')continue;
+    s.tx=300-rnd(0,26);s.ty=s.ty+rnd(-4,4);
+  }
+  cine('line');
+  narrate('Alone',
+   `<p>And then the thing your diary will record with a plainness worse than any curse: as the vanguard
+    closes, your captains fall back. Ship by ship the line dissolves behind you, opening the distance,
+    men who watched a fleet die two months ago making the private calculation brave men make. Your
+    flagship holds the narrows alone, one ship wide in a three-hundred-pace channel, and the enemy
+    column keeps coming.</p>
+    <p>The flagship fights. Cannon, fire-arrows, the gunners working like men possessed while the
+    current holds the enemy bows-on in the mill-race, unable to bring their numbers around you. Your
+    diary: <em>my ship alone poured shot and arrows like a storm.</em> It cannot last, and everyone on
+    both sides of the channel knows it.</p>`);
+  setChoices([
+    {title:'Fall back to the squadron',
+     body:'Give up the narrows, rejoin the twelve, and hold the wider water together. No one fights alone forever, and the fleet cannot lose its admiral.',
+     fn:()=>{
+       narrate('Alone \u00b7 what if',
+        `<p>Fall back, and the cork comes out of the bottle. The vanguard follows you into water wide
+         enough for ten ships abreast, then twenty, and the line you rejoin is the line that already
+         chose retreat once and now retreats with company. There is no second narrows behind you; the
+         channel was the entire plan, and the plan only works if one ship is willing to be the proof
+         that it works.</p>
+         <p class="aside">This is the moment the battle is actually about. Not the tide, not the geography:
+         whether one ship holding can shame twelve into remembering they are a navy.</p>`);
+       setControls([{label:'Rewind \u00b7 hold, and raise the signal', fn:signalAnwi}]);
+     }},
+    {title:'Hold the narrows, and raise the signal flags',
+     body:'What Yi did: hold alone, and summon the captains by name. To An Wi, hanging back: "Do you wish to die under military law? If you run, where do you think you will live?"',
+     fn:signalAnwi},
+  ]);
+}
+function signalAnwi(){
+  S.stage='anwi';S.st=0;
+  const anwi=S.ships.find(s=>s.special==='anwi'&&s.alive);
+  if(anwi){anwi.tx=445;anwi.ty=300;}
+  /* the vanguard swarms him */
+  const jp=aliveShips('j').filter(s=>s.pi>=(s.wps?s.wps.length:0)).slice(0,6);
+  jp.forEach((s,i)=>{s.tx=452+rnd(-6,10);s.ty=292+i*5;});
+  playScene(SC_ANWI(),()=>{
+    narrate('Alone \u00b7 the signal',
+     `<p>An Wi's ship drives straight into the vanguard, and the enemy does what their whole way of war
+      is built to do: they swarm him, three, four, five ships grappling, boarders pouring over the
+      bulwarks, and for minutes his ship is a hill being taken. You bring the flagship alongside, Kim
+      Eung-ham behind you, cannon at a range where every shot strikes timber, and the hill holds.</p>`);
+    setControls([{label:'The vanguard falters', fn:kurushima}]);
+  });
+}
+function updAnwi(dt){
+  for(const s of S.ships){
+    if(!s.alive)continue;
+    if(s.side==='j')shipMove(s,0.4,dt);
+    if(s.special==='anwi')shipMove(s,0.5,dt);
+    if(s.special==='yi'&&S.st>2){s.tx=440;s.ty=310;shipMove(s,0.4,dt);}
+  }
+  if(S.st>1&&Math.random()<dt*2.5){
+    const yi=S.ships.find(s=>s.special==='yi');
+    const targets=aliveShips('j').filter(s=>s.x<540);
+    if(yi&&targets.length)fireAt(yi,targets[Math.floor(Math.random()*targets.length)],0.5);
+  }
+}
+function kurushima(){
+  S.stage='kuru';S.st=0;
+  const ku=S.ships.find(s=>s.special==='ku');
+  if(ku&&ku.alive){ku.tx=470;ku.ty=310;}
+  playScene(SC_KURU,()=>{
+    narrate('Alone \u00b7 the vanguard falters',
+     `<p>The men who followed Kurushima falter mid-channel. And under everything, under the guns and the
+      shouting and the grinding of hulls, the roar of the water begins, very slowly, to change key.</p>`);
+    setControls([{label:'The tide turns', fn:tideTurns}]);
+  });
+}
+function updKuru(dt){
+  const ku=S.ships.find(s=>s.special==='ku');
+  if(ku&&ku.alive){
+    shipMove(ku,0.4,dt);
+    if(S.st>2.5)damage(ku,3);
+  }
+  const yi=S.ships.find(s=>s.special==='yi');
+  if(S.st>0.5&&Math.random()<dt*3){
+    const targets=aliveShips('j').filter(s=>s.x<560);
+    if(yi&&targets.length)fireAt(yi,targets[Math.floor(Math.random()*targets.length)],0.5);
+  }
+}
+function tideTurns(){
+  setPhase(4);S.stage='turn';S.st=0;
+  setTide(1,'ebbing east, against the Japanese \u00b7 the channel roars');
+  playScene(SC_TIDE(),tideOrder);
+}
+function tideOrder(){
+  narrate('The tide turns',
+   `<p>Six hours from the flood, to the minute, because it is a tide and tides keep time. The current
+    dies, stands still for one long breath, and then the whole channel reverses and begins to run east,
+    against the enemy, faster with every minute. A hundred ships built for calm-water boarding are now
+    in a mill-race running the wrong way: those still rowing forward are shoved back onto those behind,
+    steerage dies, and the tightest concentration of shipping in the strait becomes a grinding, fouling,
+    splintering mass that the Uldolmok is carrying backward whether it fights or not.</p>
+    <p><em>The channel has taken your side. Tap the enemy mass to advance with the current and press the
+    attack. Tap your own line to hold the narrows and let them go.</em></p>`);
+  placeRing(ringA,560,310);
+  placeRing(ringB,380,310);
+  pickMode='tide';
+  setControls([]);
+}
+function updTurn(dt){
+  S.tideCur=Math.min(S.tideCur+dt*0.5,1);
+  /* the armada fouls itself */
+  const jp=aliveShips('j');
+  for(const s of jp){
+    s.x+=S.tideCur*currentSpeed(s.x)*dt*9;
+    for(const o of jp){
+      if(o===s)continue;
+      const d=Math.hypot(s.x-o.x,s.y-o.y);
+      if(d<5&&d>0.1){
+        const push=(5-d)*0.5*dt*8;
+        s.x+=((s.x-o.x)/d)*push;s.y+=((s.y-o.y)/d)*push;
+        if(Math.random()<dt*0.35){damage(s,1);}
+      }
+    }
+    s.y=THREE.MathUtils.clamp(s.y,shoreN(s.x)+9,shoreS(s.x)-9);
+  }
+}
+function holdCF(){
+  narrate('The tide turns \u00b7 what if',
+   `<p>You hold the narrows and let the ebb carry them out, and it is not wrong, only smaller. The
+    armada extracts itself, battered and humiliated, reforms in the eastern bay, and is still a hundred
+    and twenty ships to your thirteen, with another tide coming in six hours and every day after. The
+    current is a weapon that fires on a schedule; a defensive victory here is a battle survived, not a
+    sea closed.</p>
+    <p class="aside">Yi's report to the throne counts thirty-one enemy warships destroyed. Numbers like
+    that are not made holding station. They are made by pressing a broken enemy downstream.</p>`);
+  setControls([{label:'Rewind \u00b7 press the attack', fn:()=>{pressAttack();}}]);
+}
+function pressAttack(){
+  S.stage='press';S.st=0;
+  cine('strait');
+  for(const s of aliveShips('k')){s.tx=s.x+150;s.ty=THREE.MathUtils.clamp(s.ty,shoreN(s.x+150)+12,shoreS(s.x+150)-12);}
+  narrate('The tide turns \u00b7 the press',
+   `<p>The line comes forward off its anchors, thirteen ships riding the same current that is wrecking
+    the enemy, and the day becomes gunnery. The panokseon do the thing they were built for at a range
+    the fouled mass cannot answer, and ship after ship in the tangle burns, founders, or is ground onto
+    its neighbours. The rest claw east out of the Roaring Channel any way the water lets them.</p>`);
+  setControls([]);
+}
+function updPress(dt){
+  updTurn(dt);
+  for(const s of aliveShips('k')){
+    shipMove(s,0.35,dt);
+    if(Math.random()<dt*1.6){
+      const targets=aliveShips('j').filter(t=>Math.hypot(t.x-s.x,t.y-s.y)<120);
+      if(targets.length)fireAt(s,targets[Math.floor(Math.random()*targets.length)],0.42);
+    }
+  }
+  /* the armada breaks east */
+  if(S.st>4){
+    for(const s of aliveShips('j')){s.tx=980;s.ty=THREE.MathUtils.clamp(s.y,240,380);shipMove(s,0.5,dt);}
+  }
+  if(S.jpLost>=31||S.st>16){
+    S.stage='done';
+    narrate('The tide turns \u00b7 dusk',
+     `<p>By dusk the strait is yours and the sea west of it is closed again. Thirty-one enemy warships
+      destroyed against none of your own lost; your flagship's dead can be counted on one hand. The
+      surviving armada runs east and does not stop, and with it goes the entire Japanese plan for the
+      war: no supply route rounds this coast, no army in the north eats by sea, no fleet enters the
+      Yellow Sea while this man lives.</p>`);
+    setControls([{label:'The reckoning', fn:aftermath}]);
+  }
+}
+function aftermath(){
+  setPhase(5);setDay('After');
+  S.stage='done';cine('over');
+  playScene(SC_AFTER(),aftermathText);
+}
+function aftermathText(){
+  narrate('Aftermath',
+   `<p>Yi's diary entry for the day ends in three characters of bewildered honesty: \uC2E4\uB85C
+    \uCC9C\uD589\uC774\uB2E4, <em>truly, this was Heaven's aid.</em> Historians have mostly declined the
+    theology and kept the arithmetic: thirteen ships against a hundred and thirty three, thirty-one of
+    the enemy sunk, none of his own lost, the most lopsided naval victory in recorded history, won with
+    geography, tide tables, gunnery, and one ship's refusal to leave a channel. The famous iron chain
+    across the strait is later legend; the refugee fishing boats massed on the horizon behind him,
+    mistaken by the enemy for a second fleet, may not be.</p>
+    <p>The strategic engine of the invasion seized that afternoon. Without the western sea route the
+    armies in the north withered on their supply lines and fell back to the coast, and the war ended the
+    next year when Hideyoshi died. Yi Sun-sin fought its last battle at Noryang and was killed by a
+    stray shot in the hour of victory, having ordered his death concealed until the fighting ended:
+    <em>the battle is at its height; do not announce my death.</em> He remains the only admiral in world
+    history who never lost an engagement, twenty-three battles, and the one foreign commander whose
+    portrait hung, by his own account of respect, in the cabin of the Japanese admiral Togo three
+    centuries later.</p>
+    <p class="aside">And the sentence every Korean schoolchild can finish from its first four words,
+    the one that made everything after it possible: your servant still has twelve warships.</p>`);
+  setControls([{label:'Fight it again', fn:enterPrologue, ghost:true}]);
+}
+
+/* ================= narration & UI ================= */
+const narrLabel=document.getElementById('narrLabel');
+const narrBody=document.getElementById('narrBody');
+const choiceArea=document.getElementById('choiceArea');
+const controls=document.getElementById('controls');
+function narrate(label,html){
+  narrLabel.textContent=label;
+  narrBody.innerHTML=html;
+  narrBody.classList.remove('fade-in');void narrBody.offsetWidth;
+  narrBody.classList.add('fade-in');
+  choiceArea.innerHTML='';
+}
+function setControls(btns){
+  controls.innerHTML='';
+  for(const b of btns){
+    const el=document.createElement('button');
+    el.className='btn'+(b.ghost?' ghost':'');el.textContent=b.label;el.onclick=b.fn;
+    controls.appendChild(el);
+  }
+}
+function setChoices(items){
+  choiceArea.innerHTML='';
+  const grid=document.createElement('div');grid.className='choices fade-in';
+  for(const it of items){
+    const c=document.createElement('button');c.className='choice';
+    c.innerHTML=`<h3>${it.title}</h3><p>${it.body}</p>`;
+    c.onclick=it.fn;grid.appendChild(c);
+  }
+  choiceArea.appendChild(grid);
+  controls.innerHTML='';
+}
+function setPhase(p){
+  S.phase=p;
+  document.querySelectorAll('.pill').forEach(el=>{
+    const n=+el.dataset.p;
+    el.classList.toggle('active',n===p);
+    el.classList.toggle('done',n<p);
+  });
+}
+
+/* ================= main loop ================= */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05);
+  last=now;perfNow=now;S.st+=dt;
+  switch(S.stage){
+    case 'cfsail':updCfSail(dt);break;
+    case 'cfopen':updCfOpen(dt);break;
+    case 'form':for(const s of aliveShips('k'))shipMove(s,0.5,dt);break;
+    case 'funnel':updFunnel(dt);break;
+    case 'anwi':updAnwi(dt);break;
+    case 'kuru':updKuru(dt);break;
+    case 'turn':updTurn(dt);break;
+    case 'press':updPress(dt);break;
+  }
+  /* the tide itself */
+  const target=S.tide;
+  if(S.stage!=='turn'&&S.stage!=='press')S.tideCur+=(target-S.tideCur)*Math.min(dt*0.6,1);
+  updStreaks(dt);
+  updBalls(dt);
+  updSinking(dt);
+  updRings(dt);
+  sea.position.y=-0.45+Math.sin(now*0.0012)*0.05;
+  applyCamera(dt);
+  flushShips();
+  flushBalls();
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+
+/* ================= boot ================= */
+resize();
+enterPrologue();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

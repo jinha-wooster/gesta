@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marathon, 490 BC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16120e;
+    --ink-2:#1e1913;
+    --panel:#221c15;
+    --line:#3a3226;
+    --parchment:#e7dcc4;
+    --muted:#a2957c;
+    --faint:#6f6450;
+    --bronze:#d9a441;
+    --bronze-dim:#8f6f2e;
+    --persia:#bb4a33;
+    --persia-dim:#7d3324;
+    --sea:#2b3d44;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{background:var(--ink)}
+  body{
+    background:var(--ink);
+    color:var(--parchment);
+    font-family:'Source Serif 4', Georgia, serif;
+    font-size:17px;
+    line-height:1.65;
+    min-height:100vh;
+  }
+  .wrap{max-width:980px;margin:0 auto;padding:40px 20px 80px}
+
+  header{text-align:center;margin-bottom:28px}
+  .eyebrow{
+    font-size:12px;letter-spacing:.32em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:14px;
+  }
+  h1{
+    font-family:'GFS Didot', serif;
+    font-weight:400;
+    font-size:clamp(44px, 8vw, 76px);
+    letter-spacing:.06em;
+    color:var(--parchment);
+    line-height:1;
+  }
+  .subtitle{color:var(--muted);font-style:italic;margin-top:12px;font-size:16px}
+
+  .meander{height:14px;margin:26px auto;max-width:520px;opacity:.55}
+
+  /* phase pills */
+  .phases{
+    display:flex;justify-content:center;gap:6px;flex-wrap:wrap;
+    margin-bottom:22px;
+  }
+  .pill{
+    font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    padding:7px 13px;border:1px solid var(--line);border-radius:2px;
+    color:var(--faint);transition:all .35s;white-space:nowrap;
+  }
+  .pill.active{color:var(--bronze);border-color:var(--bronze-dim);background:rgba(217,164,65,.06)}
+  .pill.done{color:var(--muted)}
+
+  /* stage */
+  .stage{
+    position:relative;
+    border:1px solid var(--line);
+    background:var(--ink-2);
+    border-radius:3px;
+    overflow:hidden;
+  }
+  canvas{display:block;width:100%;height:auto}
+  .counters{
+    position:absolute;top:10px;left:12px;right:12px;
+    display:flex;justify-content:space-between;
+    pointer-events:none;font-size:12px;letter-spacing:.08em;
+    opacity:0;transition:opacity .6s;
+  }
+  .counters.show{opacity:1}
+  .counter{background:rgba(22,18,14,.75);padding:4px 10px;border-radius:2px;border:1px solid var(--line)}
+  .counter b{font-weight:600}
+  .c-ath b{color:var(--bronze)}
+  .c-per b{color:var(--persia)}
+
+  /* narration */
+  .narration{
+    border:1px solid var(--line);border-top:none;
+    background:var(--panel);
+    padding:26px 30px;
+    border-radius:0 0 3px 3px;
+    min-height:150px;
+  }
+  .narr-label{
+    font-size:11px;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--bronze);margin-bottom:10px;
+    font-family:'Source Serif 4',serif;
+  }
+  .narration p{margin-bottom:12px;color:var(--parchment)}
+  .narration p:last-child{margin-bottom:0}
+  .narration em{color:var(--muted)}
+  .aside{font-size:14px;color:var(--muted);font-style:italic;border-left:2px solid var(--bronze-dim);padding-left:14px;margin-top:14px}
+
+  /* decision cards */
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  @media(max-width:640px){.choices{grid-template-columns:1fr}}
+  .choice{
+    border:1px solid var(--line);border-radius:3px;padding:20px;
+    background:var(--ink-2);cursor:pointer;text-align:left;
+    color:var(--parchment);font-family:inherit;font-size:16px;
+    transition:border-color .25s, background .25s;
+  }
+  .choice:hover{border-color:var(--bronze-dim);background:#26201780}
+  .choice h3{
+    font-family:'GFS Didot',serif;font-weight:400;font-size:20px;
+    letter-spacing:.04em;margin-bottom:8px;color:var(--bronze);
+  }
+  .choice p{font-size:14.5px;color:var(--muted);line-height:1.55}
+
+  /* buttons */
+  .controls{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn{
+    font-family:inherit;font-size:14px;letter-spacing:.14em;text-transform:uppercase;
+    padding:13px 28px;background:transparent;color:var(--bronze);
+    border:1px solid var(--bronze-dim);border-radius:2px;cursor:pointer;
+    transition:all .25s;
+  }
+  .btn:hover{background:rgba(217,164,65,.1);border-color:var(--bronze)}
+  .btn.ghost{color:var(--muted);border-color:var(--line)}
+  .btn.ghost:hover{color:var(--parchment);background:rgba(255,255,255,.04)}
+  .btn:disabled{opacity:.35;cursor:default}
+
+  footer{
+    margin-top:44px;text-align:center;font-size:13px;color:var(--faint);
+    line-height:1.7;
+  }
+  footer .meander{margin-bottom:22px}
+
+  .fade-in{animation:fadeIn .6s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion: reduce){
+    .fade-in{animation:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">490 BC · The plain of Marathon · Attica</div>
+    <h1>MARATHON</h1>
+    <p class="subtitle">Ten thousand hoplites against the empire of the Great King</p>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <pattern id="key" width="26" height="14" patternUnits="userSpaceOnUse">
+          <path d="M0 12 H10 V2 H20 V8 H14 V6 H18 V4 H12 V10 H22 V0 H26" fill="none" stroke="#d9a441" stroke-width="1.4"/>
+        </pattern>
+      </defs>
+      <rect width="520" height="14" fill="url(#key)"/>
+    </svg>
+  </header>
+
+  <nav class="phases" aria-label="Battle phases">
+    <span class="pill" data-p="0">Prologue</span>
+    <span class="pill" data-p="1">The vote</span>
+    <span class="pill" data-p="2">Deployment</span>
+    <span class="pill" data-p="3">The charge</span>
+    <span class="pill" data-p="4">The battle</span>
+    <span class="pill" data-p="5">Aftermath</span>
+  </nav>
+
+  <div class="stage">
+    <canvas id="field" width="1000" height="620" role="img" aria-label="Animated tactical map of the plain of Marathon showing Athenian and Persian formations"></canvas>
+    <div class="counters" id="counters">
+      <span class="counter c-ath">Athenian fallen&nbsp; <b id="athDead">0</b></span>
+      <span class="counter c-per">Persian fallen&nbsp; <b id="perDead">0</b></span>
+    </div>
+  </div>
+
+  <div class="narration">
+    <div class="narr-label" id="narrLabel">Prologue</div>
+    <div id="narrBody"></div>
+    <div id="choiceArea"></div>
+  </div>
+
+  <div class="controls" id="controls"></div>
+
+  <footer>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true"><rect width="520" height="14" fill="url(#key)"/></svg>
+    Grounded in Herodotus, <em>Histories</em> VI, and mainstream scholarship. Troop numbers, the length of the run,
+    and Persian cavalry's absence are debated by historians; where accounts differ, this simulation follows
+    the most widely accepted reconstruction. One dot represents roughly 35 to 55 men.
+  </footer>
+</div>
+
+<script>
+"use strict";
+
+/* ============ canvas & world ============ */
+const cv = document.getElementById('field');
+const cx = cv.getContext('2d');
+const W = 1000, H = 620;
+
+/* zones */
+const SEA_Y = 70, BEACH_Y = 112, HILL_Y = 545;
+const MARSH = {x:830, y:78, w:170, h:210};
+
+/* ============ state ============ */
+const S = {
+  phase: 0,
+  stage: 'idle',        // idle | charge | melee | envelop | rout | done | cfcharge | cfmelee | cfflank | cffrozen
+  formation: null,      // 'thin' | 'even'
+  soldiers: [],
+  arrows: [],
+  corpses: [],
+  athDead: 0, perDead: 0, perEscaped: 0,
+  st: 0,                // seconds in current stage
+  wingsRouted: false,
+  narratedContact: false,
+};
+
+const ATH_PER_DOT = 35, PER_PER_DOT = 55;
+const rnd = (a,b)=>a+Math.random()*(b-a);
+
+/* ============ soldiers ============ */
+function soldier(x,y,side,grp){
+  return {x,y,tx:x,ty:y,hx:x,hy:y,side,grp,alive:true,flee:false,dieAt:null,jit:rnd(0,6.28)};
+}
+
+function spawnPersians(){
+  // 9 ranks along the beach; best troops (Persians & Sakae) in the centre
+  for(let r=0;r<9;r++){
+    for(let c=0;c<50;c++){
+      const x = 255 + c*10.2 + rnd(-1.5,1.5);
+      const y = 150 + r*7.6 + rnd(-1.5,1.5);
+      const grp = (x<430)?'pl':(x>592)?'pr':'pc';
+      S.soldiers.push(soldier(x,y,'p',grp));
+    }
+  }
+}
+
+function spawnAthenians(formation){
+  S.soldiers = S.soldiers.filter(s=>s.side==='p');
+  const mk=(x0,x1,ranks,grp)=>{
+    const cols = Math.round((x1-x0)/11);
+    for(let r=0;r<ranks;r++)for(let c=0;c<cols;c++){
+      const x = x0 + c*11 + rnd(-1.5,1.5);
+      const y = 432 + r*7.4 + rnd(-1.5,1.5);
+      S.soldiers.push(soldier(x,y,'a',grp));
+    }
+  };
+  if(formation==='thin'){
+    mk(250,424,8,'al');   // left wing (with the Plataeans)
+    mk(436,566,4,'ac');   // deliberately thinned centre
+    mk(578,752,8,'ar');   // right wing, Callimachus's post of honour
+  }else{
+    mk(250,752,6,'ae');   // one even line
+  }
+}
+
+/* ============ drawing ============ */
+function drawTerrain(){
+  cx.fillStyle = '#16120e'; cx.fillRect(0,0,W,H);
+
+  // sea
+  cx.fillStyle = '#233238'; cx.fillRect(0,0,W,SEA_Y);
+  cx.strokeStyle = 'rgba(231,220,196,.10)'; cx.lineWidth = 1;
+  for(let i=0;i<4;i++){
+    cx.beginPath();
+    for(let x=0;x<=W;x+=20) cx.lineTo(x, 18+i*14 + Math.sin(x*.02+i)*2.4);
+    cx.stroke();
+  }
+  // ships
+  cx.fillStyle = '#0e1a1e';
+  for(let i=0;i<9;i++){
+    const sx = 300 + i*46;
+    cx.beginPath();
+    cx.moveTo(sx-16,52); cx.quadraticCurveTo(sx,64,sx+16,52);
+    cx.lineTo(sx+12,46); cx.lineTo(sx-12,46); cx.closePath(); cx.fill();
+    cx.fillRect(sx-1,32,2,15);
+  }
+  // beach
+  cx.fillStyle = '#2a241b'; cx.fillRect(0,SEA_Y,W,BEACH_Y-SEA_Y);
+
+  // great marsh
+  cx.fillStyle = '#222a1f';
+  cx.beginPath();
+  cx.ellipse(MARSH.x+MARSH.w/2, MARSH.y+MARSH.h/2, MARSH.w/2, MARSH.h/2, 0, 0, 6.3);
+  cx.fill();
+  cx.strokeStyle = 'rgba(160,175,130,.16)';
+  for(let i=0;i<6;i++){
+    const mx = MARSH.x+30+rndSeed(i)*(MARSH.w-60), my = MARSH.y+30+rndSeed(i+7)*(MARSH.h-60);
+    cx.beginPath(); cx.moveTo(mx-8,my); cx.quadraticCurveTo(mx,my-5,mx+8,my); cx.stroke();
+  }
+
+  // foothills
+  cx.fillStyle = '#1c1710'; cx.fillRect(0,HILL_Y,W,H-HILL_Y);
+  cx.strokeStyle = 'rgba(231,220,196,.12)';
+  for(let i=0;i<7;i++){
+    const hx = 60+i*145, hr = 46+((i*37)%30);
+    cx.beginPath(); cx.arc(hx, H+18, hr, Math.PI, 0, false); cx.stroke();
+  }
+
+  // labels
+  cx.fillStyle = 'rgba(231,220,196,.42)';
+  cx.font = '11px Georgia'; cx.textAlign='left';
+  cx.fillText('THE PERSIAN FLEET', 16, 30);
+  cx.fillText('GREAT MARSH', MARSH.x+34, MARSH.y+MARSH.h/2);
+  cx.fillText('FOOTHILLS OF PENTELIKON · THE ATHENIAN CAMP', 16, H-16);
+  cx.textAlign='right';
+  cx.fillText('PLAIN OF MARATHON', W-20, 360);
+}
+function rndSeed(i){ const v = Math.sin(i*127.1)*43758.5; return v-Math.floor(v); }
+
+function drawSoldiers(){
+  // fallen first, as ground marks
+  for(const c of S.corpses){
+    cx.fillStyle = c.side==='a' ? 'rgba(143,111,46,.5)' : 'rgba(125,51,36,.5)';
+    cx.fillRect(c.x-2.4, c.y-.9, 4.8, 1.8);
+  }
+  for(const s of S.soldiers){
+    if(!s.alive) continue;
+    cx.fillStyle = s.side==='a' ? '#d9a441'
+      : (s.grp==='pc' ? '#cf5138' : '#b04531');
+    cx.beginPath(); cx.arc(s.x, s.y, 2.1, 0, 6.3); cx.fill();
+  }
+}
+
+function drawArrows(){
+  cx.strokeStyle = 'rgba(231,220,196,.65)'; cx.lineWidth = 1;
+  for(const a of S.arrows){
+    cx.beginPath(); cx.moveTo(a.x,a.y); cx.lineTo(a.x-a.vx*3.2, a.y-a.vy*3.2); cx.stroke();
+  }
+}
+
+function draw(){
+  drawTerrain();
+  drawSoldiers();
+  drawArrows();
+  if(S.stage==='cffrozen'){
+    cx.fillStyle = 'rgba(187,74,51,.10)'; cx.fillRect(0,0,W,H);
+  }
+}
+
+/* ============ helpers ============ */
+function kill(s){
+  if(!s.alive) return;
+  s.alive=false;
+  S.corpses.push({x:s.x,y:s.y,side:s.side});
+  if(s.side==='a') S.athDead++; else S.perDead++;
+  updateCounters();
+}
+function alive(side,grp){ return S.soldiers.filter(s=>s.alive && s.side===side && (!grp||s.grp===grp)); }
+function killRandom(side,grp,n){
+  const pool = alive(side,grp);
+  for(let i=0;i<n && pool.length;i++){
+    const idx = Math.floor(Math.random()*pool.length);
+    kill(pool[idx]); pool.splice(idx,1);
+  }
+}
+function updateCounters(){
+  document.getElementById('athDead').textContent = '~'+(S.athDead*ATH_PER_DOT).toLocaleString();
+  document.getElementById('perDead').textContent = '~'+(S.perDead*PER_PER_DOT).toLocaleString();
+}
+function moveToward(s, speed, dt){
+  const dx = s.tx-s.x, dy = s.ty-s.y, d = Math.hypot(dx,dy);
+  if(d < 1.5) return true;
+  const wob = Math.sin(perf*0.004 + s.jit)*.25;
+  s.x += (dx/d)*speed*dt*60 + wob*.3;
+  s.y += (dy/d)*speed*dt*60;
+  return false;
+}
+
+/* ============ battle timeline (historical) ============ */
+function startCharge(){
+  S.stage='charge'; S.st=0; S.narratedContact=false;
+  document.getElementById('counters').classList.add('show');
+  for(const s of S.soldiers){
+    if(s.side!=='a') continue;
+    s.ty = 224 + (s.y-432);        // keep rank depth, close on the Persian front
+    s.tx = s.hx;
+  }
+}
+
+function updCharge(dt){
+  let contact = false;
+  for(const s of S.soldiers){
+    if(s.side!=='a'||!s.alive) continue;
+    const run = s.y < 380;                 // the final stretch at a run
+    moveToward(s, run?1.55:0.55, dt);
+    if(s.y < 250) contact = true;
+  }
+  // arrow volleys once in range
+  if(S.st>1.2 && Math.random()<0.5){
+    const shooters = alive('p'); if(shooters.length){
+      const from = shooters[Math.floor(Math.random()*shooters.length)];
+      const tgts = alive('a').filter(a=>a.y<400);
+      if(tgts.length){
+        const t = tgts[Math.floor(Math.random()*tgts.length)];
+        const dx=t.x-from.x, dy=t.y-from.y, d=Math.hypot(dx,dy);
+        S.arrows.push({x:from.x,y:from.y,vx:dx/d*5.4,vy:dy/d*5.4,ttl:d/5.4});
+      }
+    }
+  }
+  if(contact){
+    if(S.stage==='charge'){ startMelee(); }
+  }
+}
+
+function startMelee(){
+  S.stage='melee'; S.st=0; S.arrows.length=0; setPhase(4);
+  narrate('The battle',
+   `<p>The lines meet with a crash that Herodotus says astonished the Persians, who thought the charging Greeks
+    <em>possessed by a destructive madness</em>. Then the plan begins to work, and to hurt.</p>
+    <p>In the centre, where you thinned the ranks, the Great King's best troops grind the Athenians backward,
+    step by step toward the hills. It looks like the line is failing. It is doing exactly what Miltiades intended:
+    bending, absorbing, holding just long enough.</p>
+    <p>On both wings, eight ranks of bronze smash through the weaker Persian flanks.</p>`);
+  // targets: centre gets pushed, wings push forward
+  for(const s of S.soldiers){
+    if(!s.alive) continue;
+    if(s.grp==='ac'){ s.tx=s.x; s.ty=s.y+95; }
+    else if(s.grp==='al'||s.grp==='ar'){ s.tx=s.x; s.ty=s.y-58; }
+    else if(s.grp==='pl'||s.grp==='pr'){ s.tx=s.x; s.ty=s.y-20; }
+    else if(s.grp==='pc'){ s.tx=s.x; s.ty=s.y+70; }
+  }
+}
+
+function updMelee(dt){
+  for(const s of S.soldiers){ if(s.alive && !s.flee) moveToward(s,0.28,dt); }
+  // attrition: Persian wings bleed fast, Athenian losses stay light
+  if(Math.random()<dt*7) killRandom('p','pl',1);
+  if(Math.random()<dt*7) killRandom('p','pr',1);
+  if(Math.random()<dt*1.6) killRandom('p','pc',1);
+  if(Math.random()<dt*0.55) killRandom('a',null,1);
+
+  if(S.st>3.6 && !S.wingsRouted){
+    S.wingsRouted = true;
+    for(const s of S.soldiers){
+      if(s.alive && (s.grp==='pl'||s.grp==='pr')){
+        s.flee=true; s.tx = rnd(340,660); s.ty = rnd(40,58);
+        if(Math.random()<0.3) s.dieAt = rnd(0.2,0.8);   // cut down while fleeing
+      }
+    }
+  }
+  if(S.st>6.2) startEnvelop();
+}
+
+function startEnvelop(){
+  S.stage='envelop'; S.st=0;
+  narrate('The battle',
+   `<p>And now the manoeuvre that will be studied for 2,500 years. Instead of chasing the broken Persian wings
+    to the ships, the Athenian wings <em>wheel inward</em>, turning on the victorious Persian centre from
+    both sides at once.</p>
+    <p>The Great King's finest, moments ago driving the Greek centre before them, are suddenly struck on
+    both flanks. A double envelopment. Order dissolves.</p>`);
+  for(const s of S.soldiers){
+    if(!s.alive||s.flee) continue;
+    if(s.grp==='al'){ s.tx = rnd(400,480); s.ty = rnd(210,300); }
+    if(s.grp==='ar'){ s.tx = rnd(540,620); s.ty = rnd(210,300); }
+    if(s.grp==='ac'){ s.ty = s.y-30; }
+  }
+}
+
+function updEnvelop(dt){
+  for(const s of S.soldiers){ if(s.alive) moveToward(s, s.flee?1.5:0.5, dt); }
+  fleeDeaths(dt);
+  if(Math.random()<dt*10) killRandom('p','pc',1);
+  if(Math.random()<dt*0.4) killRandom('a',null,1);
+  if(S.st>3.4) startRout();
+}
+
+function startRout(){
+  S.stage='rout'; S.st=0;
+  narrate('The battle',
+   `<p>The Persian centre breaks and runs for the ships. Some, in the chaos and smoke, flee the wrong way
+    and stumble into the Great Marsh, where by ancient tradition great numbers drowned.</p>
+    <p>The Athenians pursue to the water's edge, fighting for the ships themselves. Here fall some of their
+    highest-ranked dead, including the war archon Callimachus, whose single vote made this day possible.
+    The Persians save all but seven of their ships and put to sea.</p>`);
+  for(const s of S.soldiers){
+    if(!s.alive) continue;
+    if(s.side==='p'){
+      s.flee=true;
+      if(Math.random()<0.26){ s.tx = MARSH.x+rnd(30,130); s.ty = MARSH.y+rnd(40,160); s.marsh=true; }
+      else { s.tx = rnd(320,680); s.ty = rnd(38,56); if(Math.random()<0.28) s.dieAt = rnd(0.15,0.8); }
+    } else {
+      s.tx = s.x + rnd(-15,15); s.ty = Math.max(140, s.y-110);   // pursuit
+    }
+  }
+}
+
+function updRout(dt){
+  for(const s of S.soldiers){ if(s.alive) moveToward(s, s.side==='p'?1.6:0.6, dt); }
+  fleeDeaths(dt);
+  for(const s of S.soldiers){
+    if(!s.alive||s.side!=='p') continue;
+    if(s.marsh && Math.hypot(s.tx-s.x,s.ty-s.y)<8){ kill(s); }
+    else if(!s.marsh && s.y<66){ s.alive=false; S.perEscaped++; }   // reached the ships
+  }
+  if(S.st>5 || alive('p').length===0){
+    S.stage='done';
+    setControls([{label:'The reckoning', fn:gotoAftermath}]);
+  }
+}
+
+function fleeDeaths(dt){
+  for(const s of S.soldiers){
+    if(s.alive && s.flee && s.dieAt!=null){
+      s.dieAt -= dt*0.25;
+      if(s.dieAt<=0) kill(s);
+    }
+  }
+}
+
+/* ============ counterfactual: even line ============ */
+function startCfCharge(){
+  S.stage='cfcharge'; S.st=0;
+  document.getElementById('counters').classList.add('show');
+  for(const s of S.soldiers){
+    if(s.side!=='a') continue;
+    s.ty = 224 + (s.y-432); s.tx = s.hx;
+  }
+}
+function updCfCharge(dt){
+  let contact=false;
+  for(const s of S.soldiers){
+    if(s.side!=='a'||!s.alive) continue;
+    moveToward(s, s.y<380?1.55:0.55, dt);
+    if(s.y<250) contact=true;
+  }
+  if(S.st>1.2 && Math.random()<0.5){
+    const shooters=alive('p');
+    if(shooters.length){
+      const from=shooters[Math.floor(Math.random()*shooters.length)];
+      const tgts=alive('a').filter(a=>a.y<400);
+      if(tgts.length){ const t=tgts[Math.floor(Math.random()*tgts.length)];
+        const dx=t.x-from.x,dy=t.y-from.y,d=Math.hypot(dx,dy);
+        S.arrows.push({x:from.x,y:from.y,vx:dx/d*5.4,vy:dy/d*5.4,ttl:d/5.4});}
+    }
+  }
+  if(contact){
+    S.stage='cfmelee'; S.st=0; S.arrows.length=0;
+    narrate('Deployment · what if',
+     `<p>Your even line holds the Persian centre. For a while, this looks like the safer choice.</p>
+      <p>But the Persian army is more than twice your size, and a line of equal depth everywhere is a
+      <em>shorter</em> line. Watch the ends.</p>`);
+    // Persian overlap columns swing around both flanks
+    for(const s of S.soldiers){
+      if(!s.alive||s.side!=='p') continue;
+      if(s.x<300){ s.tx = rnd(180,240); s.ty = rnd(300,470); s.flank=true; }
+      else if(s.x>700){ s.tx = rnd(760,822); s.ty = rnd(300,470); s.flank=true; }
+      else { s.ty = s.y+25; }
+    }
+  }
+}
+function updCfMelee(dt){
+  for(const s of S.soldiers){ if(s.alive) moveToward(s,0.42,dt); }
+  if(Math.random()<dt*1.8) killRandom('p',null,1);
+  if(Math.random()<dt*1.2) killRandom('a',null,1);
+  if(S.st>3){
+    S.stage='cfflank'; S.st=0;
+    // flanking columns turn inward onto the Athenian ends
+    for(const s of S.soldiers){
+      if(s.alive && s.flank){
+        s.tx = s.x<500 ? rnd(255,330) : rnd(670,745);
+        s.ty = rnd(430,480);
+      }
+    }
+    narrate('Deployment · what if',
+     `<p>The longer Persian line laps around both of your ends and folds onto them. Hoplites fight superbly
+      to their front; struck from the side and rear, the phalanx has no answer.</p>
+      <p>Your flanks begin to collapse inward. With them would go Athens, and behind Athens, perhaps
+      the whole Greek experiment.</p>`);
+  }
+}
+function updCfFlank(dt){
+  for(const s of S.soldiers){ if(s.alive) moveToward(s,0.5,dt); }
+  // Athenian ends die fast
+  const ends = alive('a').filter(a=>a.x<340||a.x>660);
+  if(ends.length && Math.random()<dt*14) kill(ends[Math.floor(Math.random()*ends.length)]);
+  if(Math.random()<dt*1.5) killRandom('p',null,1);
+  if(S.st>4.5){
+    S.stage='cffrozen';
+    narrate('Deployment · what if',
+     `<p>This is the battle Datis and Artaphernes expected to fight, and the reason numbers usually win.</p>
+      <p class="aside">Miltiades saw the problem in advance. His answer was strange, risky, and correct:
+      make the line long enough by deliberately weakening the one place everyone believed had to be strong.</p>`);
+    setControls([{label:'Rewind · take Miltiades\u2019s advice', fn:()=>{ resetBattlefield(); enterDeployment(true); }}]);
+  }
+}
+
+/* ============ arrows ============ */
+function updArrows(dt){
+  for(let i=S.arrows.length-1;i>=0;i--){
+    const a=S.arrows[i];
+    a.x+=a.vx*dt*60; a.y+=a.vy*dt*60; a.ttl-=dt*60;
+    if(a.ttl<=0){
+      // strikes home occasionally; shields and armour turn most aside
+      if(Math.random()<0.10){
+        const near = alive('a').filter(s=>Math.hypot(s.x-a.x,s.y-a.y)<10);
+        if(near.length) kill(near[0]);
+      }
+      S.arrows.splice(i,1);
+    }
+  }
+}
+
+/* ============ main loop ============ */
+let perf = 0, last = performance.now();
+function loop(now){
+  const dt = Math.min((now-last)/1000, 0.05);
+  last = now; perf = now; S.st += dt;
+  switch(S.stage){
+    case 'charge': updCharge(dt); updArrows(dt); break;
+    case 'melee': updMelee(dt); break;
+    case 'envelop': updEnvelop(dt); break;
+    case 'rout': updRout(dt); break;
+    case 'cfcharge': updCfCharge(dt); updArrows(dt); break;
+    case 'cfmelee': updCfMelee(dt); break;
+    case 'cfflank': updCfFlank(dt); break;
+  }
+  draw();
+  requestAnimationFrame(loop);
+}
+
+/* ============ narration & UI ============ */
+const narrLabel = document.getElementById('narrLabel');
+const narrBody = document.getElementById('narrBody');
+const choiceArea = document.getElementById('choiceArea');
+const controls = document.getElementById('controls');
+
+function narrate(label, html){
+  narrLabel.textContent = label;
+  narrBody.innerHTML = html;
+  narrBody.classList.remove('fade-in'); void narrBody.offsetWidth;
+  narrBody.classList.add('fade-in');
+  choiceArea.innerHTML = '';
+}
+function setControls(btns){
+  controls.innerHTML='';
+  for(const b of btns){
+    const el=document.createElement('button');
+    el.className='btn'+(b.ghost?' ghost':'');
+    el.textContent=b.label;
+    el.onclick=b.fn;
+    controls.appendChild(el);
+  }
+}
+function setChoices(items){
+  choiceArea.innerHTML='';
+  const grid=document.createElement('div'); grid.className='choices fade-in';
+  for(const it of items){
+    const c=document.createElement('button'); c.className='choice';
+    c.innerHTML = `<h3>${it.title}</h3><p>${it.body}</p>`;
+    c.onclick=it.fn;
+    grid.appendChild(c);
+  }
+  choiceArea.appendChild(grid);
+  controls.innerHTML='';
+}
+function setPhase(p){
+  S.phase=p;
+  document.querySelectorAll('.pill').forEach(el=>{
+    const n=+el.dataset.p;
+    el.classList.toggle('active', n===p);
+    el.classList.toggle('done', n<p);
+  });
+}
+function resetBattlefield(){
+  S.soldiers=[]; S.arrows=[]; S.corpses=[];
+  S.athDead=0; S.perDead=0; S.perEscaped=0;
+  S.wingsRouted=false; S.stage='idle';
+  updateCounters();
+  document.getElementById('counters').classList.remove('show');
+  spawnPersians();
+}
+
+/* ============ phases ============ */
+function enterPrologue(){
+  setPhase(0); resetBattlefield();
+  narrate('Prologue',
+   `<p>Late summer, 490 BC. King Darius of Persia rules the largest empire the world has known, and Athens
+    has offended him: it sent ships to support a rebellion in his territory. His fleet of hundreds of vessels
+    has just landed some 25,000 men on the plain of Marathon, a day's march from Athens, guided by the
+    exiled Athenian tyrant Hippias, who intends to rule the city again as a Persian client.</p>
+    <p>Weeks earlier the same fleet erased the city of Eretria: temples burned, population enslaved.
+    Athens has perhaps 10,000 hoplites, citizen soldiers in bronze, plus a small force from loyal Plataea.
+    The runner Pheidippides was sent to Sparta for help; the Spartans are coming, but a religious festival
+    holds them for six more days.</p>
+    <p>The Athenian army has marched out and taken position in the foothills, blocking the road to the city.
+    You are in its command tent. Below, on the plain, the campfires of the Great King's army.</p>`);
+  setControls([{label:'Enter the command tent', fn:enterVote}]);
+}
+
+function enterVote(){
+  setPhase(1);
+  narrate('The vote of Callimachus',
+   `<p>Athenian command is divided among ten generals, one per tribe, and they are split five against five.
+    The war archon Callimachus holds the deciding vote, and the general Miltiades, who once served the
+    Persians and knows how they fight, is speaking urgently into his ear.</p>
+    <p>For this moment, you are Callimachus. Herodotus records the arguments on both sides.</p>`);
+  setChoices([
+    {title:'Wait behind the hills',
+     body:'Five generals urge caution: we are badly outnumbered, the position is strong, and every day of delay brings the Spartans closer. Why gamble the only army Athens has?',
+     fn:voteWait},
+    {title:'Attack',
+     body:'Miltiades: delay is the greater risk. Persian gold is already working on factions inside Athens; wait, and the city may be betrayed before Sparta ever marches. Strike now, while the men\u2019s spirit holds, and Athens can be made free.',
+     fn:voteAttack},
+  ]);
+}
+
+function voteWait(){
+  narrate('The vote · what if',
+   `<p>You choose to wait. It is the textbook answer, and it might be the fatal one.</p>
+    <p>The Persians do not need to storm your hills. They can re-embark half their force and sail around
+    Cape Sounion to an undefended Athens, where Hippias's friends wait to open the gates, exactly the
+    manoeuvre they in fact attempted after the battle. Eretria did not fall to assault either; it fell to
+    treachery on the seventh day. Miltiades's whole argument is that time is a weapon, and it is not yours.</p>
+    <p class="aside">History records that Callimachus was persuaded. "It is up to you, Callimachus,"
+    Herodotus has Miltiades say, "whether to enslave Athens, or to make her free."</p>`);
+  setControls([{label:'Cast the vote Callimachus cast', fn:voteAttack}]);
+}
+
+function voteAttack(){
+  narrate('The vote',
+   `<p>Attack. The tablet drops, five votes become six, and the thing is decided. By custom each general
+    presides in turn; the others cede their days to Miltiades, and he waits for his own day to come round
+    before committing, one more sign this is a plan, not an impulse.</p>
+    <p>Now the plan itself. And it is a strange one.</p>`);
+  setControls([{label:'Draw up the line of battle', fn:()=>enterDeployment(false)}]);
+}
+
+function enterDeployment(fromRewind){
+  setPhase(2); resetBattlefield();
+  spawnAthenians('thin'); S.formation='thin';
+  narrate('Deployment',
+   `<p>A hoplite phalanx normally stands eight shields deep everywhere. Miltiades proposes something no one
+    has tried against the Persians: stretch the line to match theirs so it cannot be outflanked, and find the
+    extra frontage by <em>thinning the centre to half depth</em>, keeping the wings at full strength.</p>
+    <p>It means deliberately weakening the line exactly where the Great King's best troops will strike.
+    The centre will be asked to bend without breaking while the wings do the killing.</p>
+    ${fromRewind?'<p class="aside">The line re-forms as Miltiades drew it: strong wings, thin centre.</p>':''}`);
+  if(fromRewind){
+    setControls([{label:'Sound the paean · charge', fn:()=>{ setPhase(3); narrateCharge(); startCharge(); }}]);
+  }else{
+    setChoices([
+      {title:'The even line',
+       body:'Depth is safety. Keep the ranks deep and uniform across the whole line, solid everywhere. No part of the line is a designated weak point.',
+       fn:()=>{ spawnAthenians('even'); S.formation='even';
+         narrate('Deployment · what if',
+          `<p>You form one uniform line, six ranks deep, solid and orthodox. The men take their places.</p>
+           <p>Sound the advance, and see what an even line buys you against an army twice your size.</p>`);
+         setControls([{label:'Sound the advance', fn:startCfCharge}]);
+       }},
+      {title:'Miltiades\u2019s line',
+       body:'Thin the centre to four ranks. Load the wings to eight. Match the Persian frontage edge to edge, accept that the centre will suffer, and trust the wings to decide it.',
+       fn:()=>{ spawnAthenians('thin'); S.formation='thin';
+         narrate('Deployment',
+          `<p>The line forms as Miltiades drew it: the Plataeans anchoring the far left, Callimachus in the
+           post of honour on the right, and in the thinned centre the tribes of Themistocles and Aristides,
+           two men who will each later save Greece in their own way.</p>
+           <p>Nearly a mile of bronze and linen. Ahead, eight stades of open ground, roughly 1,500 metres,
+           every metre of it inside the range of ten thousand Persian bows for the final stretch.</p>`);
+         setControls([{label:'Sound the paean · charge', fn:()=>{ setPhase(3); narrateCharge(); startCharge(); }}]);
+       }},
+    ]);
+  }
+}
+
+function narrateCharge(){
+  narrate('The charge',
+   `<p>The paean rises along the line and ten thousand men step off across the plain. Herodotus claims they
+    ran the whole eight stades; modern historians doubt men in 25 kilograms of armour could, and suspect
+    they marched, then broke into a run for the last 200 metres or so, once inside arrow range.</p>
+    <p>Either way, the intent is the same: cross the killing ground of the Persian archers as fast as legs
+    allow. The Persians, watching a smaller army with no cavalry and no archers of its own sprint toward
+    them, conclude the Greeks have gone mad.</p>`);
+  setControls([]);
+}
+
+function gotoAftermath(){
+  setPhase(5); S.stage='done';
+  narrate('Aftermath',
+   `<p>Herodotus gives the count: <em>6,400 Persian dead against 192 Athenians</em>. The 192 were buried under
+    a mound on the plain, the Soros, an honour usually reserved for heroes. It still stands; you can visit it.</p>
+    <p>The day is not over. The Persian fleet rounds Cape Sounion, making for undefended Athens. The exhausted
+    army turns and force-marches some 40 kilometres home, arriving before the ships. The Persians see hoplites
+    on the shore, and sail away.</p>
+    <p>The famous run comes later and gets tangled: Pheidippides's historical run was Athens to Sparta
+    <em>before</em> the battle, about 240 km in two days. The tale of a runner dying with "we have won"
+    on his lips appears centuries afterward. The modern marathon distance honours the legend, not the record.</p>
+    <p class="aside">Why it mattered: Marathon proved the Persian empire could be beaten, by citizen soldiers
+    of a self-governing city, ten years before the great invasion of Xerxes. Aeschylus, poet of the age, wrote
+    tragedies that defined drama itself; his epitaph mentions none of it. It says only that he fought at Marathon.</p>`);
+  setControls([{label:'Run it again', fn:enterPrologue, ghost:true}]);
+}
+
+/* ============ boot ============ */
+spawnPersians();
+enterPrologue();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

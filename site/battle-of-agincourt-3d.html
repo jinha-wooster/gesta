@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agincourt, 1415 · 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#141312; --ink-2:#1b1a18; --panel:#201e1b; --line:#38352f;
+    --parchment:#e5ddc8; --muted:#9c957f; --faint:#696355;
+    --bronze:#d9a441; --bronze-dim:#8f6f2e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{background:var(--ink)}
+  body{background:var(--ink);color:var(--parchment);font-family:'Source Serif 4',Georgia,serif;font-size:17px;line-height:1.65;min-height:100vh}
+  .wrap{max-width:1060px;margin:0 auto;padding:36px 18px 80px}
+
+  header{text-align:center;margin-bottom:26px}
+  .eyebrow{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  h1{font-family:'GFS Didot',serif;font-weight:400;font-size:clamp(38px,7vw,70px);letter-spacing:.06em;line-height:1}
+  .subtitle{color:var(--muted);font-style:italic;margin-top:12px;font-size:16px}
+  .meander{height:14px;margin:24px auto;max-width:520px;opacity:.55}
+
+  .phases{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+  .pill{font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:7px 13px;border:1px solid var(--line);border-radius:2px;color:var(--faint);transition:all .35s;white-space:nowrap}
+  .pill.active{color:var(--bronze);border-color:var(--bronze-dim);background:rgba(217,164,65,.06)}
+  .pill.done{color:var(--muted)}
+
+  .stage{position:relative;border:1px solid var(--line);background:#000;border-radius:3px;overflow:hidden}
+  #view{display:block;width:100%;height:560px;cursor:grab;touch-action:none}
+  #view.dragging{cursor:grabbing}
+  @media(max-width:700px){#view{height:420px}}
+
+  .counters{position:absolute;top:10px;left:12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;font-size:12px;letter-spacing:.08em;opacity:0;transition:opacity .6s}
+  .counters.show{opacity:1}
+  .counter{background:rgba(20,19,18,.74);padding:4px 10px;border-radius:2px;border:1px solid var(--line);width:max-content}
+  .counter b{font-weight:600}
+  .c-fr b{color:#7f9ad8} .c-en b{color:#e0705c}
+
+  .daytag{position:absolute;bottom:10px;left:12px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(229,221,200,.7);background:rgba(20,19,18,.6);padding:5px 10px;border-radius:2px;pointer-events:none}
+
+  #formHud{display:none;position:absolute;bottom:92px;left:50%;transform:translateX(-50%);
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--bronze);
+    background:rgba(20,19,18,.85);border:1px solid var(--bronze-dim);padding:8px 16px;
+    border-radius:2px;pointer-events:none;white-space:nowrap;z-index:6}
+
+  .camctl{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:6px}
+  .cambtn{font-family:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;background:rgba(20,19,18,.74);border:1px solid var(--line);border-radius:2px;color:var(--muted);cursor:pointer;transition:all .2s}
+  .cambtn:hover{color:var(--bronze);border-color:var(--bronze-dim)}
+  .camhint{position:absolute;bottom:10px;right:12px;font-size:11px;letter-spacing:.06em;color:rgba(229,221,200,.55);background:rgba(20,19,18,.6);padding:4px 9px;border-radius:2px;pointer-events:none}
+  @media(max-width:700px){.camhint{display:none}}
+
+  .narration{border:1px solid var(--line);border-top:none;background:var(--panel);padding:26px 30px;border-radius:0 0 3px 3px;min-height:150px}
+  .narr-label{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--bronze);margin-bottom:10px}
+  .narration p{margin-bottom:12px}
+  .narration p:last-child{margin-bottom:0}
+  .narration em{color:var(--muted)}
+  .aside{font-size:14px;color:var(--muted);font-style:italic;border-left:2px solid var(--bronze-dim);padding-left:14px;margin-top:14px}
+
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  @media(max-width:640px){.choices{grid-template-columns:1fr}}
+  .choice{border:1px solid var(--line);border-radius:3px;padding:20px;background:var(--ink-2);cursor:pointer;text-align:left;color:var(--parchment);font-family:inherit;font-size:16px;transition:border-color .25s,background .25s}
+  .choice:hover{border-color:var(--bronze-dim);background:#24221e80}
+  .choice h3{font-family:'GFS Didot',serif;font-weight:400;font-size:20px;letter-spacing:.04em;margin-bottom:8px;color:var(--bronze)}
+  .choice p{font-size:14.5px;color:var(--muted);line-height:1.55}
+
+  .controls{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn{font-family:inherit;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:13px 28px;background:transparent;color:var(--bronze);border:1px solid var(--bronze-dim);border-radius:2px;cursor:pointer;transition:all .25s}
+  .btn:hover{background:rgba(217,164,65,.1);border-color:var(--bronze)}
+  .btn.ghost{color:var(--muted);border-color:var(--line)}
+  .btn.ghost:hover{color:var(--parchment);background:rgba(255,255,255,.04)}
+
+  #vn{display:none;position:absolute;left:0;right:0;bottom:0;padding:14px 16px 16px;
+      background:linear-gradient(transparent, rgba(12,12,10,.55) 18%, rgba(12,12,10,.92) 60%);z-index:5}
+  .vn-box{display:flex;gap:16px;max-width:860px;margin:0 auto;align-items:flex-end;cursor:pointer}
+  .vn-portrait{width:104px;height:128px;flex:0 0 auto;border:1px solid var(--bronze-dim);
+      border-radius:3px;background:#1c1814;overflow:hidden}
+  .vn-portrait svg{width:100%;height:100%;display:block}
+  .vn-main{flex:1;min-width:0}
+  .vn-name{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--bronze);margin-bottom:7px}
+  .vn-text{font-size:16.5px;line-height:1.6;color:var(--parchment);min-height:52px}
+  .vn-text em{color:var(--muted)}
+  .vn-next{font-size:11px;letter-spacing:.2em;color:var(--faint);margin-top:8px;text-transform:uppercase}
+  .vn-choices{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .vn-choice{font-family:inherit;font-size:14.5px;text-align:left;padding:11px 16px;background:rgba(24,22,18,.9);
+      border:1px solid var(--line);border-radius:2px;color:var(--parchment);cursor:pointer;transition:all .2s}
+  .vn-choice:hover{border-color:var(--bronze-dim);background:rgba(32,29,23,.95)}
+  #vntoast{position:absolute;right:16px;bottom:100%;margin-bottom:8px;font-size:11px;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--bronze);background:rgba(18,16,13,.85);border:1px solid var(--bronze-dim);
+      padding:6px 12px;border-radius:2px;opacity:0;transition:opacity .5s;pointer-events:none}
+  #vntoast.show{opacity:1}
+  .vn-narr .vn-text{font-style:italic;color:var(--muted)}
+  @media(max-width:640px){.vn-portrait{width:76px;height:96px}.vn-text{font-size:15px}}
+  /* decision dock overlaid on the simulation */
+  #dock{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:10px 14px 12px;
+      background:linear-gradient(transparent, rgba(12,12,10,.45) 18%, rgba(12,12,10,.9) 72%)}
+  #dock:not(:has(button)){display:none}
+  #dock .choices{max-width:880px;margin:0 auto;gap:10px}
+  #dock .choice{padding:12px 14px;background:rgba(24,22,18,.93)}
+  #dock .choice h3{font-size:17px;margin-bottom:5px}
+  #dock .choice p{font-size:13px;line-height:1.45}
+  #dock .controls{margin-top:0;padding-top:8px}
+  @media(max-width:640px){#dock .choice{padding:10px 12px}#dock .choice p{font-size:12px}}
+  footer{margin-top:44px;text-align:center;font-size:13px;color:var(--faint);line-height:1.7}
+  .fade-in{animation:fadeIn .6s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">25 October 1415 · Saint Crispin's Day · Between the woods of Azincourt and Tramecourt</div>
+    <h1>AGINCOURT</h1>
+    <p class="subtitle">A starving army, a ploughed field after a night of rain, and the mud that ate a nobility</p>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true">
+      <defs><pattern id="key" width="26" height="14" patternUnits="userSpaceOnUse">
+        <path d="M0 12 H10 V2 H20 V8 H14 V6 H18 V4 H12 V10 H22 V0 H26" fill="none" stroke="#d9a441" stroke-width="1.4"/>
+      </pattern></defs>
+      <rect width="520" height="14" fill="url(#key)"/>
+    </svg>
+  </header>
+
+  <nav class="phases" aria-label="Battle phases">
+    <span class="pill" data-p="0">Prologue</span>
+    <span class="pill" data-p="1">Deployment</span>
+    <span class="pill" data-p="2">The advance</span>
+    <span class="pill" data-p="3">The storm</span>
+    <span class="pill" data-p="4">The melee</span>
+    <span class="pill" data-p="5">Aftermath</span>
+  </nav>
+
+  <div class="stage">
+    <div id="view" role="img" aria-label="3D battlefield of Agincourt between two woods"></div>
+    <div class="counters" id="counters">
+      <span class="counter c-fr">French fallen&nbsp; <b id="frCt">0</b></span>
+      <span class="counter c-en">English fallen&nbsp; <b id="enCt">0</b></span>
+    </div>
+    <div class="daytag" id="daytag">Dawn, after the rain</div>
+    <div id="formHud"></div>
+    <div class="camctl">
+      <button class="cambtn" data-cam="over">Overview</button>
+      <button class="cambtn" data-cam="line">The line</button>
+      <button class="cambtn" data-cam="mud">The field</button>
+      <button class="cambtn" data-cam="french">The French host</button>
+    </div>
+    <div class="camhint">drag · rotate&ensp;|&ensp;scroll · zoom&ensp;|&ensp;right-drag · pan</div>
+    <div id="dock"><div id="choiceArea"></div><div class="controls" id="controls"></div></div>
+    <div id="vn"><div id="vntoast"></div>
+      <div class="vn-box" id="vnbox">
+        <div class="vn-portrait" id="vnportrait"></div>
+        <div class="vn-main">
+          <div class="vn-name" id="vnname"></div>
+          <div class="vn-text" id="vntext"></div>
+          <div class="vn-choices" id="vnchoices"></div>
+          <div class="vn-next" id="vnnext">tap to continue &#9656;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="narration">
+    <div class="narr-label" id="narrLabel">Prologue</div>
+    <div id="narrBody"></div>
+  </div>
+
+
+  <footer>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true"><rect width="520" height="14" fill="url(#key)"/></svg>
+    Grounded in the Gesta Henrici Quinti, written by a priest who watched from the baggage line, and the
+    French chronicles of Monstrelet and Waurin. Numbers are argued to this day: tradition says the French
+    outnumbered the English five to one, careful modern counting says perhaps two to one, and the mud
+    did not care either way. One figure represents roughly 50 men.
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+
+/* ================= geography =================
+   Sim space 1000 x 620. The English stand in the south, the French host in
+   the north. The woods of Azincourt (west) and Tramecourt (east) converge
+   southward, so the field narrows toward the English line. Between the
+   armies: a newly ploughed, newly sown wheat field after a night of rain. */
+const sx2w=x=>(x-500)*0.2, sy2w=y=>(y-310)*0.2;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const smooth=(x,a,b)=>THREE.MathUtils.smoothstep(x,a,b);
+function woodW(y){const t=(y-140)/340; return 170+110*THREE.MathUtils.clamp(t,0,1);}   /* west wood edge */
+function woodE(y){const t=(y-140)/340; return 830-110*THREE.MathUtils.clamp(t,0,1);}   /* east wood edge */
+function inMud(y){return y>230&&y<400;}
+const MEN_PER=50;
+
+const S={
+  phase:0, stage:'idle', sub:'', subT:0, st:0,
+  soldiers:[], arrows:[], stakes:[],
+  frDead:0, enDead:0,
+  lineY:452, joined:false, pushed:0,
+};
+
+/* ================= three.js ================= */
+const view=document.getElementById('view');
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x8f938f);
+scene.fog=new THREE.Fog(0x8f938f,150,430);
+
+const camera=new THREE.PerspectiveCamera(52,1,0.5,900);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const SHADOWS=window.innerWidth>700;
+if(SHADOWS){renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;}
+view.appendChild(renderer.domElement);
+function resize(){const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+
+scene.add(new THREE.HemisphereLight(0xc4c8c2,0x4e4a40,0.8));
+const sun=new THREE.DirectionalLight(0xd8d8cc,0.7);
+sun.position.set(-40,90,50);
+if(SHADOWS){
+  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+  const sc=sun.shadow.camera;
+  sc.left=-130;sc.right=130;sc.top=130;sc.bottom=-130;sc.far=360;
+  sc.updateProjectionMatrix();
+  sun.shadow.bias=-0.0008;
+}
+scene.add(sun);
+
+/* ---------- terrain ---------- */
+function terrainH(wx,wz){
+  const x=wx/0.2+500,y=wz/0.2+310;
+  let h=Math.sin(x*0.06)*0.35+Math.cos(y*0.07)*0.3;
+  const w=woodW(y),e=woodE(y);
+  if(x<w)h+=Math.min((w-x)*0.05,4)+0.6;
+  if(x>e)h+=Math.min((x-e)*0.05,4)+0.6;
+  if(y<80)h+=(80-y)*0.04;
+  if(y>560)h+=(y-560)*0.04;
+  if(inMud(y)&&x>w&&x<e)h-=0.5;               /* the sunken, sodden field */
+  return h;
+}
+{
+  const g=new THREE.PlaneGeometry(230,150,160,116);
+  g.rotateX(-Math.PI/2);
+  const pos=g.attributes.position,colors=[];
+  const cField=new THREE.Color(0x6e6242),cMud=new THREE.Color(0x4a3c2a),
+        cWood=new THREE.Color(0x3e5236),cGrass=new THREE.Color(0x66714a),tmp=new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const wx=pos.getX(i),wz=pos.getZ(i);
+    const x=wx/0.2+500,y=wz/0.2+310;
+    pos.setY(i,terrainH(wx,wz));
+    const w=woodW(y),e=woodE(y);
+    if(x<w-4||x>e+4)tmp.copy(cWood);
+    else{
+      tmp.copy(cField);
+      if(inMud(y))tmp.lerp(cMud,0.55+Math.sin(x*0.5)*0.15);
+      else tmp.lerp(cGrass,0.3);
+      /* plough furrows */
+      tmp.offsetHSL(0,0,Math.sin(y*1.4)*0.035);
+    }
+    tmp.offsetHSL(0,0,(Math.sin(wx*1.5)*Math.sin(wz*1.9))*0.03);
+    colors.push(tmp.r,tmp.g,tmp.b);
+  }
+  g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  g.computeVertexNormals();
+  const terrain=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}));
+  terrain.receiveShadow=SHADOWS;
+  scene.add(terrain);
+}
+/* the woods */
+{
+  const trunk=new THREE.MeshLambertMaterial({color:0x4a3a28});
+  const leaf=new THREE.MeshLambertMaterial({color:0x445238});
+  const leaf2=new THREE.MeshLambertMaterial({color:0x55603c});
+  for(let i=0;i<120;i++){
+    const y=rnd(100,560);
+    const west=Math.random()<0.5;
+    const w=woodW(y),e=woodE(y);
+    const x=west?rnd(40,w-8):rnd(e+8,960);
+    const wx=sx2w(x),wz=sy2w(y);
+    const t=new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.3,2.6,5),trunk);
+    t.position.set(wx,terrainH(wx,wz)+1.3,wz);
+    scene.add(t);
+    const c=new THREE.Mesh(new THREE.SphereGeometry(rnd(1.6,2.6),6,5),Math.random()<0.5?leaf:leaf2);
+    c.position.set(wx,terrainH(wx,wz)+3.6,wz);c.scale.y=0.85;
+    if(SHADOWS&&i%3===0)c.castShadow=true;
+    scene.add(c);
+  }
+}
+/* puddles on the field */
+{
+  const pm=new THREE.MeshLambertMaterial({color:0x5a6a6e,transparent:true,opacity:0.55});
+  for(let i=0;i<26;i++){
+    const y=rnd(240,395),x=rnd(woodW(y)+20,woodE(y)-20);
+    const p=new THREE.Mesh(new THREE.CircleGeometry(rnd(1,2.6),8),pm);
+    p.rotation.x=-Math.PI/2;
+    const wx=sx2w(x),wz=sy2w(y);
+    p.position.set(wx,terrainH(wx,wz)+0.06,wz);
+    scene.add(p);
+  }
+}
+/* villages: Azincourt NW, Tramecourt NE, Maisoncelles S with the baggage */
+function hamlet(cx,cy,n){
+  const wall=new THREE.MeshLambertMaterial({color:0x9a8c74});
+  const roof=new THREE.MeshLambertMaterial({color:0x6e5540});
+  for(let i=0;i<n;i++){
+    const x=cx+rnd(-22,22),y=cy+rnd(-12,12);
+    const wx=sx2w(x),wz=sy2w(y);
+    const h=new THREE.Mesh(new THREE.BoxGeometry(2.4,1.6,1.8),wall);
+    h.position.set(wx,terrainH(wx,wz)+0.8,wz);h.rotation.y=rnd(0,1);
+    const r=new THREE.Mesh(new THREE.ConeGeometry(1.7,1.2,4),roof);
+    r.position.set(wx,terrainH(wx,wz)+2.1,wz);r.rotation.y=h.rotation.y+Math.PI/4;
+    scene.add(h,r);
+  }
+}
+hamlet(120,90,5);
+hamlet(890,100,5);
+hamlet(500,590,7);
+
+/* ---------- vertex-colored figures ---------- */
+function buildFigure(parts){
+  let vC=0,iC=0;
+  for(const p of parts){vC+=p.g.attributes.position.count;iC+=p.g.index.count;}
+  const P=new Float32Array(vC*3),N=new Float32Array(vC*3),C=new Float32Array(vC*3),I=new Uint16Array(iC);
+  const col=new THREE.Color();
+  let vO=0,iO=0;
+  for(const p of parts){
+    P.set(p.g.attributes.position.array,vO*3);
+    N.set(p.g.attributes.normal.array,vO*3);
+    col.set(p.c);
+    const n=p.g.attributes.position.count;
+    for(let i=0;i<n;i++){C[(vO+i)*3]=col.r;C[(vO+i)*3+1]=col.g;C[(vO+i)*3+2]=col.b;}
+    const idx=p.g.index.array;
+    for(let i=0;i<idx.length;i++)I[iO+i]=idx[i]+vO;
+    vO+=n;iO+=idx.length;
+  }
+  const out=new THREE.BufferGeometry();
+  out.setAttribute('position',new THREE.BufferAttribute(P,3));
+  out.setAttribute('normal',new THREE.BufferAttribute(N,3));
+  out.setAttribute('color',new THREE.BufferAttribute(C,3));
+  out.setIndex(new THREE.BufferAttribute(I,1));
+  return out;
+}
+function cyl(r1,r2,h,seg,x,y,z,rz){
+  const g=new THREE.CylinderGeometry(r1,r2,h,seg);
+  if(rz)g.rotateZ(rz);
+  g.translate(x,y,z);return g;
+}
+function sph(r,x,y,z){const g=new THREE.SphereGeometry(r,6,5);g.translate(x,y,z);return g;}
+function box(w,h,d,x,y,z){const g=new THREE.BoxGeometry(w,h,d);g.translate(x,y,z);return g;}
+
+/* the man-at-arms in full harness, surcoat over steel; forward is +x */
+function buildManAtArms(surcoat){
+  const ST=0x9a9aa2,STD=0x83838c;
+  return buildFigure([
+    {g:cyl(.075,.09,.36,5, 0,.18,-.11),c:ST},
+    {g:cyl(.075,.09,.36,5, 0,.18, .11),c:ST},
+    {g:cyl(.085,.095,.34,5, 0,.52,-.11),c:ST},
+    {g:cyl(.085,.095,.34,5, 0,.52, .11),c:ST},
+    {g:cyl(.18,.22,.3, 6, 0,.8,0),c:surcoat},
+    {g:cyl(.19,.165,.48,6, 0,1.16,0),c:surcoat},
+    {g:cyl(.2,.2,.1,6, 0,1.36,0),c:ST},                  /* breast rim */
+    {g:cyl(.06,.065,.5,5, 0,1.12,-.245),c:STD},
+    {g:cyl(.06,.065,.5,5, 0,1.12, .245),c:STD},
+    {g:sph(.15,0,1.72,0),c:ST},
+    {g:sph(.17,0,1.8,0),c:STD},                          /* bascinet */
+    {g:box(.14,.16,.1, .13,1.72,0),c:STD},               /* visor */
+    {g:cyl(.03,.03,2.1,4, .1,1.4,.24,-0.1),c:0x5c452c},  /* poleaxe haft */
+    {g:box(.3,.22,.05, .25,2.4,.24),c:0x8a8578},         /* the head */
+  ]);
+}
+/* the English archer: no harness worth the name, and faster in the mud for it */
+function buildArcher(){
+  const FL=0xc9a075;
+  return buildFigure([
+    {g:cyl(.07,.085,.66,5, 0,.33,-.11),c:0x5c5238},
+    {g:cyl(.07,.085,.66,5, 0,.33, .11),c:0x5c5238},
+    {g:cyl(.17,.21,.42,6, 0,.9,0),c:0x6b7a4a},
+    {g:cyl(.17,.15,.34,6, 0,1.28,0),c:0x7a5c38},          /* leather jack */
+    {g:cyl(.055,.06,.5,5, 0,1.12,-.245),c:FL},
+    {g:cyl(.055,.06,.5,5, 0,1.12, .245),c:FL},
+    {g:sph(.15,0,1.7,0),c:FL},
+    {g:sph(.16,0,1.8,0),c:0x4a4436},                      /* hood */
+    {g:cyl(.022,.022,1.9,4, .16,1.45,-.05),c:0x8a744c},   /* the bow stave */
+    {g:box(.1,.5,.14, -.14,1.2,.2),c:0x5c452c},           /* arrow bag */
+  ]);
+}
+/* armored cavalry */
+function buildCav(caparison){
+  const ST=0x9a9aa2;
+  return buildFigure([
+    {g:box(1.8,.62,.56, 0,1.05,0),c:caparison},
+    {g:box(.5,.66,.4, .95,1.45,0),c:caparison},
+    {g:box(.44,.32,.34, 1.3,1.66,0),c:ST},                /* chanfron */
+    {g:box(.18,1.0,.5, -.6,.5,0),c:0x4a3c30},
+    {g:box(.18,1.0,.5, .6,.5,0),c:0x4a3c30},
+    {g:cyl(.24,.3,.9,6, -.1,1.95,0),c:ST},
+    {g:sph(.2,-.1,2.6,0),c:ST},
+    {g:cyl(.028,.028,2.4,4, .3,2.5,.3,-0.9),c:0x5c452c},  /* the couched lance */
+  ]);
+}
+const GEO={
+  em:buildManAtArms(0x8c2f2a),      /* England, red and steel */
+  ea:buildArcher(),
+  fm:buildManAtArms(0x3f5a9c),      /* France, blue and steel */
+  fc:buildCav(0x3f5a9c),
+};
+const MATS={};for(const k in GEO)MATS[k]=new THREE.MeshLambertMaterial({vertexColors:true});
+let MESH={};
+const M4=new THREE.Matrix4(),QT=new THREE.Quaternion(),V3=new THREE.Vector3(),SC=new THREE.Vector3(),EUL=new THREE.Euler();
+let perfNow=0;
+
+function soldier(x,y,side,grp,kind){
+  return {x,y,tx:x,ty:y,hx:x,hy:y,side,grp,kind,alive:true,flee:false,dieAt:null,
+          jit:rnd(0,6.28),face:side==='e'?Math.PI/2:-Math.PI/2,moving:false,escaped:false,
+          prisoner:false,pi:0,wps:null};
+}
+function buildInstances(){
+  for(const k in MESH)scene.remove(MESH[k]);
+  MESH={};
+  for(const k in GEO){
+    const list=S.soldiers.filter(s=>s.kind===k);
+    const m=new THREE.InstancedMesh(GEO[k],MATS[k],Math.max(list.length,1));
+    m.castShadow=SHADOWS;
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);
+    for(let i=0;i<m.count;i++)m.setMatrixAt(i,M4);
+    m.instanceMatrix.needsUpdate=true;
+    list.forEach((s,i)=>{s.idx=i;s.mesh=m;});
+    scene.add(m);MESH[k]=m;
+  }
+}
+function writeInstance(s){
+  const wx=sx2w(s.x),wz=sy2w(s.y);
+  if(s.escaped){SC.setScalar(0.0001);V3.set(wx,-80,wz);QT.set(0,0,0,1);}
+  else if(!s.alive){
+    V3.set(wx,terrainH(wx,wz)+0.22,wz);
+    EUL.set(Math.PI/2,s.jit,0);QT.setFromEuler(EUL);
+    SC.set(1,1,0.35);
+  }else if(s.prisoner){
+    V3.set(wx,terrainH(wx,wz),wz);
+    EUL.set(0,s.face,0);QT.setFromEuler(EUL);
+    SC.set(1,0.7,1);
+  }else{
+    const slow=inMud(s.y)&&s.kind!=='ea';
+    const bob=s.moving?Math.abs(Math.sin(perfNow*(slow?0.007:0.012)+s.jit))*0.12:0;
+    const lean=s.moving?(slow?0.22:0.14):0;
+    const sway=s.moving?Math.sin(perfNow*0.011+s.jit)*(slow?0.11:0.07):0;
+    V3.set(wx,terrainH(wx,wz)+bob,wz);
+    EUL.set(lean,s.face,sway,'YXZ');QT.setFromEuler(EUL);
+    SC.setScalar(1);
+  }
+  M4.compose(V3,QT,SC);
+  s.mesh.setMatrixAt(s.idx,M4);
+}
+function flushInstances(){
+  for(const s of S.soldiers)writeInstance(s);
+  for(const k in MESH)MESH[k].instanceMatrix.needsUpdate=true;
+}
+function mudFactor(s){
+  if(!inMud(s.y))return 1;
+  if(s.kind==='ea')return 0.7;
+  if(s.kind==='fc')return 0.5;
+  if(s.kind==='fm')return 0.32;
+  return 0.55;
+}
+function moveToward(s,speed,dt){
+  const dx=s.tx-s.x,dy=s.ty-s.y,d=Math.hypot(dx,dy);
+  if(d<1.5){s.moving=false;return true;}
+  s.moving=true;
+  const v=speed*mudFactor(s);
+  s.x+=(dx/d)*v*dt*60;s.y+=(dy/d)*v*dt*60;
+  s.face=Math.atan2(-dy,dx);
+  return false;
+}
+function kill(s){
+  if(!s.alive)return;
+  s.alive=false;
+  if(s.side==='f')S.frDead++;else S.enDead++;
+  updateCounters();
+}
+function alive(side,grp){return S.soldiers.filter(s=>s.alive&&!s.prisoner&&s.side===side&&(!grp||s.grp===grp));}
+function killRandom(list,n){
+  const pool=list.filter(s=>s.alive);
+  for(let i=0;i<n&&pool.length;i++){
+    const j=Math.floor(Math.random()*pool.length);
+    kill(pool[j]);pool.splice(j,1);
+  }
+}
+function updateCounters(){
+  document.getElementById('frCt').textContent='~'+(S.frDead*MEN_PER).toLocaleString();
+  document.getElementById('enCt').textContent='~'+(S.enDead*MEN_PER).toLocaleString();
+}
+function setDay(t){document.getElementById('daytag').textContent=t;}
+
+/* ---------- the stakes ---------- */
+const STAKE_MAX=110;
+const stakeMesh=new THREE.InstancedMesh(
+  new THREE.CylinderGeometry(0.02,0.09,1.5,4),
+  new THREE.MeshLambertMaterial({color:0x6e5838}),STAKE_MAX);
+stakeMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(stakeMesh);
+function layStakes(){
+  S.stakes=[];
+  for(const s of S.soldiers){
+    if(s.kind!=='ea'||!s.alive)continue;
+    S.stakes.push({x:s.x+rnd(-2,2),y:s.y-6+rnd(-2,2),jit:rnd(-0.3,0.3)});
+  }
+}
+function flushStakes(){
+  let i=0;
+  for(const st of S.stakes){
+    if(i>=STAKE_MAX)break;
+    const wx=sx2w(st.x),wz=sy2w(st.y);
+    V3.set(wx,terrainH(wx,wz)+0.6,wz);
+    EUL.set(-0.55+st.jit,0,st.jit*0.5);QT.setFromEuler(EUL);
+    SC.setScalar(1);
+    M4.compose(V3,QT,SC);
+    stakeMesh.setMatrixAt(i++,M4);
+  }
+  for(;i<STAKE_MAX;i++){SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);stakeMesh.setMatrixAt(i,M4);}
+  stakeMesh.instanceMatrix.needsUpdate=true;
+}
+
+/* ---------- the arrow storm ---------- */
+const ARROW_MAX=340;
+const arrowMesh=new THREE.InstancedMesh(
+  new THREE.CylinderGeometry(0.04,0.04,1.3,4),
+  new THREE.MeshLambertMaterial({color:0x2d251a}),ARROW_MAX);
+arrowMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(arrowMesh);
+const UP=new THREE.Vector3(0,1,0),DIR=new THREE.Vector3();
+function fireArrowAt(from,tgt,hit){
+  const fx=sx2w(from.x),fz=sy2w(from.y),tx=sx2w(tgt.x+rnd(-3,3)),tz=sy2w(tgt.y+rnd(-3,3));
+  S.arrows.push({fx,fy:terrainH(fx,fz)+1.9,fz,tx,ty:terrainH(tx,tz)+0.3,tz,
+    t:0,dur:rnd(0.7,1.0),arc:rnd(6,10),simx:tgt.x,simy:tgt.y,px:fx,py:2,pz:fz,vx:0,vy:1,vz:0,side:tgt.side,hit});
+}
+function volley(n,targets,hit){
+  const archers=alive('e','ea');
+  if(!archers.length||!targets.length)return;
+  for(let i=0;i<n;i++){
+    fireArrowAt(archers[Math.floor(Math.random()*archers.length)],
+                targets[Math.floor(Math.random()*targets.length)],hit);
+  }
+}
+function updArrowFlight(dt){
+  for(let i=S.arrows.length-1;i>=0;i--){
+    const a=S.arrows[i];a.t+=dt;
+    const u=Math.min(a.t/a.dur,1);
+    const nx=a.fx+(a.tx-a.fx)*u,nz=a.fz+(a.tz-a.fz)*u;
+    const ny=a.fy+(a.ty-a.fy)*u+Math.sin(u*Math.PI)*a.arc;
+    a.vx=nx-a.px;a.vy=ny-a.py;a.vz=nz-a.pz;
+    a.px=nx;a.py=ny;a.pz=nz;
+    if(u>=1){
+      if(Math.random()<a.hit){
+        const near=S.soldiers.filter(s=>s.alive&&!s.prisoner&&s.side===a.side&&Math.hypot(s.x-a.simx,s.y-a.simy)<9);
+        if(near.length)kill(near[0]);
+      }
+      S.arrows.splice(i,1);
+    }
+  }
+}
+function flushArrows(){
+  let i=0;
+  for(const a of S.arrows){
+    if(i>=ARROW_MAX)break;
+    V3.set(a.px,a.py,a.pz);
+    DIR.set(a.vx,a.vy,a.vz).normalize();
+    QT.setFromUnitVectors(UP,DIR);
+    SC.setScalar(1);M4.compose(V3,QT,SC);
+    arrowMesh.setMatrixAt(i++,M4);
+  }
+  for(;i<ARROW_MAX;i++){SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);arrowMesh.setMatrixAt(i,M4);}
+  arrowMesh.instanceMatrix.needsUpdate=true;
+}
+
+/* ---------- banners ---------- */
+const banners={};
+function makeBanner(color){
+  const g=new THREE.Group();
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,5.4,5),new THREE.MeshLambertMaterial({color:0x4a3b26}));
+  pole.position.y=2.7;
+  const flag=new THREE.Mesh(new THREE.PlaneGeometry(2.2,1.3),new THREE.MeshLambertMaterial({color,side:THREE.DoubleSide}));
+  flag.position.set(1.15,4.5,0);
+  g.add(pole,flag);g.userData.flag=flag;
+  scene.add(g);g.visible=false;
+  return g;
+}
+banners.en=makeBanner(0x8c2f2a);
+banners.fr=makeBanner(0x3f5a9c);
+function updateBanners(){
+  const sel={en:s=>s.side==='e', fr:s=>s.side==='f'&&s.grp!=='f3'&&!s.prisoner&&!s.flee};
+  for(const k in banners){
+    const list=S.soldiers.filter(s=>s.alive&&sel[k](s));
+    const b=banners[k];
+    if(list.length<6){b.visible=false;continue;}
+    let mx=0,my=0;for(const s of list){mx+=s.x;my+=s.y;}
+    mx/=list.length;my/=list.length;
+    const wx=sx2w(mx),wz=sy2w(my);
+    b.position.set(wx,terrainH(wx,wz),wz);
+    b.userData.flag.rotation.y=Math.sin(perfNow*0.002)*0.35;
+    b.visible=true;
+  }
+}
+
+/* ================= camera ================= */
+const cam={yaw:Math.PI,pitch:0.95,dist:200,tx:0,ty:2,tz:0,auto:null};
+function applyCamera(dt){
+  if(cam.auto){
+    const a=cam.auto,k=1-Math.pow(0.001,dt);
+    cam.yaw+=(a.yaw-cam.yaw)*k;cam.pitch+=(a.pitch-cam.pitch)*k;cam.dist+=(a.dist-cam.dist)*k;
+    cam.tx+=(a.tx-cam.tx)*k;cam.ty+=(a.ty-cam.ty)*k;cam.tz+=(a.tz-cam.tz)*k;
+    if(Math.abs(a.dist-cam.dist)<0.5&&Math.abs(a.yaw-cam.yaw)<0.01)cam.auto=null;
+  }
+  cam.pitch=THREE.MathUtils.clamp(cam.pitch,0.14,1.42);
+  cam.dist=THREE.MathUtils.clamp(cam.dist,20,290);
+  const cp=Math.cos(cam.pitch);
+  camera.position.set(
+    cam.tx+Math.sin(cam.yaw)*cp*cam.dist,
+    cam.ty+Math.sin(cam.pitch)*cam.dist,
+    cam.tz+Math.cos(cam.yaw)*cp*cam.dist);
+  camera.lookAt(cam.tx,cam.ty,cam.tz);
+}
+const PRESETS={
+  over:{yaw:Math.PI,pitch:0.95,dist:200,tx:0,ty:2,tz:0},
+  line:{yaw:Math.PI-0.3,pitch:0.42,dist:64,tx:0,ty:1,tz:sy2w(452)},
+  mud:{yaw:Math.PI,pitch:0.6,dist:95,tx:0,ty:1,tz:sy2w(320)},
+  french:{yaw:0.3,pitch:0.55,dist:100,tx:0,ty:1,tz:sy2w(170)},
+};
+document.querySelectorAll('.cambtn').forEach(b=>b.onclick=()=>{cam.auto={...PRESETS[b.dataset.cam]};});
+function cine(name){cam.auto={...PRESETS[name]};}
+
+let drag=null,formDrag=null;
+view.addEventListener('pointerdown',e=>{
+  view.setPointerCapture(e.pointerId);
+  if(S.stage==='deploy'&&e.button===0&&!e.shiftKey){
+    const hit=castAt(e,[formPlane]);
+    if(hit.length){formDrag={y0:e.clientY,l0:S.lineY};return;}
+  }
+  drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,btn:e.button,shift:e.shiftKey};
+  view.classList.add('dragging');cam.auto=null;
+});
+view.addEventListener('pointermove',e=>{
+  if(formDrag){
+    const l=THREE.MathUtils.clamp(formDrag.l0-(e.clientY-formDrag.y0)*0.9,360,472);
+    const q=Math.round(l/14)*14;
+    if(q!==S.lineY){S.lineY=q;placeEnglish(q);layStakes();formHudText();}
+    return;
+  }
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  drag.x=e.clientX;drag.y=e.clientY;
+  if(drag.btn===2||drag.shift){
+    const cp=Math.cos(cam.yaw),sp=Math.sin(cam.yaw),k=cam.dist*0.0016;
+    cam.tx-=(dx*cp-dy*sp)*k;
+    cam.tz-=(-dx*sp-dy*cp)*k;
+    cam.tx=THREE.MathUtils.clamp(cam.tx,-105,105);
+    cam.tz=THREE.MathUtils.clamp(cam.tz,-66,66);
+  }else{cam.yaw-=dx*0.0055;cam.pitch+=dy*0.0045;}
+});
+const endDrag=()=>{drag=null;view.classList.remove('dragging');};
+view.addEventListener('pointerup',e=>{
+  if(formDrag){formDrag=null;return;}
+  if(drag&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<12)tryPick(e);
+  endDrag();
+});
+view.addEventListener('pointercancel',endDrag);
+view.addEventListener('wheel',e=>{e.preventDefault();cam.auto=null;cam.dist*=(1+Math.sign(e.deltaY)*0.09);},{passive:false});
+view.addEventListener('contextmenu',e=>e.preventDefault());
+let pinch=null;
+view.addEventListener('touchstart',e=>{if(e.touches.length===2)pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);});
+view.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&pinch){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    cam.dist*=pinch/d;pinch=d;cam.auto=null;
+  }
+},{passive:true});
+view.addEventListener('touchend',()=>pinch=null);
+
+/* ================= command layer ================= */
+const ORDER={given:false};
+const raycaster=new THREE.Raycaster();
+const ndc=new THREE.Vector2();
+function castAt(e,objects){
+  const r=renderer.domElement.getBoundingClientRect();
+  ndc.x=((e.clientX-r.left)/r.width)*2-1;
+  ndc.y=-((e.clientY-r.top)/r.height)*2+1;
+  raycaster.setFromCamera(ndc,camera);
+  return raycaster.intersectObjects(objects,false);
+}
+const formPlane=new THREE.Mesh(
+  new THREE.PlaneGeometry(110,32),
+  new THREE.MeshBasicMaterial({color:0xd9a441,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
+formPlane.rotation.x=-Math.PI/2;
+scene.add(formPlane);
+const formHud=document.getElementById('formHud');
+function frontage(){return Math.round((woodE(S.lineY)-woodW(S.lineY))*1.1);}
+function formHudText(){
+  formHud.textContent=S.lineY>=430
+    ?'Frontage ~'+frontage()+' paces \u00b7 woods anchor both flanks \u00b7 drag the line to move it'
+    :'Frontage ~'+frontage()+' paces \u00b7 flanks open \u00b7 drag the line to move it';
+}
+function ringMesh(color){
+  const m=new THREE.Mesh(new THREE.TorusGeometry(9,0.45,8,32),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.85}));
+  m.rotation.x=-Math.PI/2;
+  m.visible=false;
+  const hit=new THREE.Mesh(new THREE.CircleGeometry(17,16),
+    new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
+  hit.rotation.x=-Math.PI/2;hit.visible=false;hit.userData.owner=m;
+  m.userData.hit=hit;
+  const fill=new THREE.Mesh(new THREE.CircleGeometry(8.2,24),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.13,depthWrite:false,side:THREE.DoubleSide}));
+  fill.position.z=0.02;
+  m.add(fill);
+  scene.add(m);scene.add(hit);
+  return m;
+}
+const ringA=ringMesh(0xd9a441);
+const ringB=ringMesh(0xc45540);
+const RINGS=[ringA,ringB];
+let ringT=0,pickMode=null;
+function updCommandFx(dt){
+  ringT+=dt;
+  formPlane.material.opacity=(S.stage==='deploy')?0.06+Math.sin(ringT*3)*0.03:0;
+  if(S.stage==='deploy'){
+    formPlane.position.set(0,terrainH(0,sy2w(S.lineY))+0.6,sy2w(S.lineY));
+  }
+  for(const r of [ringA,ringB]){
+    if(!r.visible)continue;
+    const k=1+Math.sin(ringT*3.4)*0.08;
+    r.scale.setScalar(k);
+    r.material.opacity=0.55+Math.sin(ringT*3.4)*0.3;
+  }
+}
+function placeRing(r,sx,sy){
+  const wx=sx2w(sx),wz=sy2w(sy);
+  r.position.set(wx,terrainH(wx,wz)+0.6,wz);
+  r.visible=true;
+  const h=r.userData.hit;
+  h.position.set(wx,terrainH(wx,wz)+0.5,wz);
+  h.visible=true;
+}
+function hideRings(){for(const r of RINGS){r.visible=false;r.userData.hit.visible=false;}pickMode=null;}
+function pickRing(e){
+  const rect=renderer.domElement.getBoundingClientRect();
+  let best=null,bestD=1e9;
+  for(const r of RINGS){
+    if(!r.visible)continue;
+    V3.copy(r.position).project(camera);
+    if(V3.z>1)continue;
+    const px=(V3.x*0.5+0.5)*rect.width+rect.left;
+    const py=(-V3.y*0.5+0.5)*rect.height+rect.top;
+    const d=Math.hypot(e.clientX-px,e.clientY-py);
+    if(d<bestD){bestD=d;best=r;}
+  }
+  return bestD<Math.max(56,rect.width*0.08)?best:null;
+}
+function tryPick(e){
+  if(!pickMode)return;
+  const r=pickRing(e);
+  if(!r)return;
+  const choice=r===ringA?'a':'b';
+  const mode=pickMode;
+  hideRings();
+  if(mode==='melee'){choice==='a'?joinMelee():keepShootingCF();}
+}
+
+/* ================= armies ================= */
+function placeEnglish(lineY){
+  const w=woodW(lineY),e=woodE(lineY);
+  const mid=(w+e)/2,span=e-w;
+  for(const s of S.soldiers){
+    if(s.side!=='e')continue;
+    if(s.kind==='em'){
+      const i=s.slot;
+      s.x=mid-60+ (i%20)*6.3;
+      s.y=lineY+Math.floor(i/20)*6.5;
+    }else{
+      const i=s.slot,wing=i<50?0:1;
+      const k=wing===0?(i):(i-50);
+      /* wings angled forward toward the enemy */
+      const bx=wing===0?w+8:e-8;
+      const dirx=wing===0?1:-1;
+      s.x=bx+dirx*( (k%5)*5 );
+      s.y=lineY-4-Math.floor(k/5)*4.5+ (wing===0?0:0);
+      s.y-= (wing===0? (4-(k%5)) : (k%5))*1.8;   /* the forward angle */
+    }
+    s.tx=s.x;s.ty=s.y;s.hx=s.x;s.hy=s.y;
+  }
+}
+function spawnAll(){
+  S.soldiers=[];
+  /* England: perhaps a thousand men-at-arms, five thousand bows */
+  for(let i=0;i<20*2;i++){const s=soldier(0,0,'e','em','em');s.slot=i;S.soldiers.push(s);}
+  for(let i=0;i<100;i++){const s=soldier(0,0,'e','ea','ea');s.slot=i;S.soldiers.push(s);}
+  /* France: the first battle on foot, the second behind it, cavalry on the wings, the third mounted and waiting */
+  for(let r=0;r<5;r++)for(let c=0;c<20;c++){
+    S.soldiers.push(soldier(310+c*19+rnd(-2,2),150+r*8+rnd(-2,2),'f','f1','fm'));
+  }
+  for(let r=0;r<4;r++)for(let c=0;c<18;c++){
+    S.soldiers.push(soldier(330+c*19+rnd(-2,2),95+r*8+rnd(-2,2),'f','f2','fm'));
+  }
+  for(let i=0;i<16;i++)S.soldiers.push(soldier(215+rnd(-24,24),165+rnd(-14,14),'f','fcW','fc'));
+  for(let i=0;i<16;i++)S.soldiers.push(soldier(785+rnd(-24,24),165+rnd(-14,14),'f','fcE','fc'));
+  for(let i=0;i<36;i++)S.soldiers.push(soldier(430+rnd(0,140),52+rnd(-14,14),'f','f3','fc'));
+  buildInstances();
+  placeEnglish(S.lineY);
+  layStakes();
+}
+
+/* ================= dialogue layer ================= */
+const REL={};
+const FLAGSV={};
+function PT(o){
+ const hats={
+  crest:`<path d="M34 46 Q34 24 52 22 Q70 24 70 46 L64 42 Q52 34 40 42 Z" fill="${o.hatC}"/><rect x="47" y="5" width="10" height="20" rx="4" fill="${o.crestC||'#a03028'}"/>`,
+  cap:`<path d="M34 46 Q34 26 52 24 Q70 26 70 46 Q52 36 34 46 Z" fill="${o.hatC}"/>`,
+  band:`<path d="M36 44 Q52 30 68 44 Z" fill="${o.hairC||'#3a2c1a'}"/><rect x="34" y="43" width="36" height="6" rx="2" fill="${o.hatC}"/>`,
+  hood:`<path d="M30 68 Q28 24 52 22 Q76 24 74 68 L66 60 Q52 40 38 60 Z" fill="${o.hatC}"/>`,
+  coif:`<path d="M33 64 Q31 26 52 24 Q73 26 71 64 L64 58 Q52 42 40 58 Z" fill="${o.hatC}"/>`,
+  scholar:`<rect x="36" y="26" width="32" height="11" rx="2" fill="${o.hatC}"/><rect x="48" y="15" width="8" height="13" fill="${o.hatC}"/>`,
+  longhair:`<path d="M32 74 Q28 28 52 26 Q76 28 72 74 L66 70 Q68 40 52 40 Q36 40 38 70 Z" fill="${o.hairC||'#7a5c38'}"/>`,
+  none:`<path d="M34 48 Q34 28 52 26 Q70 28 70 48 Q64 38 52 39 Q40 38 34 48 Z" fill="${o.hairC||'#3a2c1a'}"/>`,
+ };
+ const beard=o.beard?`<path d="M40 84 Q52 96 64 84 L62 ${o.beard==='long'?102:94} Q52 ${o.beard==='long'?110:100} 42 ${o.beard==='long'?102:94} Z" fill="${o.beardC||o.hairC||'#3a2c1a'}"/>`:'';
+ const stache=o.stache?`<path d="M41 76 Q52 71 63 76" stroke="${o.beardC||o.hairC||'#3a2c1a'}" stroke-width="3" fill="none" stroke-linecap="round"/>`:'';
+ return `<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="${o.bg}"/>
+<ellipse cx="52" cy="122" rx="40" ry="26" fill="${o.robe}"/><path d="M14 122 Q52 86 90 122" fill="${o.robe2}"/>
+${o.extra||''}
+<ellipse cx="52" cy="64" rx="20" ry="23" fill="${o.skin||'#c9a075'}"/>
+${hats[o.hat||'none']||''}
+<path d="M40 58 L48 57 M56 57 L64 58" stroke="#2a2012" stroke-width="2.2" stroke-linecap="round"/>
+<circle cx="44" cy="63" r="1.9" fill="#20180e"/><circle cx="60" cy="63" r="1.9" fill="#20180e"/>
+${stache}${beard}
+<path d="M46 80 Q52 ${o.stern?79:84} 58 80" stroke="#8a5a3a" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>`;
+}
+const CAST={
+ erp:{name:'Sir Thomas Erpingham \u00b7 marshal of the archers',svg:PT({bg:'#1b1a18',robe:'#8c2f2a',robe2:'#a03830',hat:'coif',hatC:'#9a9aa2',beard:'short',beardC:'#d8d4c8',stern:1})},
+ gam:{name:'Davy Gam \u00b7 captain of the Welsh',svg:PT({bg:'#191b18',robe:'#4a5238',robe2:'#5a6244',hat:'coif',hatC:'#6a6a72',beard:'short',beardC:'#2c2014'})},
+ pri:{name:'The King\u2019s chaplain \u00b7 author of the Gesta',svg:PT({bg:'#1a1816',robe:'#4a4436',robe2:'#5a5244',hat:'hood',hatC:'#3a342a'})},
+ mont:{name:'Montjoie \u00b7 King of Arms of France',svg:PT({bg:'#171a20',robe:'#3f5a9c',robe2:'#4c6ab0',hat:'none',hairC:'#3a2c1a',extra:'<path d="M32 100 H72 V128 H32 Z" fill="#3f5a9c"/><path d="M42 104 l4 8 l-8 0 Z M62 104 l4 8 l-8 0 Z M52 114 l4 8 l-8 0 Z" fill="#d0a040"/>'})},
+ nar:{name:'',svg:null},
+};
+const vnEl=document.getElementById('vn');
+const vnPortrait=document.getElementById('vnportrait');
+const vnName=document.getElementById('vnname');
+const vnText=document.getElementById('vntext');
+const vnChoices=document.getElementById('vnchoices');
+const vnNextEl=document.getElementById('vnnext');
+const vnToast=document.getElementById('vntoast');
+let vnQueue=[],vnDone=null,vnBusy=false;
+function playScene(steps,done){
+  vnQueue=steps.slice();vnDone=done;
+  choiceArea.innerHTML='';
+  setControls([]);
+  vnEl.style.display='block';
+  vnAdvance();
+}
+function vnAdvance(){
+  while(vnQueue.length&&vnQueue[0].if&&!vnQueue[0].if()){vnQueue.shift();}
+  if(!vnQueue.length){
+    vnEl.style.display='none';
+    const d=vnDone;vnDone=null;
+    if(d)d();
+    return;
+  }
+  renderVn(vnQueue.shift());
+}
+function renderVn(st){
+  const who=CAST[st.who]||CAST.nar;
+  vnPortrait.innerHTML=who.svg||'';
+  vnPortrait.style.display=who.svg?'block':'none';
+  vnName.textContent=who.name;
+  document.getElementById('vnbox').classList.toggle('vn-narr',st.who==='nar');
+  vnText.innerHTML=typeof st.text==='function'?st.text():st.text||'';
+  vnChoices.innerHTML='';
+  if(st.choices){
+    vnNextEl.style.display='none';vnBusy=true;
+    for(const c of st.choices){
+      const b=document.createElement('button');
+      b.className='vn-choice';b.textContent=c.label;
+      b.onclick=(ev)=>{
+        ev.stopPropagation();
+        if(c.d)for(const k in c.d){REL[k]=(REL[k]||0)+c.d[k];}
+        if(c.flag)FLAGSV[c.flag]=true;
+        if(c.toast)vToast(c.toast);
+        if(c.reply)vnQueue=c.reply.concat(vnQueue);
+        vnBusy=false;
+        vnAdvance();
+      };
+      vnChoices.appendChild(b);
+    }
+  }else{vnNextEl.style.display='block';vnBusy=false;}
+}
+document.getElementById('vnbox').addEventListener('click',()=>{if(!vnBusy&&vnEl.style.display==='block')vnAdvance();});
+function vToast(t){
+  vnToast.textContent=t;vnToast.classList.add('show');
+  setTimeout(()=>vnToast.classList.remove('show'),1900);
+}
+const SC_G_OPEN=[
+ {who:'erp',text:`Sir Thomas Erpingham, sire, with your archers. Fifty-eight years old and wet to the marrow, and I have never in my life seen a worse morning to be French. The bowstrings are dry under wax, and the men are as ready as starving men come.`},
+ {who:'gam',text:`Davy Gam, majesty, with the Welsh. The scouts ask me to report the enemy's numbers.`},
+ {who:'nar',text:`He looks across the field for a long, entirely unhurried moment.`},
+ {who:'gam',text:`There are enough to be killed, enough to be taken prisoner, and enough to run away.`,choices:[
+  {label:'"Wales counts the way I like counting. Stand near me today, Davy Gam."',d:{gam:1},toast:'Bond \u00b7 Davy Gam',reply:[
+   {who:'gam',text:`Near you, majesty, or between you and harm. Whichever the day asks for first.`}]},
+  {label:'"God\u2019s arithmetic, then. Let us go and check His working."',reply:[
+   {who:'erp',text:`Amen, sire. And may He mark that we showed our work.`}]},
+ ]},
+];
+const SC_G_ADV=[
+ {who:'erp',text:`Sire, hear it plainly before you order it: if we advance, there is one half hour in which we are a hedgehog carrying its own spines in its arms. If their horse comes on during the re-staking, it is over. I say this so that you order it knowing it. Because I believe you must order it anyway.`},
+ {who:'nar',text:`The line kneels and kisses the earth. Then old Erpingham rides out before the archers, hurls his baton spinning into the air, and roars the word the chronicles could only spell as they heard it.`},
+ {who:'erp',text:`NESTROQUE! Now strike! In the name of God and Saint George, banners ADVANCE!`},
+];
+const SC_G_ORDER=[
+ {who:'erp',text:`Sire! The quivers are down to their last sheaves, and the French stand packed like barrels in a hold! Five thousand of my lads are at the stakes holding empty bows, and every man of them is asking me the same question. Say the word, and I will show France what a lead mallet is for.`},
+];
+const SC_G_PRIS=[
+ {who:'pri',text:`Sire. I am your chaplain; I stood with the baggage, and I heard what is said of it, and I see the third battle forming, and I see what is now being weighed behind your eyes. I will write down whatever you do next, because that is my office. I find I am praying that God does not ask me to understand it. Only to record it faithfully.`},
+];
+const SC_G_AFTER=[
+ {who:'nar',text:`In the evening, the French herald comes through the corpse-field under safe conduct.`},
+ {who:'mont',text:`Montjoie, King of Arms, majesty. The day is yours. God's justice has spoken it.`},
+ {who:'nar',text:`And you ask him the only question left: "What castle is that, on the rise beyond the field?" "It is called Azincourt, sire." "Then this shall be the battle of Agincourt, for as long as it is remembered at all."`},
+ {who:'erp',if:()=>(REL.gam||0)>=1,text:`Davy Gam fell, sire. In the press, before your standard, going between you and harm exactly as he priced himself this morning. The Welsh are saying you knighted him where he lay. Let them say it, sire. It ought to be true. Make it so.`},
+ {who:'erp',if:()=>!((REL.gam||0)>=1),text:`Among our few dead, sire: the Welshman Gam, fallen before your standard. He counted the French correctly this morning, to the man.`},
+ {who:'pri',text:`And I shall write all of it, sire: the mud, the miracle, and the other thing. The Gesta of Henry the Fifth. Let God sort the glory from the rest. I only kept the minutes.`},
+];
+
+/* ================= phases ================= */
+function enterPrologue(){
+  setPhase(0);setDay('Dawn, after a night of rain');
+  S.frDead=0;S.enDead=0;updateCounters();
+  document.getElementById('counters').classList.remove('show');
+  S.lineY=452;S.joined=false;S.pushed=0;S.arrows=[];
+  ORDER.given=false;S.meleeCue=false;S.prisCue=false;hideRings();formHud.style.display='none';formDrag=null;
+  S.stage='idle';
+  spawnAll();
+  cine('over');
+  narrate('Prologue',
+   `<p>The army that stands in this field was 12,000 strong when it landed in August. The siege of
+    Harfleur took five weeks and the dysentery took a third of everything, and Henry, having won one
+    town at ruinous cost, chose to march the survivors 200 miles to Calais anyway, to show he could
+    walk through France. The French shadowed the march for two weeks, blocked the fords, and finally,
+    with the English out of food, out of time, and racked with sickness, stepped across the Calais road
+    here, between two woods, and stopped.</p>
+    <p>Perhaps 6,000 English can still stand in line this morning, five in six of them archers, men who
+    have been marching on nuts and river water. Across the field: the chivalry of France, called out by
+    the Oriflamme, somewhere between twice and five times their number depending on which historian is
+    counting, so rich in dukes and counts that the command is less an army than an argument. It rained
+    all night. The field between the armies was ploughed and sown three weeks ago, and every step on it
+    now is a decision the mud gets a vote in.</p>
+    <p>You are Henry, twenty-nine years old, a king whose crown at home rests on a usurpation and whose
+    claim abroad rests on this march ending well. Saint Crispin's Day, and no way out but through.</p>`);
+  setControls([{label:'Draw up the line', fn:()=>playScene(SC_G_OPEN,()=>enterDeployment(false))}]);
+}
+function enterDeployment(fromRewind){
+  setPhase(1);
+  S.stage='deploy';
+  if(fromRewind){
+    for(const s of S.soldiers){
+      s.alive=true;s.flee=false;s.prisoner=false;s.pi=0;s.wps=null;
+      s.x=s.hx;s.y=s.hy;s.tx=s.hx;s.ty=s.hy;
+    }
+    /* the French return to their marks */
+    spawnAll();
+    S.frDead=0;S.enDead=0;updateCounters();
+    S.lineY=452;
+  }
+  placeEnglish(S.lineY);layStakes();
+  cine('line');
+  formHud.style.display='block';formHudText();
+  narrate('Deployment',
+   fromRewind?
+   `<p>The line re-forms at the narrow end of the field, where the woods stand on both flanks like walls
+    you did not have to build. Drag it if you would adjust the ground, then stand.</p>`
+   :`<p>You have one line and no reserve: the men-at-arms dismounted in the centre, four deep at best,
+    and the archers massed on the wings, angled forward, each man driving a sharpened double-pointed
+    stake into the earth before him, an invention born of hearing that the French plan opens with
+    cavalry charging the bowmen down. Where you plant this line decides what the field does to whoever
+    crosses it.</p>
+    <p><em>The line is in your hands. Drag it south to the narrowest ground, where the woods anchor both
+    flanks and the French must funnel to reach you, or north where the field is open and wide. Then
+    stand.</em></p>`);
+  setControls([{label:'Stand', fn:confirmLine}]);
+}
+function confirmLine(){
+  formHud.style.display='none';
+  if(S.lineY<430){
+    /* the open-field counterfactual */
+    S.stage='cfwide';S.st=0;
+    narrate('Deployment \u00b7 what if',
+     `<p>You stand in the open, and the French marshals, whatever their arguments, can all read a map.
+      With room to ride, the cavalry does not have to touch your stakes at all: it goes wide, around
+      both wings, at the one arm of your army that cannot fight horsemen in the open and cannot run in
+      time.</p>`);
+    setControls([]);
+    for(const s of alive('f','fcW')){s.wps=[[150,300],[200,S.lineY+30],[woodW(S.lineY)+30,S.lineY+6]];s.pi=0;}
+    for(const s of alive('f','fcE')){s.wps=[[850,300],[800,S.lineY+30],[woodE(S.lineY)-30,S.lineY+6]];s.pi=0;}
+    return;
+  }
+  S.stage='idle';
+  narrate('Deployment',
+   `<p>The line stands at the throat of the field, perhaps 750 paces of front, the woods of Azincourt and
+    Tramecourt pressed against both flanks. Whatever comes at this line must come through a narrowing
+    funnel of sodden plough, and it cannot come around. Across the field the French host is forming,
+    unforming, and arguing: so many great lords have demanded the honour of the first battle that the
+    van is a traffic jam of dukes, and the crossbowmen and gunners who should screen it have been
+    shouldered to the rear as social inferiors.</p>
+    <p>And then: nothing. Hours of it. The French are between you and Calais; every hour starves you and
+    reinforces them. They know it. You know it. Someone must move.</p>`);
+  setChoices([
+    {title:'Hold your ground and wait',
+     body:'The defensive line is perfect and the stakes are set. Make them come to you; a fortress that walks toward the enemy stops being a fortress.',
+     fn:()=>{
+       narrate('The advance \u00b7 what if',
+        `<p>You wait, and the arithmetic of waiting does its work. By afternoon the men have been a full
+         day without food at the end of a starving fortnight; by tomorrow, desertion and sickness will
+         choose your order of battle for you. The French, camped astride your only road, receive fresh
+         contingents through the morning and need do nothing at all: against a trapped and starving
+         enemy, standing still is their winning move, and they are for once disciplined enough to make
+         it. Your perfect line dissolves without ever being attacked.</p>
+         <p class="aside">The stakes and the funnel are worthless unless the French charge into them, and
+         the French have no reason to charge, yet. What Henry did next was manufacture the reason: he
+         moved the fortress.</p>`);
+       setControls([{label:'Rewind \u00b7 advance the line', fn:()=>playScene(SC_G_ADV,advanceLine)}]);
+     }},
+    {title:'"Advance banners, in the name of Jesu"',
+     body:'What Henry ordered: the whole line, stakes and all, walks forward to within bowshot of the French host, to sting them into coming on. The most dangerous half hour of the day.',
+     fn:()=>playScene(SC_G_ADV,advanceLine)},
+  ]);
+}
+function updCfWide(dt){
+  for(const s of S.soldiers){
+    if(!s.alive)continue;
+    if(s.grp==='fcW'||s.grp==='fcE'){
+      if(s.wps&&s.pi<s.wps.length){
+        s.tx=s.wps[s.pi][0];s.ty=s.wps[s.pi][1];
+        if(moveToward(s,1.2,dt))s.pi++;
+      }
+    }
+  }
+  if(S.st>3.5&&Math.random()<dt*7)killRandom(alive('e','ea'),1);
+  if(S.st>7){
+    S.stage='cffrozen';
+    narrate('Deployment \u00b7 what if',
+     `<p>Ridden down from both flanks at once, the archery, five sixths of your army, dies in the open
+      with its stakes facing the wrong way, and the battle is decided before the men-at-arms exchange a
+      blow. The entire English method depends on the bow, and the bow depends on ground that forbids
+      horsemen their sweep. The woods were never scenery. They were the walls of the fortress.</p>`);
+    setControls([{label:'Rewind \u00b7 to the narrow ground', fn:()=>{enterDeployment(true);}}]);
+  }
+}
+function advanceLine(){
+  setPhase(2);setDay('Late morning');
+  S.stage='advance';S.st=0;
+  document.getElementById('counters').classList.add('show');
+  const newY=386;
+  for(const s of S.soldiers){
+    if(s.side!=='e')continue;
+    s.ty=s.y-(S.lineY-newY);s.tx=s.x;
+  }
+  S.lineY=newY;
+  cine('mud');
+  narrate('The advance',
+   `<p>The order goes down the line, the men kneel and kiss the earth, and the whole army, banners,
+    men-at-arms, and archers with their stakes pulled up and shouldered, walks forward across the
+    plough to within extreme bowshot of the French host, and plants itself again. It is the gamble of
+    the day compressed into half an hour: an army that is only strong standing still, walking, its
+    hedgehog dismantled, within charging distance of the largest cavalry force in Europe. Had the
+    French come on during the re-staking, there would be no Saint Crispin's Day speech to write.</p>
+    <p>They do not come on. They are still arguing precedence in the van when the English stop, re-set
+    the stakes, and the first flight goes up.</p>`);
+  setControls([]);
+}
+function updAdvance(dt){
+  let done=0,total=0;
+  for(const s of S.soldiers){
+    if(!s.alive||s.side!=='e')continue;
+    total++;
+    if(moveToward(s,0.5,dt))done++;
+  }
+  if(total&&done>total*0.9){
+    layStakes();
+    startStorm();
+  }
+}
+function startStorm(){
+  setPhase(3);S.stage='storm';S.st=0;S.volT=0;
+  cine('french');
+  narrate('The storm',
+   `<p>Five thousand bows, a dozen arrows a minute each: the chroniclers on both sides reach for the same
+    word, and the word is weather. The sky, one writes, was darkened as if by a cloud of winter. Armour
+    turns most of it at distance, but horses are not armoured everywhere, pride is not armoured anywhere,
+    and the sting does exactly what it was sent to do: the French cavalry on the wings, unwilling to
+    stand under it, charges the archers, and the mounted vanguard of French chivalry rides at a gallop
+    into soft plough, planted stakes, and converging arrow fire.</p>`);
+  setControls([]);
+  for(const s of alive('f','fcW')){s.tx=woodW(S.lineY)+26+rnd(0,14);s.ty=S.lineY-8+rnd(-4,4);}
+  for(const s of alive('f','fcE')){s.tx=woodE(S.lineY)-26-rnd(0,14);s.ty=S.lineY-8+rnd(-4,4);}
+}
+function updStorm(dt){
+  S.volT+=dt;
+  if(S.volT>0.5){
+    S.volT=0;
+    volley(30,[...alive('f','fcW'),...alive('f','fcE'),...alive('f','f1')],0.13);
+  }
+  for(const s of [...alive('f','fcW'),...alive('f','fcE')]){
+    moveToward(s,1.1,dt);
+    /* the stake line */
+    if(s.y>S.lineY-14){
+      if(Math.random()<dt*2.2)kill(s);
+      else if(Math.random()<dt*3&&!s.flee){
+        s.flee=true;
+        /* the wounded horses bolt back through their own advancing first battle */
+        s.wps=[[s.x+rnd(-30,30),260],[s.x+rnd(-60,60),150]];s.pi=0;
+      }
+    }
+  }
+  for(const s of S.soldiers){
+    if(!s.alive||!s.flee||s.kind!=='fc')continue;
+    if(s.wps&&s.pi<s.wps.length){
+      s.tx=s.wps[s.pi][0];s.ty=s.wps[s.pi][1];
+      if(moveToward(s,1.3,dt))s.pi++;
+      /* trampling through the first battle */
+      if(Math.random()<dt*0.7)killRandom(alive('f','f1').filter(t=>Math.hypot(t.x-s.x,t.y-s.y)<10),1);
+    }
+  }
+  if(S.st>6.5)startWade();
+}
+function startWade(){
+  S.stage='wade';S.st=0;
+  narrate('The storm \u00b7 the wade',
+   `<p>The cavalry reels back, and riderless, arrow-maddened horses stampede through the first battle of
+    dismounted men-at-arms just as it steps off, ploughing lanes through the ranks and churning the
+    field into porridge. And then the flower of France, in sixty pounds of steel a man, begins to wade
+    a quarter mile of that porridge, uphill into the funnel. The woods squeeze the mass from both sides;
+    the arrow fire from the flanks makes every man shoulder instinctively inward, away from it; and so
+    the deepest column compresses itself tighter with every step, exactly as the ground was chosen to
+    make it do. Men later said that by the last hundred paces, some could not raise their arms.</p>`);
+  setControls([]);
+  for(const s of alive('f','f1')){
+    const cx=500+(s.hx-500)*0.55;
+    s.tx=cx;s.ty=S.lineY-10-rnd(0,8);
+  }
+}
+function updWade(dt){
+  if(S.st>1&&Math.random()<dt*2){volley(16,alive('f','f1'),0.1);}
+  for(const s of alive('f','f1'))moveToward(s,0.6,dt);
+  const arrivedCount=alive('f','f1').filter(s=>s.y>S.lineY-24).length;
+  if(arrivedCount>30&&!S.meleeCue){S.meleeCue=true;playScene(SC_G_ORDER,startMelee);}
+}
+function startMelee(){
+  setPhase(4);S.stage='melee';S.st=0;
+  cine('line');
+  narrate('The melee',
+   `<p>The impact, when it comes, is real: exhausted or not, the French mass is heavy, and its sheer
+    weight bends the English line back a spear's length before it holds. Then the field's arithmetic
+    asserts itself. The French are packed too tight to swing, standing in mud to the knee, breathing
+    through visor slits after a quarter-mile wade; men who fall cannot rise, and men who cannot rise in
+    that press are finished. The thin English line, rested and standing on its own footing, has all the
+    room it needs.</p>
+    <p><em>Your archers stand at the stakes with empty quivers emptying fast. Tap the melee to loose
+    them into it, mallets, hatchets, and daggers against mired steel. Tap the stakes to hold them in
+    place and keep shooting.</em></p>`);
+  placeRing(ringA,500,S.lineY-16);
+  placeRing(ringB,woodW(S.lineY)+30,S.lineY);
+  pickMode='melee';
+  setControls([]);
+}
+function updMelee(dt){
+  S.pushed=Math.min(S.pushed+dt*0.8,6);
+  for(const s of alive('e','em')){s.ty=s.hy+S.pushed;moveToward(s,0.3,dt);}
+  for(const s of alive('f','f1'))moveToward(s,0.5,dt);
+  if(Math.random()<dt*2.2)killRandom(alive('f','f1'),1);
+  if(Math.random()<dt*0.5)killRandom(alive('e','em'),1);
+  if(S.joined){
+    if(Math.random()<dt*4.5)killRandom(alive('f','f1'),1);
+    if(S.st>5&&!S.secondSent){
+      S.secondSent=true;
+      narrate('The melee \u00b7 the second battle',
+       `<p>The second French battle comes on into the wreck of the first, adding weight where weight is
+        the problem, and the pile at the English line becomes the thing the chroniclers could not stop
+        describing: heaps of the fallen, armoured men drowning in mud under other armoured men, that the
+        living climbed to fight from. The English take prisoners now by the hundred, great names hauled
+        out of the press by their helms, worth more alive in ransom than any wage of war.</p>`);
+      for(const s of alive('f','f2')){
+        const cx=500+(s.hx-500)*0.55;
+        s.tx=cx;s.ty=S.lineY-12-rnd(0,10);
+      }
+    }
+    if(S.secondSent){
+      for(const s of alive('f','f2'))moveToward(s,0.55,dt);
+      if(Math.random()<dt*3.5)killRandom(alive('f','f2'),1);
+    }
+    const f1=alive('f','f1').length,f2=alive('f','f2').length;
+    if(S.st>10&&f1+f2<55&&!S.prisCue){S.prisCue=true;playScene(SC_G_PRIS,startPrisoners);}
+  }
+}
+function joinMelee(){
+  S.joined=true;S.st=0;
+  narrate('The melee \u00b7 the archers go in',
+   `<p>The bows drop at the stakes and five thousand unarmoured men swarm the flanks of the press with
+    lead mallets, hatchets, and the long daggers made for the gaps in harness. It is not chivalry and it
+    is not close: they are fresh, fast, sure-footed in the mud that holds their enemies like a hand, and
+    they can choose where every blow lands on a man who cannot turn. The battle's arithmetic, five to
+    one against England this morning, has inverted at the only place arithmetic matters, the fighting
+    edge, where mired knights meet twice their number of free hands.</p>`);
+  for(const s of alive('e','ea')){
+    const wing=s.hx<500?0:1;
+    s.tx=(wing===0?440:560)+rnd(-30,30);
+    s.ty=S.lineY-14+rnd(-8,8);
+  }
+  setControls([]);
+}
+function keepShootingCF(){
+  S.stage='cfshoot';S.st=0;
+  narrate('The melee \u00b7 what if',
+   `<p>You hold the archers at the stakes, and the quivers give out inside minutes: a bowman shoots his
+    sheaf and then he is a spectator, and shooting into the locked press kills friend with foe. Meanwhile
+    the weight against your men-at-arms does not tire as fast as they do. A thousand exhausted men, four
+    deep, cannot hold a mass ten times their number forever with their reserve standing idle fifty paces
+    away holding empty bows.</p>`);
+  setControls([]);
+}
+function updCfShoot(dt){
+  S.pushed=Math.min(S.pushed+dt*2.2,20);
+  for(const s of alive('e','em')){s.ty=s.hy+S.pushed;moveToward(s,0.35,dt);}
+  for(const s of alive('f','f1'))moveToward(s,0.5,dt);
+  if(Math.random()<dt*3)killRandom(alive('e','em'),1);
+  if(Math.random()<dt*1)killRandom(alive('f','f1'),1);
+  if(S.st>5){
+    S.stage='cffrozen';
+    narrate('The melee \u00b7 what if',
+     `<p>The centre gives, the line breaks at the banners, and the day ends the way the morning's
+      arithmetic always said it should. The archers were never only artillery. At Agincourt the decisive
+      charge of the day was made on foot, by the unarmoured, with mallets: the moment the longbowmen
+      stopped being a weapon system and became infantry is the moment the battle was actually won.</p>`);
+    setControls([{label:'Rewind \u00b7 loose the archers', fn:()=>{
+      S.stage='melee';S.pushed=6;S.st=0;
+      for(const s of alive('e','em')){s.y=s.hy+6;s.ty=s.y;}
+      joinMelee();
+    }}]);
+  }
+}
+function startPrisoners(){
+  S.stage='prisoners';
+  /* the surviving French of the first two battles yield */
+  let taken=0;
+  for(const s of [...alive('f','f1'),...alive('f','f2')]){
+    if(taken>=34)break;
+    s.prisoner=true;s.tx=470+rnd(0,60);s.ty=S.lineY+34+rnd(0,16);taken++;
+  }
+  narrate('The melee \u00b7 the prisoners',
+   `<p>By early afternoon the first two French battles have ceased to exist and the English hold more
+    prisoners than they have soldiers: hundreds of knights and great lords, disarmed but still in
+    harness, massed a bowshot behind a fighting line that is still engaged. And then two things happen
+    at once. Word comes that the baggage camp at Maisoncelles is being plundered, the army's rear
+    apparently under attack. And across the field the third French battle, thousands of fresh mounted
+    men who have not yet charged, is seen forming as if to come on.</p>
+    <p>If it charges home while the prisoners rise behind the line, the battle is lost in minutes. This
+    is the calculation on the table, with seconds to make it, in the fog of a rumour.</p>`);
+  setChoices([
+    {title:'The prisoners are spared',
+     body:'They are disarmed, they are ransom worth a kingdom, and killing the helpless is the thing the whole code of arms exists to forbid. Hold the line and trust it.',
+     fn:()=>{
+       narrate('The prisoners \u00b7 what if',
+        `<p>In the event, the third battle never charged: its lords looked at the pile in the mud where
+         the first two battles had gone, and rode away, and the baggage raid was a local squire with
+         peasants, not a stratagem. Spare the prisoners and history is very likely identical, minus its
+         darkest hour, and you could not have known that in the moment, which is the entire problem, and
+         the entire debate.</p>
+         <p class="aside">What Henry actually ordered next is the most argued-over act of his life. When
+         his men-at-arms refused, some from conscience, some protecting their ransoms, he detailed two
+         hundred archers to the work, and stopped it only when the third battle dispersed. Contemporary
+         chroniclers, even the French, recorded it mostly without condemnation, as a lawful horror of
+         necessity; the centuries since have been less kind, and should be. The catalogue does not look
+         away from what commands cost, or who pays them.</p>`);
+       setControls([{label:'What Henry ordered', fn:()=>playScene(SC_G_AFTER,aftermath)}]);
+     }},
+    {title:'The order Henry gave',
+     body:'The killing of the prisoners: the most debated command of the medieval age, given in fear of a charge that never came, and halted the moment the field was safe.',
+     fn:()=>{
+       narrate('The prisoners',
+        `<p>The order goes out and the men-at-arms refuse it, some naming their souls and some naming
+         their ransoms, and so two hundred archers are told off to the work, and for some minutes the
+         worst thing of the day happens behind the line, until the third battle is seen dispersing and
+         Henry halts it. Many hundreds still live to be ransomed, among them the dukes of Orleans and
+         Bourbon and the marshal Boucicaut; many do not. Every account of this battle must stand in this
+         spot eventually, and the honest ones stand here without flinching in either direction: it was
+         fear, it was arguably the era's law of necessity, and it was a massacre of the helpless, all
+         three at once.</p>`);
+       setControls([{label:'Evening', fn:()=>playScene(SC_G_AFTER,aftermath)}]);
+     }},
+  ]);
+}
+function aftermath(){
+  setPhase(5);setDay('Saint Crispin\u2019s Day \u00b7 evening');
+  S.stage='done';cine('over');
+  /* the third battle rides away */
+  for(const s of alive('f','f3')){s.tx=s.x+rnd(-40,40);s.ty=-40;}
+  narrate('Aftermath',
+   `<p>The count defied belief on both sides. France: perhaps 6,000 dead in three hours, and the quality
+    of the dead mattered more than the count: the Constable d'Albret, three dukes, some ninety lords of
+    rank, and so much of the gentry of Picardy and Artois that whole districts went into mourning at
+    once. England: something over a hundred dead, the Duke of York, smothered in the press, chief among
+    them. The Duke of Orleans was pulled alive from under the pile; he would spend twenty-five years an
+    English prisoner and become, in captivity, one of the finest poets of medieval France.</p>
+    <p>Henry got his crown's worth: Normandy by 1419, the Treaty of Troyes by 1420, the French king's
+    daughter and the French succession itself. Then he died of dysentery in 1422, two months before the
+    mad old king he was to succeed, and left the double monarchy to a nine-month-old. Within a decade a
+    farm girl from Domremy had reversed the war's tide; by 1453 England held nothing in France but
+    Calais. The most perfect tactical victory of the age purchased, in the end, thirty-eight years of
+    ruinous war and a lost cause.</p>
+    <p class="aside">What survived instead was the story. Two centuries later Shakespeare gave the
+    starving army its speech, we few, we happy few, we band of brothers, and welded it to England's idea
+    of itself forever. Modern scholarship has spent decades scraping the myth for the machine
+    underneath, and found the machine more interesting: not the longbow alone, but ground, weather,
+    discipline, and a commander who understood that a field between two woods, after rain, could be
+    made to fight for the smaller army. The two-finger salute the archers supposedly invented here is,
+    for the record, a legend. The mud is not.</p>`);
+  setControls([{label:'Fight it again', fn:enterPrologue, ghost:true}]);
+}
+
+/* ================= narration & UI ================= */
+const narrLabel=document.getElementById('narrLabel');
+const narrBody=document.getElementById('narrBody');
+const choiceArea=document.getElementById('choiceArea');
+const controls=document.getElementById('controls');
+function narrate(label,html){
+  narrLabel.textContent=label;
+  narrBody.innerHTML=html;
+  narrBody.classList.remove('fade-in');void narrBody.offsetWidth;
+  narrBody.classList.add('fade-in');
+  choiceArea.innerHTML='';
+}
+function setControls(btns){
+  controls.innerHTML='';
+  for(const b of btns){
+    const el=document.createElement('button');
+    el.className='btn'+(b.ghost?' ghost':'');el.textContent=b.label;el.onclick=b.fn;
+    controls.appendChild(el);
+  }
+}
+function setChoices(items){
+  choiceArea.innerHTML='';
+  const grid=document.createElement('div');grid.className='choices fade-in';
+  for(const it of items){
+    const c=document.createElement('button');c.className='choice';
+    c.innerHTML=`<h3>${it.title}</h3><p>${it.body}</p>`;
+    c.onclick=it.fn;grid.appendChild(c);
+  }
+  choiceArea.appendChild(grid);
+  controls.innerHTML='';
+}
+function setPhase(p){
+  S.phase=p;
+  document.querySelectorAll('.pill').forEach(el=>{
+    const n=+el.dataset.p;
+    el.classList.toggle('active',n===p);
+    el.classList.toggle('done',n<p);
+  });
+}
+
+/* ================= main loop ================= */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05);
+  last=now;perfNow=now;S.st+=dt;
+  switch(S.stage){
+    case 'cfwide':updCfWide(dt);break;
+    case 'advance':updAdvance(dt);break;
+    case 'storm':updStorm(dt);break;
+    case 'wade':updWade(dt);break;
+    case 'melee':updMelee(dt);break;
+    case 'cfshoot':updCfShoot(dt);break;
+    case 'prisoners':case 'done':
+      for(const s of S.soldiers){if(s.alive&&(s.prisoner||s.grp==='f3'))moveToward(s,0.6,dt);}
+      break;
+  }
+  updArrowFlight(dt);
+  updCommandFx(dt);
+  applyCamera(dt);
+  flushInstances();
+  flushArrows();
+  flushStakes();
+  updateBanners();
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+
+/* ================= boot ================= */
+resize();
+enterPrologue();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

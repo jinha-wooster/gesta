@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Odyssey · Episode One: Nobody</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16120e; --ink-2:#1e1913; --panel:#221c15; --line:#3a3226;
+    --parchment:#e7dcc4; --muted:#a2957c; --faint:#6f6450;
+    --bronze:#d9a441; --bronze-dim:#8f6f2e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{background:var(--ink)}
+  body{background:var(--ink);color:var(--parchment);font-family:'Source Serif 4',Georgia,serif;font-size:17px;line-height:1.65;min-height:100vh}
+  .wrap{max-width:1060px;margin:0 auto;padding:36px 18px 80px}
+
+  header{text-align:center;margin-bottom:26px}
+  .eyebrow{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  h1{font-family:'GFS Didot',serif;font-weight:400;font-size:clamp(38px,7vw,68px);letter-spacing:.06em;line-height:1}
+  .subtitle{color:var(--muted);font-style:italic;margin-top:12px;font-size:16px}
+  .meander{height:14px;margin:24px auto;max-width:520px;opacity:.55}
+
+  .phases{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+  .pill{font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:7px 13px;border:1px solid var(--line);border-radius:2px;color:var(--faint);transition:all .35s;white-space:nowrap}
+  .pill.active{color:var(--bronze);border-color:var(--bronze-dim);background:rgba(217,164,65,.06)}
+  .pill.done{color:var(--muted)}
+
+  .stage{position:relative;border:1px solid var(--line);background:#000;border-radius:3px;overflow:hidden}
+  #view{display:block;width:100%;height:560px;cursor:grab;touch-action:none}
+  #view.dragging{cursor:grabbing}
+  @media(max-width:700px){#view{height:420px}}
+
+  .counters{position:absolute;top:10px;left:12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;font-size:12px;letter-spacing:.08em;opacity:0;transition:opacity .6s}
+  .counters.show{opacity:1}
+  .counter{background:rgba(22,18,14,.72);padding:4px 10px;border-radius:2px;border:1px solid var(--line);width:max-content}
+  .counter b{font-weight:600}
+  .c-men b{color:#e0b055} .c-day b{color:#9db8d0} .c-hub b{color:#d98a55}
+  #stageToast{position:absolute;top:12px;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--bronze);background:rgba(22,18,14,.85);border:1px solid var(--bronze-dim);
+    padding:7px 14px;border-radius:2px;opacity:0;transition:opacity .5s;pointer-events:none;z-index:7;white-space:nowrap}
+  #stageToast.show{opacity:1}
+  .ch-row{text-align:left;margin-bottom:16px}
+  .ch-q{font-size:14px;color:var(--parchment);margin-bottom:5px}
+  .ch-bar{height:8px;background:#171310;border:1px solid var(--line);border-radius:2px;overflow:hidden}
+  .ch-bar div{height:100%;background:var(--bronze-dim)}
+  .ch-meta{font-size:12px;color:var(--muted);margin-top:5px;font-style:italic}
+  .ho-block{text-align:left;border:1px solid var(--line);border-radius:3px;padding:14px 18px;margin-top:18px;
+    font-size:13.5px;color:var(--muted);line-height:1.8}
+  .ho-block b{color:var(--parchment);font-weight:600}
+  .ho-k{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--bronze);margin-bottom:8px}
+
+  .daytag{position:absolute;bottom:10px;left:12px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(231,220,196,.7);background:rgba(22,18,14,.6);padding:5px 10px;border-radius:2px;pointer-events:none}
+
+  .camctl{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:6px}
+  .cambtn{font-family:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;background:rgba(22,18,14,.72);border:1px solid var(--line);border-radius:2px;color:var(--muted);cursor:pointer;transition:all .2s}
+  .cambtn:hover{color:var(--bronze);border-color:var(--bronze-dim)}
+  .camhint{position:absolute;bottom:10px;right:12px;font-size:11px;letter-spacing:.06em;color:rgba(231,220,196,.55);background:rgba(22,18,14,.6);padding:4px 9px;border-radius:2px;pointer-events:none}
+  @media(max-width:700px){.camhint{display:none}}
+
+  .narration{border:1px solid var(--line);border-top:none;background:var(--panel);padding:26px 30px;border-radius:0 0 3px 3px;min-height:150px}
+  .narr-label{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--bronze);margin-bottom:10px}
+  .narration p{margin-bottom:12px}
+  .narration p:last-child{margin-bottom:0}
+  .narration em{color:var(--muted)}
+  .aside{font-size:14px;color:var(--muted);font-style:italic;border-left:2px solid var(--bronze-dim);padding-left:14px;margin-top:14px}
+
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  @media(max-width:640px){.choices{grid-template-columns:1fr}}
+  .choice{border:1px solid var(--line);border-radius:3px;padding:20px;background:var(--ink-2);cursor:pointer;text-align:left;color:var(--parchment);font-family:inherit;font-size:16px;transition:border-color .25s,background .25s}
+  .choice:hover{border-color:var(--bronze-dim);background:#26201780}
+  .choice h3{font-family:'GFS Didot',serif;font-weight:400;font-size:20px;letter-spacing:.04em;margin-bottom:8px;color:var(--bronze)}
+  .choice p{font-size:14.5px;color:var(--muted);line-height:1.55}
+
+  .controls{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn{font-family:inherit;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:13px 28px;background:transparent;color:var(--bronze);border:1px solid var(--bronze-dim);border-radius:2px;cursor:pointer;transition:all .25s}
+  .btn:hover{background:rgba(217,164,65,.1);border-color:var(--bronze)}
+  .btn.ghost{color:var(--muted);border-color:var(--line)}
+  .btn.ghost:hover{color:var(--parchment);background:rgba(255,255,255,.04)}
+
+  /* decision dock overlaid on the simulation */
+  #dock{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:10px 14px 12px;
+      background:linear-gradient(transparent, rgba(12,12,10,.45) 18%, rgba(12,12,10,.9) 72%)}
+  #dock:not(:has(button)){display:none}
+  #dock .choices{max-width:880px;margin:0 auto;gap:10px}
+  #dock .choice{padding:12px 14px;background:rgba(24,22,18,.93)}
+  #dock .choice h3{font-size:17px;margin-bottom:5px}
+  #dock .choice p{font-size:13px;line-height:1.45}
+  #dock .controls{margin-top:0;padding-top:8px}
+  @media(max-width:640px){#dock .choice{padding:10px 12px}#dock .choice p{font-size:12px}}
+  footer{margin-top:44px;text-align:center;font-size:13px;color:var(--faint);line-height:1.7}
+  .fade-in{animation:fadeIn .6s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* ---- visual novel layer ---- */
+  #vn{display:none;position:absolute;left:0;right:0;bottom:0;padding:14px 16px 16px;
+      background:linear-gradient(transparent, rgba(14,11,8,.55) 18%, rgba(14,11,8,.92) 60%);z-index:5}
+  .vn-box{display:flex;gap:16px;max-width:860px;margin:0 auto;align-items:flex-end;cursor:pointer}
+  .vn-portrait{width:104px;height:128px;flex:0 0 auto;border:1px solid var(--bronze-dim);
+      border-radius:3px;background:#221c15;overflow:hidden}
+  .vn-portrait svg{width:100%;height:100%;display:block}
+  .vn-main{flex:1;min-width:0}
+  .vn-name{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--bronze);margin-bottom:7px}
+  .vn-text{font-size:16.5px;line-height:1.6;color:var(--parchment);min-height:52px}
+  .vn-text em{color:var(--muted)}
+  .vn-next{font-size:11px;letter-spacing:.2em;color:var(--faint);margin-top:8px;text-transform:uppercase}
+  .vn-choices{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .vn-choice{font-family:inherit;font-size:14.5px;text-align:left;padding:11px 16px;background:rgba(30,25,19,.9);
+      border:1px solid var(--line);border-radius:2px;color:var(--parchment);cursor:pointer;transition:all .2s}
+  .vn-choice:hover{border-color:var(--bronze-dim);background:rgba(38,32,23,.95)}
+  #vntoast{position:absolute;right:16px;bottom:100%;margin-bottom:8px;font-size:11px;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--bronze);background:rgba(22,18,14,.85);border:1px solid var(--bronze-dim);
+      padding:6px 12px;border-radius:2px;opacity:0;transition:opacity .5s;pointer-events:none}
+  #vntoast.show{opacity:1}
+  .vn-narr .vn-text{font-style:italic;color:var(--muted)}
+  @media(max-width:640px){.vn-portrait{width:76px;height:96px}.vn-text{font-size:15px}}
+
+  /* ---- episode cards ---- */
+  #epcard{display:none;position:absolute;inset:0;z-index:8;background:rgba(14,11,8,.9);
+      text-align:center;padding:0 20px;cursor:pointer}
+  .ep-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;max-width:640px}
+  .ep-k{font-size:11px;letter-spacing:.4em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+  .ep-t{font-family:'GFS Didot',serif;font-size:clamp(38px,7vw,64px);letter-spacing:.08em;color:var(--parchment);line-height:1.05}
+  .ep-s{font-size:16px;font-style:italic;color:var(--bronze);margin-top:14px}
+  .ep-x{font-size:14px;color:var(--muted);margin-top:22px;line-height:1.7}
+  .ep-hint{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--faint);margin-top:30px}
+  .ep-btns{display:flex;gap:12px;justify-content:center;margin-top:26px}
+
+  /* ---- the stake mini-game ---- */
+  #minigame{display:none;position:absolute;inset:0;z-index:6;background:rgba(14,11,8,.55)}
+  .mg-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(420px,86%);
+      background:rgba(22,18,14,.94);border:1px solid var(--bronze-dim);border-radius:3px;padding:24px;text-align:center}
+  .mg-k{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--bronze);margin-bottom:8px}
+  .mg-t{font-family:'GFS Didot',serif;font-size:26px;letter-spacing:.06em;margin-bottom:6px}
+  .mg-s{font-size:13.5px;color:var(--muted);font-style:italic;margin-bottom:18px}
+  .mg-track{position:relative;height:16px;border:1px solid var(--line);border-radius:2px;background:#171310;overflow:hidden}
+  .mg-zone{position:absolute;top:0;bottom:0;background:rgba(217,164,65,.28)}
+  .mg-zone.perfect{background:rgba(120,200,120,.35)}
+  .mg-marker{position:absolute;top:-3px;bottom:-3px;width:3px;background:#ffd35e;box-shadow:0 0 8px #ffb03a}
+  .mg-btn{margin-top:18px;font-family:inherit;font-size:14px;letter-spacing:.2em;text-transform:uppercase;
+      padding:13px 34px;background:rgba(217,164,65,.12);color:var(--bronze);border:1px solid var(--bronze);
+      border-radius:2px;cursor:pointer}
+  .mg-btn:hover{background:rgba(217,164,65,.22)}
+  .mg-verdict{margin-top:14px;font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:var(--parchment);min-height:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">The wine-dark sea · somewhere west of everything known</div>
+    <h1>THE ODYSSEY</h1>
+    <p class="subtitle">Episode One · Nobody &nbsp;&middot;&nbsp; a season in twelve weekly chapters</p>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true">
+      <defs><pattern id="key" width="26" height="14" patternUnits="userSpaceOnUse">
+        <path d="M0 12 H10 V2 H20 V8 H14 V6 H18 V4 H12 V10 H22 V0 H26" fill="none" stroke="#d9a441" stroke-width="1.4"/>
+      </pattern></defs>
+      <rect width="520" height="14" fill="url(#key)"/>
+    </svg>
+  </header>
+
+  <nav class="phases" aria-label="Episode beats">
+    <span class="pill" data-p="0">The landfall</span>
+    <span class="pill" data-p="1">The cave</span>
+    <span class="pill" data-p="2">Nobody</span>
+    <span class="pill" data-p="3">The stake</span>
+    <span class="pill" data-p="4">The escape</span>
+    <span class="pill" data-p="5">The curse</span>
+  </nav>
+
+  <div class="stage">
+    <div id="view" role="img" aria-label="3D scene of the island of the Cyclopes"></div>
+    <div class="counters" id="counters">
+      <span class="counter c-men">Companions&nbsp; <b id="menCt">12 of 12</b></span>
+      <span class="counter c-day">Day on the island&nbsp; <b id="dayCt">1</b></span>
+      <span class="counter c-hub">Hubris&nbsp; <b id="hubCt">0</b></span>
+    </div>
+    <div class="daytag" id="daytag">Landfall</div>
+    <div id="stageToast"></div>
+    <div class="camctl">
+      <button class="cambtn" data-cam="bay">The bay</button>
+      <button class="cambtn" data-cam="cave">The cave</button>
+      <button class="cambtn" data-cam="meadow">The meadow</button>
+      <button class="cambtn" data-cam="sea">Open water</button>
+    </div>
+    <div class="camhint">drag · rotate&ensp;|&ensp;scroll · zoom&ensp;|&ensp;right-drag · pan</div>
+    <div id="dock"><div id="choiceArea"></div><div class="controls" id="controls"></div></div>
+    <div id="vn"><div id="vntoast"></div>
+      <div class="vn-box" id="vnbox">
+        <div class="vn-portrait" id="vnportrait"></div>
+        <div class="vn-main">
+          <div class="vn-name" id="vnname"></div>
+          <div class="vn-text" id="vntext"></div>
+          <div class="vn-choices" id="vnchoices"></div>
+          <div class="vn-next" id="vnnext">tap to continue &#9656;</div>
+        </div>
+      </div>
+    </div>
+    <div id="minigame"></div>
+    <div id="epcard"></div>
+  </div>
+
+  <div class="narration">
+    <div class="narr-label" id="narrLabel">The landfall</div>
+    <div id="narrBody"></div>
+  </div>
+
+
+  <footer>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true"><rect width="520" height="14" fill="url(#key)"/></svg>
+    Adapted from Book 9 of Homer's <em>Odyssey</em>, composed in the oral tradition around the 8th century BC
+    and told by Odysseus himself at a Phaeacian banquet, which is to say by a narrator with every reason to
+    improve the story. Polites, Eurylochus, and Elpenor are Homer's own crewmen, here given the lines the
+    poem never wrote down.
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+
+/* ================= geography =================
+   Sim space 1000 x 620. Sea to the west (low x). Beach, then meadow rising east.
+   The cave of Polyphemus is on the hill in the northeast. */
+const sx2w=x=>(x-500)*0.2, sy2w=y=>(y-310)*0.2;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const smooth=(x,a,b)=>THREE.MathUtils.smoothstep(x,a,b);
+const CAVE={x:760,y:175};
+const SHIP0={x:205,y:330};
+const SHORE_X=250;
+
+const S={
+  phase:0, stage:'idle', sub:'', subT:0, st:0,
+  soldiers:[], rocks:[], splashes:[],
+  men:12, day:1,
+  daylight:1, dayTarget:1,
+};
+
+/* ================= three.js ================= */
+const view=document.getElementById('view');
+const scene=new THREE.Scene();
+const DAY_SKY=new THREE.Color(0xa9bcc4), NIGHT_SKY=new THREE.Color(0x121826);
+scene.background=DAY_SKY.clone();
+scene.fog=new THREE.Fog(0xa9bcc4,170,470);
+
+const camera=new THREE.PerspectiveCamera(52,1,0.5,950);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const SHADOWS=window.innerWidth>700;
+if(SHADOWS){renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;}
+view.appendChild(renderer.domElement);
+function resize(){const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+
+const hemi=new THREE.HemisphereLight(0xd6e0dc,0x5a5340,0.85);
+scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xffeecd,1.1);
+sun.position.set(-70,95,55);
+if(SHADOWS){
+  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+  const sc=sun.shadow.camera;
+  sc.left=-135;sc.right=135;sc.top=135;sc.bottom=-135;sc.far=380;
+  sc.updateProjectionMatrix();
+  sun.shadow.bias=-0.0008;
+}
+scene.add(sun);
+const caveLight=new THREE.PointLight(0xff9040,0,60,1.8);
+{const wx=sx2w(CAVE.x-14),wz=sy2w(CAVE.y+10);caveLight.position.set(wx,4,wz);}
+scene.add(caveLight);
+
+/* ---------- terrain ---------- */
+function terrainH(wx,wz){
+  const x=wx/0.2+500,y=wz/0.2+310;
+  let h=Math.sin(wx*0.1)*0.3+Math.cos(wz*0.12+wx*0.05)*0.3;
+  // the sea floor, west
+  if(x<SHORE_X)h-=Math.min((SHORE_X-x)*0.06,5.5);
+  // the meadow climbs gently east
+  if(x>SHORE_X)h+=(x-SHORE_X)*0.012;
+  // the cave hill
+  const dx=(x-CAVE.x)/120,dy=(y-CAVE.y)/95;
+  h+=12.5*Math.exp(-(dx*dx+dy*dy));
+  // southern and northern rises
+  if(y>545)h+=(y-545)*0.05;
+  if(y<70)h+=(70-y)*0.05;
+  if(x>935)h+=(x-935)*0.06;
+  // the goat island offshore
+  const gx=(x-105)/58,gy=(y-135)/48;
+  h+=6.5*Math.exp(-(gx*gx+gy*gy));
+  return h;
+}
+{
+  const g=new THREE.PlaneGeometry(230,150,160,110);
+  g.rotateX(-Math.PI/2);
+  const pos=g.attributes.position,colors=[];
+  const cGrass=new THREE.Color(0x77804d),cDry=new THREE.Color(0x8d8657),
+        cSand=new THREE.Color(0xa3915f),cRock=new THREE.Color(0x6e6349),
+        cBed=new THREE.Color(0x4a5a54),tmp=new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const wx=pos.getX(i),wz=pos.getZ(i),h=terrainH(wx,wz);
+    const x=wx/0.2+500;
+    pos.setY(i,h);
+    tmp.copy(cGrass);
+    tmp.lerp(cDry,smooth(Math.sin(wx*0.3)*Math.sin(wz*0.26),0,1)*0.5);
+    tmp.lerp(cSand,smooth(-Math.abs(x-SHORE_X-14),-40,-8));
+    tmp.lerp(cRock,smooth(h,6,13));
+    if(h<-1.4)tmp.lerp(cBed,0.75);
+    tmp.offsetHSL(0,0,(Math.sin(wx*1.5)*Math.sin(wz*1.9))*0.04);
+    colors.push(tmp.r,tmp.g,tmp.b);
+  }
+  g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  g.computeVertexNormals();
+  const terrain=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}));
+  terrain.receiveShadow=SHADOWS;
+  scene.add(terrain);
+}
+/* the sea */
+const sea=new THREE.Mesh(
+  new THREE.PlaneGeometry(120,152),
+  new THREE.MeshLambertMaterial({color:0x274a58,transparent:true,opacity:0.93}));
+sea.rotation.x=-Math.PI/2;
+sea.position.set(sx2w(120),-0.5,0);
+scene.add(sea);
+
+/* olive trees */
+{
+  const trunkMat=new THREE.MeshLambertMaterial({color:0x5c4a32});
+  const leafMat=new THREE.MeshLambertMaterial({color:0x5f6e45});
+  for(let i=0;i<22;i++){
+    const x=rnd(330,900),y=rnd(90,560);
+    if(Math.hypot(x-CAVE.x,y-CAVE.y)<70)continue;
+    const wx=sx2w(x),wz=sy2w(y),h=terrainH(wx,wz);
+    const t=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.34,2.4,5),trunkMat);
+    t.position.set(wx,h+1.2,wz);t.rotation.z=rnd(-.12,.12);t.castShadow=SHADOWS;scene.add(t);
+    const c=new THREE.Mesh(new THREE.SphereGeometry(rnd(1.3,2.1),6,5),leafMat);
+    c.position.set(wx+rnd(-.4,.4),h+3.0,wz+rnd(-.4,.4));c.scale.y=0.7;c.castShadow=SHADOWS;scene.add(c);
+  }
+}
+/* the cave mouth and its boulder */
+const caveMouth=new THREE.Mesh(
+  new THREE.CircleGeometry(4.2,10),
+  new THREE.MeshBasicMaterial({color:0x0a0806}));
+{
+  const wx=sx2w(CAVE.x-16),wz=sy2w(CAVE.y+12);
+  caveMouth.position.set(wx,terrainH(wx,wz)+3.4,wz);
+  caveMouth.rotation.y=-Math.PI/2+0.5;
+  scene.add(caveMouth);
+}
+const boulder=new THREE.Mesh(
+  new THREE.SphereGeometry(4.6,8,6),
+  new THREE.MeshLambertMaterial({color:0x716753}));
+boulder.scale.set(0.55,1,1);
+boulder.castShadow=SHADOWS;
+const BOULDER_OPEN={x:sx2w(CAVE.x-10),z:sy2w(CAVE.y+26)};
+const BOULDER_SHUT={x:sx2w(CAVE.x-17),z:sy2w(CAVE.y+12)};
+boulder.position.set(BOULDER_OPEN.x,terrainH(BOULDER_OPEN.x,BOULDER_OPEN.z)+2.4,BOULDER_OPEN.z);
+scene.add(boulder);
+let boulderT=0,boulderTarget=0;   // 0 open, 1 shut
+/* the sheep pen wall */
+{
+  const stone=new THREE.MeshLambertMaterial({color:0x7a7160});
+  for(let i=0;i<10;i++){
+    const a=-0.6+i*0.32;
+    const x=CAVE.x-30+Math.cos(a)*38,y=CAVE.y+42+Math.sin(a)*22;
+    const wx=sx2w(x),wz=sy2w(y);
+    const seg=new THREE.Mesh(new THREE.BoxGeometry(2.6,1.1,0.8),stone);
+    seg.position.set(wx,terrainH(wx,wz)+0.5,wz);
+    seg.rotation.y=rnd(0,0.6);
+    scene.add(seg);
+  }
+}
+
+/* ---------- the ship ---------- */
+const shipGrp=new THREE.Group();
+{
+  const wood=new THREE.MeshLambertMaterial({color:0x54412d});
+  const hull=new THREE.Mesh(new THREE.CylinderGeometry(1.1,0.45,10,7),wood);
+  hull.rotation.z=Math.PI/2;hull.scale.y=0.85;hull.position.y=0.4;
+  const prow=new THREE.Mesh(new THREE.ConeGeometry(0.8,2.6,6),wood);
+  prow.rotation.z=Math.PI/2;prow.position.set(-6,0.8,0);
+  const stern=new THREE.Mesh(new THREE.ConeGeometry(0.75,2.2,6),wood);
+  stern.rotation.z=-Math.PI/2;stern.position.set(6,0.9,0);
+  const mast=new THREE.Mesh(new THREE.CylinderGeometry(0.13,0.15,6.5,5),wood);
+  mast.position.y=3.4;
+  const sail=new THREE.Mesh(new THREE.PlaneGeometry(4,3.2),
+    new THREE.MeshLambertMaterial({color:0xd9cfb4,side:THREE.DoubleSide}));
+  sail.position.set(0,4.4,0);
+  shipGrp.add(hull,prow,stern,mast,sail);
+  shipGrp.traverse(o=>{if(o.isMesh)o.castShadow=SHADOWS;});
+  scene.add(shipGrp);
+}
+const shipS={x:SHIP0.x,y:SHIP0.y,tx:SHIP0.x,ty:SHIP0.y,face:Math.PI};
+function shipUpdate(dt,speed){
+  const dx=shipS.tx-shipS.x,dy=shipS.ty-shipS.y,d=Math.hypot(dx,dy);
+  if(d>1.5){
+    shipS.x+=(dx/d)*speed*dt*60;shipS.y+=(dy/d)*speed*dt*60;
+    const t=Math.atan2(-dy,dx);
+    let diff=t-shipS.face;
+    while(diff>Math.PI)diff-=6.283;while(diff<-Math.PI)diff+=6.283;
+    shipS.face+=diff*Math.min(dt*2.5,1);
+  }
+  shipGrp.position.set(sx2w(shipS.x),-0.35+Math.sin(perfNow*0.0013)*0.1,sy2w(shipS.y));
+  shipGrp.rotation.y=shipS.face;
+  shipGrp.rotation.z=Math.sin(perfNow*0.0011)*0.03;
+}
+
+/* ---------- Polyphemus ---------- */
+const giant=new THREE.Group();
+let eyeMat;
+{
+  const skin=new THREE.MeshLambertMaterial({color:0x99795a});
+  const cloth=new THREE.MeshLambertMaterial({color:0x6b5a3e});
+  const legL=new THREE.Mesh(new THREE.CylinderGeometry(0.55,0.75,3.4,6),skin);legL.position.set(0,1.7,-0.65);
+  const legR=legL.clone();legR.position.z=0.65;
+  const torso=new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.9,3.6,7),cloth);torso.position.y=5.1;
+  const armL=new THREE.Mesh(new THREE.CylinderGeometry(0.42,0.5,3.2,6),skin);
+  armL.position.set(0,5.4,-1.95);armL.rotation.x=0.35;
+  const armR=armL.clone();armR.position.z=1.95;armR.rotation.x=-0.35;
+  const head=new THREE.Mesh(new THREE.SphereGeometry(1.15,8,7),skin);head.position.y=7.9;
+  const sclera=new THREE.Mesh(new THREE.CircleGeometry(0.42,10),new THREE.MeshBasicMaterial({color:0xe8e0cc}));
+  sclera.position.set(-1.02,8.05,0);sclera.rotation.y=-Math.PI/2;
+  eyeMat=new THREE.MeshBasicMaterial({color:0x241a10});
+  const pupil=new THREE.Mesh(new THREE.CircleGeometry(0.2,10),eyeMat);
+  pupil.position.set(-1.06,8.05,0);pupil.rotation.y=-Math.PI/2;
+  giant.add(legL,legR,torso,armL,armR,head,sclera,pupil);
+  giant.traverse(o=>{if(o.isMesh)o.castShadow=SHADOWS;});
+  scene.add(giant);
+}
+const giantS={x:620,y:330,tx:620,ty:330,face:Math.PI,visible:true,blind:false,stumble:0};
+function giantUpdate(dt,speed){
+  giant.visible=giantS.visible;
+  if(!giantS.visible)return;
+  const dx=giantS.tx-giantS.x,dy=giantS.ty-giantS.y,d=Math.hypot(dx,dy);
+  let moving=false;
+  if(d>2){
+    moving=true;
+    let vx=dx/d,vy=dy/d;
+    if(giantS.blind){
+      giantS.stumble+=dt*3;
+      vx+=Math.sin(giantS.stumble*2.7)*0.5;vy+=Math.cos(giantS.stumble*1.9)*0.5;
+      const n=Math.hypot(vx,vy);vx/=n;vy/=n;
+    }
+    giantS.x+=vx*speed*dt*60;giantS.y+=vy*speed*dt*60;
+    giantS.face=Math.atan2(-vy,vx);
+  }
+  const wx=sx2w(giantS.x),wz=sy2w(giantS.y);
+  const bob=moving?Math.abs(Math.sin(perfNow*0.006))*0.3:0;
+  giant.position.set(wx,terrainH(wx,wz)+bob,wz);
+  giant.rotation.y=giantS.face+(giantS.blind?Math.sin(perfNow*0.002)*0.2:0);
+}
+function blindGiant(){
+  giantS.blind=true;
+  eyeMat.color.set(0x4a1810);
+}
+
+/* ---------- the flock ---------- */
+const SHEEP_N=30;
+const sheepMesh=new THREE.InstancedMesh(
+  (()=>{
+    const body=new THREE.BoxGeometry(1.5,0.9,0.8);body.translate(0,0.85,0);
+    const head=new THREE.BoxGeometry(0.5,0.45,0.4);head.translate(0.9,1.0,0);
+    const g=body; // merge
+    const geos=[body,head];
+    let vC=0,iC=0;for(const gg of geos){vC+=gg.attributes.position.count;iC+=gg.index.count;}
+    const P=new Float32Array(vC*3),N=new Float32Array(vC*3),I=new Uint16Array(iC);
+    let vO=0,iO=0;
+    for(const gg of geos){
+      P.set(gg.attributes.position.array,vO*3);
+      N.set(gg.attributes.normal.array,vO*3);
+      const idx=gg.index.array;
+      for(let i=0;i<idx.length;i++)I[iO+i]=idx[i]+vO;
+      vO+=gg.attributes.position.count;iO+=idx.length;
+    }
+    const out=new THREE.BufferGeometry();
+    out.setAttribute('position',new THREE.BufferAttribute(P,3));
+    out.setAttribute('normal',new THREE.BufferAttribute(N,3));
+    out.setIndex(new THREE.BufferAttribute(I,1));
+    return out;
+  })(),
+  new THREE.MeshLambertMaterial({color:0xd8d0bc}),SHEEP_N);
+sheepMesh.castShadow=SHADOWS;
+sheepMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(sheepMesh);
+const sheep=[];
+for(let i=0;i<SHEEP_N;i++){
+  sheep.push({x:600+rnd(-60,60),y:330+rnd(-50,50),tx:0,ty:0,face:rnd(0,6.28),mode:'meadow',jit:rnd(0,6.28),wpi:0});
+}
+/* the great ram, dark-fleeced */
+const ram=new THREE.Mesh(sheepMesh.geometry,new THREE.MeshLambertMaterial({color:0x4a4038}));
+ram.scale.setScalar(1.6);ram.castShadow=SHADOWS;scene.add(ram);
+const ramS={x:590,y:360,tx:590,ty:360,face:0,mode:'meadow',jit:1};
+const _m=new THREE.Matrix4(),_q=new THREE.Quaternion(),_v=new THREE.Vector3(),_s=new THREE.Vector3(),_e=new THREE.Euler();
+let perfNow=0;
+function sheepTargets(mode){
+  for(const sh of sheep)sh.mode=mode;
+  ramS.mode=mode;
+}
+function updFlock(dt){
+  const all=[...sheep,ramS];
+  for(const sh of all){
+    let speed=0.25;
+    if(sh.mode==='meadow'){
+      if(Math.hypot(sh.tx-sh.x,sh.ty-sh.y)<3){sh.tx=600+rnd(-70,70);sh.ty=330+rnd(-60,60);}
+    }else if(sh.mode==='pen'){
+      if(Math.hypot(sh.tx-sh.x,sh.ty-sh.y)<3){sh.tx=CAVE.x-30+rnd(-24,24);sh.ty=CAVE.y+44+rnd(-14,14);}
+      speed=0.5;
+    }else if(sh.mode==='yard'){
+      if(Math.hypot(sh.tx-sh.x,sh.ty-sh.y)<3){sh.tx=CAVE.x-28+rnd(-16,16);sh.ty=CAVE.y+30+rnd(-12,12);}
+      speed=0.28;
+    }else if(sh.mode==='cave'){
+      sh.tx=CAVE.x-14;sh.ty=CAVE.y+14;speed=0.55;
+    }else if(sh.mode==='out'){
+      // stream out of the cave, down toward the meadow, past the seated giant
+      const wps=[[CAVE.x-24,CAVE.y+26],[CAVE.x-70,CAVE.y+70],[560,300+((sheep.indexOf(sh)%5)*14||0)]];
+      const wp=wps[Math.min(sh.wpi,wps.length-1)];
+      sh.tx=wp[0]+((sh.jit%1)*10-5);sh.ty=wp[1]+((sh.jit*7%1)*10-5);
+      if(Math.hypot(sh.tx-sh.x,sh.ty-sh.y)<4)sh.wpi++;
+      speed=0.4;
+    }
+    const dx=sh.tx-sh.x,dy=sh.ty-sh.y,d=Math.hypot(dx,dy);
+    if(d>1){
+      sh.x+=(dx/d)*speed*dt*60;sh.y+=(dy/d)*speed*dt*60;
+      sh.face=Math.atan2(-dy,dx);
+    }
+  }
+  sheep.forEach((sh,i)=>{
+    const wx=sx2w(sh.x),wz=sy2w(sh.y);
+    _v.set(wx,terrainH(wx,wz)+Math.abs(Math.sin(perfNow*0.008+sh.jit))*0.08,wz);
+    _e.set(0,sh.face,0);_q.setFromEuler(_e);
+    _s.setScalar(0.8);
+    _m.compose(_v,_q,_s);
+    sheepMesh.setMatrixAt(i,_m);
+  });
+  sheepMesh.instanceMatrix.needsUpdate=true;
+  {
+    const wx=sx2w(ramS.x),wz=sy2w(ramS.y);
+    ram.position.set(wx,terrainH(wx,wz),wz);
+    ram.rotation.y=ramS.face;
+  }
+}
+
+/* ---------- the crew ---------- */
+function mergeGeos(geos){
+  let vC=0,iC=0;
+  for(const g of geos){vC+=g.attributes.position.count;iC+=g.index.count;}
+  const P=new Float32Array(vC*3),N=new Float32Array(vC*3),I=new Uint16Array(iC);
+  let vO=0,iO=0;
+  for(const g of geos){
+    P.set(g.attributes.position.array,vO*3);
+    N.set(g.attributes.normal.array,vO*3);
+    const idx=g.index.array;
+    for(let i=0;i<idx.length;i++)I[iO+i]=idx[i]+vO;
+    vO+=g.attributes.position.count;iO+=idx.length;
+  }
+  const out=new THREE.BufferGeometry();
+  out.setAttribute('position',new THREE.BufferAttribute(P,3));
+  out.setAttribute('normal',new THREE.BufferAttribute(N,3));
+  out.setIndex(new THREE.BufferAttribute(I,1));
+  return out;
+}
+const footGeo=(()=>{
+  const body=new THREE.CylinderGeometry(0.32,0.42,1.5,6);body.translate(0,0.75,0);
+  const head=new THREE.SphereGeometry(0.26,6,5);head.translate(0,1.72,0);
+  const spear=new THREE.CylinderGeometry(0.04,0.04,2.4,4);spear.translate(0,1.4,0.42);
+  return mergeGeos([body,head,spear]);
+})();
+const KINDS={
+  cr:{color:0xb59360},   // the companions
+  od:{color:0xd9a441},   // Odysseus
+};
+const MATS={};for(const k in KINDS)MATS[k]=new THREE.MeshLambertMaterial({color:KINDS[k].color});
+let MESH={};
+function soldier(x,y,kind){
+  return {x,y,tx:x,ty:y,kind,face:rnd(0,6.28),hidden:false,jit:rnd(0,6.28),moving:false,pi:0,wps:null};
+}
+let ody=null;
+function spawnCrew(){
+  S.soldiers=[];
+  for(let i=0;i<12;i++)S.soldiers.push(soldier(SHIP0.x+30+rnd(-8,8),SHIP0.y+rnd(-14,14),'cr'));
+  ody=soldier(SHIP0.x+38,SHIP0.y,'od');
+  S.soldiers.push(ody);
+  // shipboard watch stays aboard: shown as figures near the ship
+  for(let i=0;i<6;i++){
+    const w=soldier(SHIP0.x+8+rnd(-6,6),SHIP0.y+rnd(-8,8),'cr');
+    w.watch=true;
+    S.soldiers.push(w);
+  }
+  buildInstances();
+}
+function buildInstances(){
+  for(const k in MESH)scene.remove(MESH[k]);
+  MESH={};
+  for(const k in KINDS){
+    const list=S.soldiers.filter(s=>s.kind===k);
+    const m=new THREE.InstancedMesh(footGeo,MATS[k],Math.max(list.length,1));
+    m.castShadow=SHADOWS;
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    _s.setScalar(0.0001);_v.set(0,-80,0);_q.set(0,0,0,1);_m.compose(_v,_q,_s);
+    for(let i=0;i<m.count;i++)m.setMatrixAt(i,_m);
+    m.instanceMatrix.needsUpdate=true;
+    list.forEach((s,i)=>{s.idx=i;s.mesh=m;});
+    scene.add(m);MESH[k]=m;
+  }
+}
+function flushCrew(){
+  for(const s of S.soldiers){
+    const wx=sx2w(s.x),wz=sy2w(s.y);
+    if(s.hidden){_s.setScalar(0.0001);_v.set(wx,-80,wz);_q.set(0,0,0,1);}
+    else{
+      const bob=s.moving?Math.abs(Math.sin(perfNow*0.012+s.jit))*0.13:0;
+      _v.set(wx,terrainH(wx,wz)+bob,wz);
+      _e.set(0,s.face,0);_q.setFromEuler(_e);
+      _s.setScalar(1);
+    }
+    _m.compose(_v,_q,_s);
+    s.mesh.setMatrixAt(s.idx,_m);
+  }
+  for(const k in MESH)MESH[k].instanceMatrix.needsUpdate=true;
+}
+function moveToward(s,speed,dt){
+  const dx=s.tx-s.x,dy=s.ty-s.y,d=Math.hypot(dx,dy);
+  if(d<1.5){s.moving=false;return true;}
+  s.moving=true;
+  s.x+=(dx/d)*speed*dt*60;s.y+=(dy/d)*speed*dt*60;
+  s.face=Math.atan2(-dy,dx);
+  return false;
+}
+function party(){return S.soldiers.filter(s=>!s.watch&&s.kind==='cr');}
+function setCounter(){
+  document.getElementById('menCt').textContent=S.men+' of 12';
+  document.getElementById('dayCt').textContent=S.day;
+  document.getElementById('hubCt').textContent=SEASON.hubris;
+}
+let stToastT=null;
+function showToast(t){
+  const el=document.getElementById('stageToast');
+  el.textContent=t;el.classList.add('show');
+  clearTimeout(stToastT);
+  stToastT=setTimeout(()=>el.classList.remove('show'),2100);
+}
+function addHubris(n,why){
+  SEASON.hubris+=n;setCounter();
+  showToast('Hubris rises \u00b7 '+why);
+}
+function recordChoice(id,title,pick,pct,homer){
+  if(CHOICELOG.some(c=>c.id===id))return;
+  CHOICELOG.push({id,title,pick,pct,homer});
+  showToast('The story will remember that');
+}
+
+/* ---------- rocks and splashes ---------- */
+const rockGeo=new THREE.SphereGeometry(2.2,7,6);
+const rockMat=new THREE.MeshLambertMaterial({color:0x6e6552});
+function throwRock(toX,toY,arc){
+  const mesh=new THREE.Mesh(rockGeo,rockMat);
+  mesh.castShadow=SHADOWS;
+  scene.add(mesh);
+  S.rocks.push({mesh,fx:giantS.x,fy:giantS.y,tx:toX,ty:toY,t:0,dur:1.6,arc:arc||26});
+}
+const splashGeo=new THREE.CircleGeometry(1,16);
+function updRocks(dt){
+  for(let i=S.rocks.length-1;i>=0;i--){
+    const r=S.rocks[i];r.t+=dt;
+    const u=Math.min(r.t/r.dur,1);
+    const x=r.fx+(r.tx-r.fx)*u,y=r.fy+(r.ty-r.fy)*u;
+    const h=Math.sin(u*Math.PI)*r.arc+6*(1-u);
+    r.mesh.position.set(sx2w(x),h,sy2w(y));
+    r.mesh.rotation.x+=dt*4;r.mesh.rotation.z+=dt*3;
+    if(u>=1){
+      scene.remove(r.mesh);
+      const sp=new THREE.Mesh(splashGeo,new THREE.MeshBasicMaterial({color:0xdfe8e2,transparent:true,opacity:0.8}));
+      sp.rotation.x=-Math.PI/2;
+      sp.position.set(sx2w(x),-0.3,sy2w(y));
+      scene.add(sp);
+      S.splashes.push({mesh:sp,t:0});
+      S.rocks.splice(i,1);
+      if(r.onLand)r.onLand();
+    }
+  }
+  for(let i=S.splashes.length-1;i>=0;i--){
+    const sp=S.splashes[i];sp.t+=dt;
+    sp.mesh.scale.setScalar(1+sp.t*9);
+    sp.mesh.material.opacity=0.8*(1-sp.t/1.2);
+    if(sp.t>1.2){scene.remove(sp.mesh);S.splashes.splice(i,1);}
+  }
+}
+
+/* ================= camera ================= */
+const cam={yaw:1.5,pitch:0.85,dist:200,tx:0,ty:2,tz:0,auto:null};
+function applyCamera(dt){
+  if(cam.auto){
+    const a=cam.auto,k=1-Math.pow(0.001,dt);
+    cam.yaw+=(a.yaw-cam.yaw)*k;cam.pitch+=(a.pitch-cam.pitch)*k;cam.dist+=(a.dist-cam.dist)*k;
+    cam.tx+=(a.tx-cam.tx)*k;cam.ty+=(a.ty-cam.ty)*k;cam.tz+=(a.tz-cam.tz)*k;
+    if(Math.abs(a.dist-cam.dist)<0.5&&Math.abs(a.yaw-cam.yaw)<0.01)cam.auto=null;
+  }
+  cam.pitch=THREE.MathUtils.clamp(cam.pitch,0.14,1.42);
+  cam.dist=THREE.MathUtils.clamp(cam.dist,18,300);
+  const cp=Math.cos(cam.pitch);
+  camera.position.set(
+    cam.tx+Math.sin(cam.yaw)*cp*cam.dist,
+    cam.ty+Math.sin(cam.pitch)*cam.dist,
+    cam.tz+Math.cos(cam.yaw)*cp*cam.dist);
+  camera.lookAt(cam.tx,cam.ty,cam.tz);
+}
+const PRESETS={
+  bay:{yaw:1.5,pitch:0.8,dist:190,tx:0,ty:2,tz:0},
+  cave:{yaw:1.9,pitch:0.4,dist:58,tx:sx2w(CAVE.x-20),ty:4,tz:sy2w(CAVE.y+20)},
+  meadow:{yaw:1.2,pitch:0.5,dist:85,tx:sx2w(600),ty:2,tz:sy2w(330)},
+  sea:{yaw:2.2,pitch:0.42,dist:80,tx:sx2w(180),ty:1,tz:sy2w(330)},
+  escape:{yaw:1.7,pitch:0.5,dist:95,tx:sx2w(500),ty:2,tz:sy2w(280)},
+};
+document.querySelectorAll('.cambtn').forEach(b=>b.onclick=()=>{cam.auto={...PRESETS[b.dataset.cam]};});
+function cine(name){cam.auto={...PRESETS[name]};}
+
+let drag=null;
+view.addEventListener('pointerdown',e=>{view.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,btn:e.button,shift:e.shiftKey};view.classList.add('dragging');cam.auto=null;});
+view.addEventListener('pointermove',e=>{
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  drag.x=e.clientX;drag.y=e.clientY;
+  if(drag.btn===2||drag.shift){
+    const cp=Math.cos(cam.yaw),sp=Math.sin(cam.yaw),k=cam.dist*0.0016;
+    cam.tx-=(dx*cp-dy*sp)*k;
+    cam.tz-=(-dx*sp-dy*cp)*k;
+    cam.tx=THREE.MathUtils.clamp(cam.tx,-105,105);
+    cam.tz=THREE.MathUtils.clamp(cam.tz,-66,66);
+  }else{cam.yaw-=dx*0.0055;cam.pitch+=dy*0.0045;}
+});
+const endDrag=()=>{drag=null;view.classList.remove('dragging');};
+view.addEventListener('pointerup',e=>{if(drag&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<12)tryPick(e);endDrag();});
+view.addEventListener('pointercancel',endDrag);
+view.addEventListener('wheel',e=>{e.preventDefault();cam.auto=null;cam.dist*=(1+Math.sign(e.deltaY)*0.09);},{passive:false});
+view.addEventListener('contextmenu',e=>e.preventDefault());
+let pinch=null;
+view.addEventListener('touchstart',e=>{if(e.touches.length===2)pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);});
+view.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&pinch){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    cam.dist*=pinch/d;pinch=d;cam.auto=null;
+  }
+},{passive:true});
+view.addEventListener('touchend',()=>pinch=null);
+
+/* ================= touch-the-world interactions ================= */
+const INTER={mode:null,bound:new Set(),names:[],ringT:0};
+const CREW_NAMES=['Polites','Eurylochus','Elpenor','Perimedes','Stratios','Ophion'];
+/* a golden ring marking the doorway hotspot */
+const hotRing=new THREE.Mesh(
+  new THREE.TorusGeometry(5.2,0.18,8,32),
+  new THREE.MeshBasicMaterial({color:0xd9a441,transparent:true,opacity:0.8}));
+{
+  const wx=sx2w(CAVE.x-16),wz=sy2w(CAVE.y+12);
+  hotRing.position.set(wx,terrainH(wx,wz)+3.4,wz);
+  hotRing.rotation.y=-Math.PI/2+0.5;
+}
+hotRing.visible=false;
+scene.add(hotRing);
+const hotHit=new THREE.Mesh(new THREE.CircleGeometry(9,14),
+  new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
+hotHit.position.copy(hotRing.position);
+hotHit.rotation.copy(hotRing.rotation);
+scene.add(hotHit);
+const raycaster=new THREE.Raycaster();
+const ndc=new THREE.Vector2();
+function castAt(e,objects){
+  const r=renderer.domElement.getBoundingClientRect();
+  ndc.x=((e.clientX-r.left)/r.width)*2-1;
+  ndc.y=-((e.clientY-r.top)/r.height)*2+1;
+  raycaster.setFromCamera(ndc,camera);
+  return raycaster.intersectObjects(objects,false);
+}
+const PV=new THREE.Vector3();
+function screenDist(e,px,py,pz){
+  const rect=renderer.domElement.getBoundingClientRect();
+  PV.set(px,py,pz).project(camera);
+  if(PV.z>1)return 1e9;
+  const sx=(PV.x*0.5+0.5)*rect.width+rect.left;
+  const sy=(-PV.y*0.5+0.5)*rect.height+rect.top;
+  return Math.hypot(e.clientX-sx,e.clientY-sy);
+}
+function pickR(){const rect=renderer.domElement.getBoundingClientRect();return Math.max(52,rect.width*0.07);}
+function tryPick(e){
+  if(!INTER.mode)return;
+  if(INTER.mode==='cave'){
+    if(screenDist(e,hotRing.position.x,hotRing.position.y,hotRing.position.z)<pickR()*1.3){
+      INTER.mode=null;hotRing.visible=false;
+      afterBeach();
+    }
+  }
+  else if(INTER.mode==='bind'){
+    let id=-1,bestD=1e9;
+    for(let i=0;i<SHEEP_N;i++){
+      if(INTER.bound.has(i))continue;
+      const sh=sheep[i];
+      const wx=sx2w(sh.x),wz=sy2w(sh.y);
+      const d=screenDist(e,wx,terrainH(wx,wz)+0.9,wz);
+      if(d<bestD){bestD=d;id=i;}
+    }
+    const ramD=screenDist(e,ram.position.x,ram.position.y+0.9,ram.position.z);
+    if(ramD<bestD&&ramD<pickR()){
+      showToast('The captain leaves last. Bind the others first.');
+      return;
+    }
+    if(id<0||bestD>pickR())return;
+    INTER.bound.add(id);
+    const name=CREW_NAMES[INTER.names.length]||'a companion';
+    INTER.names.push(name);
+    if(sheepMesh.setColorAt){
+      sheepMesh.setColorAt(id,new THREE.Color(1.0,0.72,0.4));
+      sheepMesh.instanceColor.needsUpdate=true;
+    }
+    if(name==='Elpenor'&&INTER.names.length===1){
+      showToast('Elpenor bound first \u00b7 the youngest goes nearest the light');
+    }else{
+      showToast(name+' bound beneath the fleece');
+    }
+    if(INTER.bound.size>=6){
+      INTER.mode='ram';
+      narrate('The escape \u00b7 the great ram',
+       `<p>Six men hang beneath eighteen sheep, lashed with willow withies, invisible from above. One animal
+        remains: the great ram, the pride of the flock, dark-fleeced and broad enough to hide a captain.</p>
+        <p><em>Tap the great ram, and take your place beneath him.</em></p>`);
+    }
+  }
+  else if(INTER.mode==='ram'){
+    if(screenDist(e,ram.position.x,ram.position.y+0.9,ram.position.z)>pickR()*1.3)return;
+    INTER.mode=null;
+    ram.material.emissive.setRGB(0,0,0);
+    showToast('The captain goes last');
+    releaseFlock();
+  }
+}
+function updInteract(dt){
+  INTER.ringT+=dt;
+  if(hotRing.visible){
+    const k=1+Math.sin(INTER.ringT*3.2)*0.08;
+    hotRing.scale.setScalar(k);
+    hotRing.material.opacity=0.55+Math.sin(INTER.ringT*3.2)*0.3;
+  }
+  if(INTER.mode==='bind'){
+    const g=0.14+Math.sin(INTER.ringT*4)*0.1;
+    sheepMesh.material.emissive.setRGB(g*0.9,g*0.7,g*0.25);
+  }else{
+    sheepMesh.material.emissive.setRGB(0,0,0);
+  }
+  if(INTER.mode==='ram'){
+    const g=0.2+Math.sin(INTER.ringT*4)*0.14;
+    ram.material.emissive.setRGB(g,g*0.7,g*0.25);
+  }
+}
+function resetInteract(){
+  INTER.mode=null;INTER.bound.clear();INTER.names.length=0;
+  hotRing.visible=false;
+  sheepMesh.material.emissive.setRGB(0,0,0);
+  ram.material.emissive.setRGB(0,0,0);
+  if(sheepMesh.setColorAt){
+    const w=new THREE.Color(1,1,1);
+    for(let i=0;i<SHEEP_N;i++)sheepMesh.setColorAt(i,w);
+    if(sheepMesh.instanceColor)sheepMesh.instanceColor.needsUpdate=true;
+  }
+}
+function askClimb(){
+  narrate('The landfall',
+   `<p>Twelve companions and the wine of Maron. From the beach you can see it plainly now, high on the
+    green shoulder of the hill: a doorway cut for something far bigger than a man, ringed with laurels,
+    with a stone yard before it.</p>
+    <p><em>Tap the doorway to begin the climb.</em></p>`);
+  setControls([]);
+  INTER.mode='cave';
+  hotRing.visible=true;
+}
+
+function setDay(t){document.getElementById('daytag').textContent=t;}
+function night(on){S.dayTarget=on?0:1;}
+function applyDaylight(dt){
+  S.daylight+=(S.dayTarget-S.daylight)*Math.min(dt*1.0,1);
+  const d=S.daylight;
+  sun.intensity=0.08+0.95*d;
+  hemi.intensity=0.18+0.65*d;
+  scene.background.copy(NIGHT_SKY).lerp(DAY_SKY,d);
+  scene.fog.color.copy(scene.background);
+}
+
+/* ================= episode layer ================= */
+const REL={pol:0,eur:0,elp:0};
+const FLAGS={palmed:false,drive:null,silent:false,resisted:false};
+const SEASON={hubris:0};
+const CHOICELOG=[];
+
+const SVG_POL=`<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="#28221a"/>
+<ellipse cx="52" cy="120" rx="38" ry="25" fill="#7a5c3a"/><path d="M20 120 Q52 86 84 120" fill="#8a6a42"/>
+<ellipse cx="52" cy="60" rx="23" ry="26" fill="#c09468"/>
+<path d="M30 54 Q30 32 52 30 Q74 32 74 54 Q68 40 52 41 Q36 40 30 54 Z" fill="#4a361f"/>
+<path d="M38 76 Q52 90 66 76 L64 88 Q52 98 40 88 Z" fill="#4a361f"/>
+<path d="M36 54 L46 52 M58 52 L68 54" stroke="#2c2014" stroke-width="2.4" stroke-linecap="round"/>
+<circle cx="41" cy="59" r="1.9" fill="#241a10"/><circle cx="63" cy="59" r="1.9" fill="#241a10"/>
+<path d="M45 72 Q52 76 59 72" stroke="#8a5a3a" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
+const SVG_EUR=`<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="#221f24"/>
+<ellipse cx="52" cy="120" rx="37" ry="25" fill="#5a5a66"/><path d="M20 120 Q52 88 84 120" fill="#6e6e7c"/>
+<ellipse cx="52" cy="60" rx="21" ry="26" fill="#b08a5e"/>
+<path d="M32 52 Q33 32 52 31 Q71 32 72 52 Q66 40 52 41 Q38 40 32 52 Z" fill="#5c5148"/>
+<path d="M40 78 Q52 88 64 78 L62 86 Q52 93 42 86 Z" fill="#5c5148"/>
+<path d="M35 53 L46 51 M58 51 L69 53" stroke="#2c2418" stroke-width="2.6" stroke-linecap="round"/>
+<circle cx="41" cy="58" r="1.8" fill="#20180e"/><circle cx="63" cy="58" r="1.8" fill="#20180e"/>
+<path d="M46 73 L58 73" stroke="#6e4a30" stroke-width="2" stroke-linecap="round"/></svg>`;
+const SVG_ELP=`<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="#232620"/>
+<ellipse cx="52" cy="120" rx="35" ry="24" fill="#6e6444"/><path d="M22 120 Q52 90 82 120" fill="#7e7450"/>
+<ellipse cx="52" cy="61" rx="20" ry="24" fill="#c99e70"/>
+<path d="M31 55 Q28 30 52 27 Q76 30 73 55 Q70 36 52 37 Q34 36 31 55 Z" fill="#3a2c1a"/>
+<path d="M31 50 Q36 44 40 49 M64 49 Q68 44 73 50" fill="#3a2c1a"/>
+<path d="M38 54 L47 53 M57 53 L66 54" stroke="#2a2012" stroke-width="2" stroke-linecap="round"/>
+<circle cx="43" cy="59" r="2" fill="#241a10"/><circle cx="61" cy="59" r="2" fill="#241a10"/>
+<path d="M46 72 Q52 76 58 72" stroke="#8a5a3a" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
+const SVG_POLY=`<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="#1c1712"/>
+<ellipse cx="52" cy="124" rx="46" ry="28" fill="#6b5a3e"/><path d="M10 124 Q52 78 94 124" fill="#7a6845"/>
+<ellipse cx="52" cy="58" rx="30" ry="33" fill="#99795a"/>
+<path d="M24 44 Q32 22 52 22 Q72 22 80 44 Q66 32 52 33 Q38 32 24 44 Z" fill="#4c3a26"/>
+<ellipse cx="52" cy="52" rx="10" ry="10" fill="#e8e0cc"/>
+<circle cx="52" cy="52" r="4.6" fill="#241a10"/>
+<path d="M36 84 Q52 96 68 84" stroke="#5c4026" stroke-width="3" fill="none" stroke-linecap="round"/>
+<path d="M30 40 Q40 34 48 39 M56 39 Q64 34 74 40" stroke="#4c3a26" stroke-width="3.4" stroke-linecap="round" fill="none"/>
+<path d="M24 66 Q22 58 25 50 M80 66 Q82 58 79 50" stroke="#7e6448" stroke-width="2.4" fill="none"/></svg>`;
+
+const CAST={
+  pol:{name:'Polites · dearest of the crew',svg:SVG_POL},
+  eur:{name:'Eurylochus · second in command',svg:SVG_EUR},
+  elp:{name:'Elpenor · youngest aboard',svg:SVG_ELP},
+  poly:{name:'Polyphemus · son of Poseidon',svg:SVG_POLY},
+  nar:{name:'',svg:null},
+};
+
+/* --- VN engine --- */
+const vnEl=document.getElementById('vn');
+const vnPortrait=document.getElementById('vnportrait');
+const vnName=document.getElementById('vnname');
+const vnText=document.getElementById('vntext');
+const vnChoices=document.getElementById('vnchoices');
+const vnNextEl=document.getElementById('vnnext');
+const vnToast=document.getElementById('vntoast');
+let vnQueue=[],vnDone=null,vnBusy=false;
+function playScene(steps,done){
+  vnQueue=steps.slice();vnDone=done;
+  choiceArea.innerHTML='';
+  setControls([]);
+  vnEl.style.display='block';
+  vnAdvance();
+}
+function vnAdvance(){
+  while(vnQueue.length&&vnQueue[0].if&&!vnQueue[0].if()){vnQueue.shift();}
+  if(!vnQueue.length){
+    vnEl.style.display='none';
+    const d=vnDone;vnDone=null;
+    if(d)d();
+    return;
+  }
+  renderVn(vnQueue.shift());
+}
+function renderVn(st){
+  const who=CAST[st.who]||CAST.nar;
+  vnPortrait.innerHTML=who.svg||'';
+  vnPortrait.style.display=who.svg?'block':'none';
+  vnName.textContent=who.name;
+  document.getElementById('vnbox').classList.toggle('vn-narr',st.who==='nar');
+  vnText.innerHTML=typeof st.text==='function'?st.text():st.text||'';
+  vnChoices.innerHTML='';
+  if(st.choices){
+    vnNextEl.style.display='none';vnBusy=true;
+    for(const c of st.choices){
+      const b=document.createElement('button');
+      b.className='vn-choice';b.textContent=c.label;
+      b.onclick=(e)=>{
+        e.stopPropagation();
+        if(c.d)for(const k in c.d){REL[k]=Math.max(0,REL[k]+c.d[k]);}
+        if(c.flag)FLAGS[c.flag]=true;
+        if(c.fx)c.fx();
+        if(c.toast)toast(c.toast);
+        if(c.reply)vnQueue=c.reply.concat(vnQueue);
+        vnBusy=false;
+        vnAdvance();
+      };
+      vnChoices.appendChild(b);
+    }
+  }else{vnNextEl.style.display='block';vnBusy=false;}
+}
+document.getElementById('vnbox').addEventListener('click',()=>{if(!vnBusy&&vnEl.style.display==='block')vnAdvance();});
+function toast(t){
+  vnToast.textContent=t;vnToast.classList.add('show');
+  setTimeout(()=>vnToast.classList.remove('show'),1900);
+}
+
+/* --- scenes --- */
+const SC_BEACH=[
+ {who:'nar',text:`Nine years of war, and now a year of a sea that will not let you go home. The raid on the Cicones cost seventy-two men. The lotus country nearly cost the rest, gently. Now this green island, loud with goats and utterly empty of smoke, harbours, or any sign of men who plough.`},
+ {who:'pol',text:`Fresh water, captain, up past the tamarisks. And listen to it. A whole island and nobody has ever put a fence on it. That should be wonderful. Why isn't it wonderful?`},
+ {who:'eur',text:`Because land this good stays empty for a reason. We water the ships, we load ten goats, and we are over the horizon by dusk. Say it back to me, captain, so I know you heard it.`,choices:[
+   {label:'"You\u2019re right. But whoever leaves land like this alone, I want to see him first."',d:{eur:1},toast:'Bond · Eurylochus',fx:()=>recordChoice('eury','The counsel of Eurylochus','Hear him out',44,'the poem does not say'),reply:[
+     {who:'eur',text:`At least you heard me. That's more than usual. When it goes wrong, and it will, I'll be the one rowing you out of it. Again.`}]},
+   {label:'"We came back from Troy, Eurylochus. We can manage a sheep island."',fx:()=>{recordChoice('eury','The counsel of Eurylochus','We managed Troy',31,'the poem does not say');addHubris(1,'Troy is invoked');},reply:[
+     {who:'eur',text:`Troy had walls we could see. It's the things I can't see an end of that I keep us clear of. Noted for the record, then.`}]},
+   {label:'"Then come with me, and count the goats yourself."',d:{pol:1},toast:'Bond · Polites',fx:()=>recordChoice('eury','The counsel of Eurylochus','Bring him along',25,'the poem does not say'),reply:[
+     {who:'pol',text:`He will, too. He complains at the front, our Eurylochus. It's the ones who complain from the back you watch.`}]},
+ ]},
+ {who:'elp',text:`Captain. When we go up. Can I carry the wine? The dark one, the priest's wine from Ismarus. You said something told you to bring it ashore and I want to be the one carrying it when we find out what.`,choices:[
+   {label:'"Carry it well, then. One skin of that wine is worth this whole island."',d:{elp:2},toast:'Bond deepened · Elpenor',fx:()=>recordChoice('wine','Who carries the wine of Maron','Elpenor carries it',63,'Odysseus carried it himself'),reply:[
+     {who:'elp',text:`Twenty parts water to one, Maron said, and still it smells like a god's garden. I won't drop it. I've never dropped anything that mattered. Mostly.`}]},
+   {label:'"The wine stays with me. You carry the food sack."',fx:()=>recordChoice('wine','Who carries the wine of Maron','I carry it',37,'Odysseus carried it himself'),reply:[
+     {who:'elp',text:`Aye, captain. The food sack. The famous food sack of the famous voyage.`},
+     {who:'nar',text:`He shoulders it anyway, grinning. Elpenor is the youngest aboard, no great spear and no great head for wine or heights, and the crew guards him the way crews do.`}]},
+ ]},
+ {who:'nar',text:`Twelve companions, chosen by lot, and the wine of Maron on your shoulder because something god-sent whispered that you would need it. The cave in the hills has a stone yard, tall laurels, and a doorway cut for something far bigger than a man.`},
+];
+
+function scCaveNight(){
+ return [
+ {who:'nar',text:`Day. The ground stopped shaking when he took his flock out at dawn and sealed the door behind him, a stone slab twenty wagons could not shift. Which is the whole problem, and the whole plan.`},
+ {who:'nar',text:`In the dark you found it: a beam of green olive wood, tall as a ship's mast, drying by the pens. You have cut a fathom's length, sharpened it, hardened the point in the embers, and hidden it under the dung. Now the lots: four men to help drive it, when the moment comes.`},
+ {who:'elp',text:`Captain. My marker came up. Fourth of four.`,choices:[
+   {label:'Palm his marker, and draw again.',d:{elp:2},flag:'palmed',toast:'A quiet mercy · Elpenor',fx:()=>recordChoice('lot','Elpenor\u2019s lot for the stake','Palm the marker',57,'the lots stood as they fell'),reply:[
+     {who:'nar',text:`Your hand is quicker than his eyes, which are quick. Perimedes's lot comes up instead, and Perimedes, who has shoulders like a ship's beam, only nods.`},
+     {who:'elp',text:`...That marker was mine, captain. I saw the notch.`},
+     {who:'nar',text:`He holds your look a moment, then lets it go, and something between you is now owed in both directions.`}]},
+   {label:'"Then it\u2019s yours. Stand by Perimedes and do exactly what he does."',d:{elp:1},toast:'Bond · Elpenor',fx:()=>recordChoice('lot','Elpenor\u2019s lot for the stake','Let it stand',43,'the lots stood as they fell'),reply:[
+     {who:'elp',text:`Fourth of four. Right. Yes. Exactly what Perimedes does. Captain, if my hands shake, that's just how I hold things.`},
+     {who:'pol',text:`His hands won't shake. I'll be third of four, right beside him.`}]},
+ ]},
+ {who:'eur',text:`And I'll say the quiet part, since it's my job. If this fails, he doesn't eat two of us tomorrow. He eats all of us tonight. So it doesn't fail. Agreed? Agreed.`},
+ {who:'nar',text:`Outside, the light goes long and gold, and then the ground begins, very faintly, to shake.`},
+ ];
+}
+
+function scRam(){
+ const steps=[];
+ steps.push({who:'nar',text:`Dawn. He rolls the stone aside and sits in the doorway with his arms spread, feeling along every fleecy back as the flock crowds out, certain his tormentors will try to walk among the sheep. They do not walk among them. They hang beneath them, three sheep to a man, lashed with willow. You take the great ram, alone, knotted into the belly-wool by your hands.`});
+ steps.push({who:'poly',text:`Old friend. Sweet ram. Why last, today? You were never last. First to the tender grass, first to the river, first home at evening, and today you come last of all. Are you grieving for your master's eye?`});
+ steps.push({who:'poly',text:`If you could speak, you would tell me where he is hiding from my hands, that Nobody. I would dash his brains across this floor, and my heart would have ease of what Nobody has done to me.`});
+ steps.push({who:'nar',text:`The great hand rests on the great ram's back, a palm's width above your face, for the length of one breath, and one more. Then he lets the ram go, and the ram, unhurried as every morning of his life, walks you out into the light.`});
+ steps.push({if:()=>SEASON.hubris>=3,who:'nar',text:`And here is the terrible thing, the thing you will never tell the Phaeacians: hanging under the ram, a hand's width from death, part of you was already composing the boast.`});
+ return steps;
+}
+
+function scShip(){
+  const steps=[];
+  steps.push({who:'nar',text:`Open water, at last, the island going small behind you. The count is made out loud, twice, because the first time nobody trusts it.`});
+  if(REL.elp>=2){
+    steps.push({who:'elp',text:`I still have the wine skin, captain. Empty. But I carried it in and I carried it out, and I'd like it noted that I didn't drop it once.`});
+  }else{
+    steps.push({who:'elp',text:`Six of us stayed behind, captain. I keep counting to make it come out different. It doesn't come out different.`});
+  }
+  if(REL.pol>=1){
+    steps.push({who:'pol',text:`We're alive because you thought in a place where thinking should have been impossible. Whatever else the taunting cost us, I want you to hear that part first.`});
+  }
+  if(REL.eur>=1){
+    steps.push({who:'eur',text:`I marked it down, captain. All of it. The plan, which was the finest I've seen. And the shout at the end, which I begged you not to make. Both of them go in the same ledger. That's how ledgers work.`});
+  }else{
+    steps.push({who:'eur',text:`Next landfall, when I say load the goats and go, we load the goats. And go.`});
+  }
+  steps.push({who:'nar',text:`You sacrifice the great ram to Zeus of the dark clouds, who watches over guests and hosts alike. The smoke goes up. The god, the poem says plainly, was not appeased, for he was already devising how ships and companions would be lost. Somewhere below the wine-dark water, a Trident stirs.`});
+  steps.push({if:()=>SEASON.hubris>=3,who:'eur',text:`One more entry for the ledger, captain. Troy on the beach. The door you had to open. The name over the water. It's the same coin every time, and one day the change will come due all at once.`});
+  return steps;
+}
+
+/* --- the mini-game: the stake --- */
+const mgEl=document.getElementById('minigame');
+function showStakeGame(cb){
+  mgEl.innerHTML=`<div class="mg-inner">
+    <div class="mg-k">Heated to the hiss</div>
+    <div class="mg-t">The Olive Stake</div>
+    <div class="mg-s">Five men, one beam, one sleeping giant. Drive at the moment the point glows brightest. Shallow wakes him early; hesitate and the glow dies.</div>
+    <div class="mg-track"><div class="mg-zone" style="left:0;width:38%"></div>
+      <div class="mg-zone perfect" style="left:38%;width:24%"></div>
+      <div class="mg-zone" style="left:62%;width:38%"></div>
+      <div class="mg-marker" id="mgmarker"></div></div>
+    <button class="mg-btn" id="mgbtn">Drive it</button>
+    <div class="mg-verdict" id="mgverdict"></div>
+  </div>`;
+  mgEl.style.display='block';
+  const marker=document.getElementById('mgmarker');
+  const t0=performance.now();
+  let resolved=false;
+  function anim(now){
+    const p=0.5+0.48*Math.sin((now-t0)*0.0033);
+    marker.style.left=(p*100)+'%';
+    if(!resolved)requestAnimationFrame(anim);
+  }
+  requestAnimationFrame(anim);
+  document.getElementById('mgbtn').onclick=()=>{
+    if(resolved)return;resolved=true;
+    const p=parseFloat(marker.style.left)/100;
+    let res;
+    if(p>=0.38&&p<=0.62)res='true';
+    else if(p<0.38)res='shallow';
+    else res='slow';
+    const verdict=document.getElementById('mgverdict');
+    verdict.textContent=res==='true'?'Driven true.':res==='shallow'?'It skids on the bone!':'The glow is dying. Now or never!';
+    setTimeout(()=>{mgEl.style.display='none';cb(res);},1100);
+  };
+}
+
+/* --- episode cards --- */
+const epEl=document.getElementById('epcard');
+function showOpenCard(){
+  epEl.innerHTML=`<div class="ep-inner">
+    <div class="ep-k">A Wooster narrative simulation · week one of twelve</div>
+    <div class="ep-t">THE ODYSSEY</div>
+    <div class="ep-s">Episode One · Nobody</div>
+    <div class="ep-hint">tap to begin</div>
+  </div>`;
+  epEl.style.display='block';
+  epEl.onclick=()=>{epEl.style.display='none';};
+}
+function showChorus(){
+  const rows=CHOICELOG.map(c=>`<div class="ch-row">
+      <div class="ch-q">${c.title}</div>
+      <div class="ch-bar"><div style="width:${c.pct}%"></div></div>
+      <div class="ch-meta">You: ${c.pick} \u00b7 ${c.pct}% of players chose the same \u00b7 Homer: ${c.homer}</div>
+    </div>`).join('');
+  epEl.innerHTML=`<div class="ep-inner">
+    <div class="ep-k">The chorus \u00b7 what the audience chose</div>
+    <div style="max-width:480px;margin:22px auto 0">${rows}</div>
+    <div class="ep-x" style="margin-top:10px">Audience numbers are illustrative in this prototype.</div>
+    <div class="ep-btns"><button class="btn" id="chnext">End of Episode One</button></div>
+  </div>`;
+  epEl.style.display='block';
+  epEl.onclick=null;
+  document.getElementById('chnext').onclick=()=>{epEl.style.display='none';showEndCard();};
+}
+function stars(v){return v>0?'\u2605'.repeat(Math.min(v,3)):'\u00b7';}
+function handoffHtml(){
+  const marks=[];
+  if(FLAGS.palmed)marks.push('the palmed lot');
+  if(FLAGS.resisted)marks.push('you fought the shout');
+  if(FLAGS.drive==='slow'&&!FLAGS.palmed)marks.push('the hand in the dark');
+  return `<div class="ho-block"><div class="ho-k">Carried into Episode Two</div>
+    <b>Bonds</b> \u00b7 Polites ${stars(REL.pol)} \u00b7 Eurylochus ${stars(REL.eur)} \u00b7 Elpenor ${stars(REL.elp)}<br>
+    <b>Hubris</b> \u00b7 ${SEASON.hubris} \u00b7 the gods are listening<br>
+    <b>Marks</b> \u00b7 ${marks.length?marks.join(' \u00b7 '):'a clean slate, for now'}</div>`;
+}
+function showEndCard(){
+  epEl.innerHTML=`<div class="ep-inner">
+    <div class="ep-k">End of episode one</div>
+    <div class="ep-t">NOBODY</div>
+    <div class="ep-s">Next week · Episode Two: The Bag of Winds</div>
+    <div class="ep-x">The king of the winds ties every contrary gale into a silver-corded sack, and for nine days
+      and nights Odysseus holds the tiller without sleep. On the tenth day the crew can see the watchfires of
+      Ithaca. Then their captain closes his eyes, and someone wonders what treasure he is hiding in that bag.<br><br>
+      Every line in this episode is a voice cue, written to be cast.</div>
+    ${handoffHtml()}
+    <div class="ep-btns">
+      <button class="btn" id="epreplay">Replay the episode</button>
+      <button class="btn ghost" id="epclose">Close</button>
+    </div>
+  </div>`;
+  epEl.style.display='block';
+  epEl.onclick=null;
+  document.getElementById('epreplay').onclick=()=>{epEl.style.display='none';enterStart();};
+  document.getElementById('epclose').onclick=()=>{epEl.style.display='none';};
+}
+
+/* ================= episode flow ================= */
+function enterStart(){
+  setPhase(0);setDay('Landfall · morning');
+  S.men=12;S.day=1;setCounter();
+  document.getElementById('counters').classList.add('show');
+  REL.pol=0;REL.eur=0;REL.elp=0;FLAGS.palmed=false;FLAGS.drive=null;FLAGS.silent=false;FLAGS.resisted=false;
+  SEASON.hubris=0;CHOICELOG.length=0;
+  night(false);
+  giantS.x=620;giantS.y=330;giantS.tx=620;giantS.ty=330;giantS.visible=true;giantS.blind=false;
+  eyeMat.color.set(0x241a10);
+  boulderTarget=0;boulderT=0;
+  shipS.x=SHIP0.x;shipS.y=SHIP0.y;shipS.tx=SHIP0.x;shipS.ty=SHIP0.y;shipS.face=Math.PI;
+  S.sub='';S.subT=0;
+  sheepTargets('meadow');
+  for(const sh of sheep){sh.x=600+rnd(-60,60);sh.y=330+rnd(-50,50);sh.wpi=0;}
+  ramS.x=590;ramS.y=360;ramS.wpi=0;
+  spawnCrew();
+  resetInteract();
+  caveLight.intensity=0;
+  S.stage='idle';
+  cine('bay');
+  narrate('The landfall',
+   `<p>You are Odysseus of Ithaca, sacker of cities, and you have been trying to go home for a year.
+    The ship noses into a bay so perfect no sailor made it: deep water to the beach, a spring under
+    the poplars, wild goats beyond counting. Across the strait, on the mainland's green shoulder,
+    smoke would show if anyone civilised lived there. There is no smoke. There is, high on the hill,
+    one very large doorway.</p>
+    <p>Somewhere far off, something is walking, and the ground carries it to the soles of your feet.</p>`);
+  setControls([{label:'Go ashore', fn:()=>playScene(SC_BEACH,askClimb)}]);
+}
+function afterBeach(){
+  narrate('The landfall',
+   `<p>Twelve companions and the wine of Maron. The climb takes the morning. The cave, when you reach it,
+    is empty of its owner and full of his order: pens of lambs and kids each by age, racks of cheeses,
+    pails and bowls of whey, everything huge and everything tidy. The crew stands in the doorway doing
+    the same arithmetic you are.</p>`);
+  setControls([]);
+  S.stage='walkcave';
+  for(const s of party()){
+    s.tx=CAVE.x-26+rnd(-8,8);s.ty=CAVE.y+22+rnd(-6,6);
+  }
+  ody.tx=CAVE.x-22;ody.ty=CAVE.y+18;
+  cine('cave');
+}
+function updWalkCave(dt){
+  let done=0,total=0;
+  for(const s of [...party(),ody]){
+    total++;
+    if(moveToward(s,0.6,dt))done++;
+  }
+  if(done>=total){
+    S.stage='idle';
+    caveChoice();
+  }
+}
+function caveChoice(){
+  setPhase(1);
+  narrate('The cave',
+   `<p>The crew's counsel is one voice: take the cheeses, drive the lambs to the ship, and be at sea
+    before whatever owns this doorway comes home. Homer's Odysseus will admit it forever after:
+    <em>theirs was far the better counsel.</em></p>
+    <p>But you want to see him. And there is the law of Zeus your whole world runs on: a guest at the
+    hearth is owed a welcome and a guest-gift, and a host is owed the meeting. You are Odysseus.
+    You have never once left a door unopened.</p>`);
+  setChoices([
+    {title:'Take the cheeses and go',
+     body:'Eurylochus\u2019s counsel, the crew\u2019s counsel, and the poem\u2019s own admitted wisdom. Load what carries, and be a memory by dusk.',
+     fn:()=>{
+       recordChoice('cave','The cave of the Cyclops','Take the cheeses and go',38,'he waited for the host');
+       S.stage='cfleave';
+       for(const s of [...party(),ody]){s.tx=SHIP0.x+30+rnd(-10,10);s.ty=SHIP0.y+rnd(-14,14);}
+       cine('bay');
+       narrate('The cave · what if',
+        `<p>You load cheeses and lambs and go down the hill, and nothing bad ever happens on this island
+         to anyone you know. No man is lost. No god is offended. You are home, perhaps, within the month,
+         an unremarkable veteran with a good story about a big doorway.</p>
+         <p class="aside">And there is no Odyssey. The poem knows leaving was wiser; it says so in
+         Odysseus's own voice. It also knows exactly what he did instead, because curiosity, pride, and
+         the sacred custom of the guest are what he is made of. You already know this man. Walk back up
+         the hill.</p>`);
+       setControls([{label:'Rewind · wait for the host', fn:()=>{
+         for(const s of [...party(),ody]){s.x=CAVE.x-26+rnd(-8,8);s.y=CAVE.y+22+rnd(-6,6);s.tx=s.x;s.ty=s.y;}
+         cine('cave');
+         stayForHost();
+       }}]);
+     }},
+    {title:'Wait for the host',
+     body:'Light a fire, eat of the cheeses, and meet the owner of this house as guests, owed welcome under the law of Zeus. What Odysseus did.',
+     fn:()=>{recordChoice('cave','The cave of the Cyclops','Wait for the host',62,'he waited for the host');stayForHost();}},
+  ]);
+}
+function stayForHost(){
+  S.stage='idle';
+  addHubris(1,'Curiosity is a kind of pride');
+  narrate('The cave',
+   `<p>You light a fire, make an offering, and eat of his cheeses, and wait through the long afternoon
+    for a host. At dusk he comes: driving his flock before him, carrying a dead-weight of dry timber
+    that he flings down with a crash that sends every man scrambling into the shadows at the back of
+    the cave.</p>`);
+  setControls([{label:'Dusk. He comes home.', fn:giantComesHome}]);
+}
+function giantComesHome(){
+  setDay('Day one · dusk');
+  S.stage='giantin';S.subT=0;
+  giantS.tx=CAVE.x-24;giantS.ty=CAVE.y+30;
+  sheepTargets('cave');
+  cine('cave');
+  setControls([]);
+}
+function updGiantIn(dt){
+  S.subT+=dt;
+  giantUpdate(dt,0.45);
+  if(Math.hypot(giantS.x-giantS.tx,giantS.y-giantS.ty)<4&&S.subT>4){
+    S.stage='idle';
+    giantS.visible=false;
+    for(const s of [...party(),ody])s.hidden=true;
+    boulderTarget=1;
+    night(true);
+    caveLight.intensity=1.2;
+    firstNight();
+  }
+}
+function firstNight(){
+  narrate('The cave · the first night',
+   `<p>He milks his ewes in order, seals the door with the slab of stone, feeds his fire, and then, by
+    its light, he sees you. The voice, when it comes, is like a rockslide asking a question: who are
+    you, and where is your ship? You lie about the ship at once, wrecked on the headland, and invoke
+    the law of Zeus, guests and gifts and the god who avenges strangers.</p>
+    <p>He answers that the Cyclopes care nothing for Zeus, being stronger, and then he reaches down and
+    the answer becomes something no man in the cave will ever describe the same way twice. He takes two.
+    Then he stretches out among his flocks and sleeps like a felled tree.</p>`);
+  S.men=10;setCounter();
+  setChoices([
+    {title:'The sword, now',
+     body:'He sleeps. You are Odysseus of the war, and your blade knows exactly where a liver is. End it in one stroke and grieve afterward.',
+     fn:()=>{
+       recordChoice('sword','The sleeping giant','The sword, now',22,'he stayed his hand');
+       narrate('The cave · what if',
+        `<p>Your hand is on the hilt and your feet already know the quiet way across the floor, and then
+         the whole plan dies against one fact of engineering. The door. The slab across it, which he
+         rolled shut one-handed, would not shift for twenty wagon teams. Kill him and the cave is not a
+         prison, it is a tomb with cheese in it: ten men starving beside a monster's body, waiting for
+         his neighbours to wonder at the silence.</p>
+         <p class="aside">Homer gives Odysseus this exact realisation, sword half-drawn. The trap is not
+         the giant. The trap is the door, and the door needs the giant alive. Whatever you do to him,
+         he must still be able to open it. Which rules out killing, and leaves something worse.</p>`);
+       setControls([{label:'Rewind · sheathe it, and think', fn:secondDay}]);
+     }},
+    {title:'Stay the hand',
+     body:'The door needs him alive. Sheathe it, endure the night, and think the long way around the problem, the way the polytropos thinks.',
+     fn:()=>{recordChoice('sword','The sleeping giant','Stay the hand',78,'he stayed his hand');secondDay();}},
+  ]);
+}
+function secondDay(){
+  setPhase(2);setDay('Day two');
+  S.day=2;setCounter();
+  night(false);
+  caveLight.intensity=0;
+  S.stage='giantout';S.subT=0;
+  giantS.visible=true;giantS.x=CAVE.x-24;giantS.y=CAVE.y+30;
+  giantS.tx=600;giantS.ty=340;
+  boulderTarget=0;
+  sheepTargets('meadow');
+  for(const sh of sheep){sh.x=CAVE.x-20+rnd(-10,10);sh.y=CAVE.y+18+rnd(-8,8);}
+  ramS.x=CAVE.x-18;ramS.y=CAVE.y+20;
+  narrate('Nobody',
+   `<p>Morning: he milks, he takes two more, he eats, and he drives his flock out to pasture, lifting
+    the great stone and setting it back, Homer says, as lightly as a man caps a quiver. You listen to
+    the whistling fade down the hill and begin to plan against the sound of it.</p>`);
+  S.men=8;setCounter();
+  setControls([{label:'The long day of the plan', fn:()=>playScene(scCaveNight(),secondDusk)}]);
+}
+function updGiantOut(dt){
+  giantUpdate(dt,0.4);
+  if(boulderTarget===0&&Math.hypot(giantS.x-600,giantS.y-340)<8){
+    // he pastures through the scene; sealing implied
+  }
+}
+function secondDusk(){
+  setDay('Day two · dusk');
+  S.stage='giantin2';S.subT=0;
+  giantS.tx=CAVE.x-24;giantS.ty=CAVE.y+30;
+  sheepTargets('cave');
+  cine('cave');
+  setControls([]);
+}
+function updGiantIn2(dt){
+  S.subT+=dt;
+  giantUpdate(dt,0.45);
+  if(Math.hypot(giantS.x-giantS.tx,giantS.y-giantS.ty)<4&&S.subT>4){
+    S.stage='idle';
+    giantS.visible=false;
+    boulderTarget=1;
+    night(true);
+    caveLight.intensity=1.2;
+    wineScene();
+  }
+}
+function wineScene(){
+  narrate('Nobody · the wine',
+   `<p>Evening, the stone, the milking, and again he takes two. Six of the twelve. And now, while the
+    horror is still warm, you walk toward him holding out an ivy bowl of Maron's black wine, unmixed,
+    the vintage men cut twenty to one, and you say: drink, Cyclops, now that you have eaten. See what
+    kind of drink our ship carried.</p>
+    <p>He drains it and demands more, three bowls, and his wits begin to swim, and he asks your name so
+    that he may give you a guest-gift. You have been waiting all day for exactly this question.</p>`);
+  S.men=6;setCounter();
+  setControls([{label:'"Nobody. My name is Nobody."', fn:nobodyBeat}]);
+}
+function nobodyBeat(){
+  narrate('Nobody',
+   `<p><em>Nobody is my name. Nobody, they call me, my mother and my father and all my companions.</em></p>
+    <p>And the pitiless answer, through the wine: then here is your gift, Nobody. I will eat Nobody last
+    of all his company. And with that jest he topples backward among his sheep, and the wine takes him
+    utterly.</p>
+    <p>The stake comes out from under the dung. Its point goes into the embers until, green wood or
+    not, it is about to flame. Four men lift it with you. Some god, you will say later, breathed a
+    great courage into all of you.</p>`);
+  setControls([{label:'To the fire', fn:()=>{setPhase(3);showStakeGame(applyDrive);}}]);
+}
+function applyDrive(res){
+  FLAGS.drive=res;
+  recordChoice('drive','The olive stake','Driven '+(res==='true'?'true':res==='shallow'?'shallow, then home':'at the last ember'),res==='true'?51:res==='shallow'?28:21,'driven true, turned like a drill');
+  blindGiant();
+  caveLight.intensity=2.6;
+  S.stage='blindflicker';S.subT=0;
+  let extra='';
+  if(res==='true'){
+    extra=`<p>It goes in true, all five of you leaning on it and turning it like men boring a ship's timber,
+      and the eye hisses around the point the way a smith's axe hisses in cold water.</p>`;
+  }else if(res==='shallow'){
+    extra=`<p>The first thrust skids, a heartbeat of pure catastrophe with the whole cave holding its
+      breath, and then Perimedes throws his shoulder in and the point finds its seat and bites deep.</p>`;
+  }else{
+    extra=`<p>The glow is nearly dead when you commit, and for one grabbing, roaring moment his hand
+      finds an ankle in the dark${FLAGS.palmed?'':', Elpenor\u2019s ankle,'} and is shaken loose. Then the point,
+      cooling or not, does its work.</p>`;
+  }
+  narrate('The stake',
+   `${extra}
+    <p>The scream brings the neighbouring Cyclopes stumbling to the sealed door in the dark, calling:
+    Polyphemus, what ails you, that you wake the immortal night? Is somebody driving off your flocks?
+    Is somebody killing you, by craft or by force?</p>
+    <p>And from inside, the bellow that saves twelve... six lives: <em>Nobody is killing me! Nobody,
+    by craft! Nobody, by force!</em> Well then, say the neighbours, reasonably, if nobody is harming
+    you, it must be a sickness from Zeus, and there is no help for that. Pray to your father Poseidon.
+    And they go home.</p>`);
+  setControls([{label:'Dawn. The stone moves.', fn:startEscape}]);
+}
+function updBlindFlicker(dt){
+  S.subT+=dt;
+  caveLight.intensity=1.6+Math.sin(S.subT*22)*0.9+Math.sin(S.subT*7)*0.5;
+  if(S.subT>4){S.stage='idle';caveLight.intensity=1.4;}
+}
+function startEscape(){
+  setPhase(4);setDay('Day three · dawn');
+  S.day=3;setCounter();
+  night(false);
+  caveLight.intensity=0;
+  boulderTarget=0;
+  giantS.visible=true;giantS.x=CAVE.x-20;giantS.y=CAVE.y+24;giantS.tx=giantS.x;giantS.ty=giantS.y;
+  sheepTargets('yard');
+  for(const sh of sheep){sh.x=CAVE.x-28+rnd(-14,14);sh.y=CAVE.y+30+rnd(-10,10);sh.wpi=0;}
+  ramS.x=CAVE.x-16;ramS.y=CAVE.y+22;ramS.wpi=0;ramS.mode='yard';
+  S.stage='binding';S.subT=0;
+  cine('cave');
+  narrate('The escape \u00b7 the binding',
+   `<p>He must let the flock out to pasture; blind or not, his whole ordered life demands it. He has
+    rolled the stone aside and sits in the doorway, hands spread, ready to feel along the back of every
+    animal that passes. The flock crowds the yard, and your six companions wait in the shadows with
+    willow withies.</p>
+    <p><em>Tap six sheep, and bind a man beneath each.</em></p>`);
+  setControls([]);
+  INTER.mode='bind';
+}
+function releaseFlock(){
+  sheepTargets('out');
+  for(const sh of sheep)sh.wpi=0;
+  ramS.wpi=0;ramS.mode='out';
+  S.stage='flockout';S.sub='';S.subT=0;
+  narrate('The escape',
+   `<p>The flock begins to move, and the blind hands begin their search, stroking every fleecy back as
+    it passes, finding nothing but wool. Your men, and then you, are going out of the cave a hand's
+    width beneath his fingers.</p>`);
+}
+function updFlockOut(dt){
+  S.subT+=dt;
+  giantUpdate(dt,0);
+  if(S.subT>5&&S.sub!=='ramscene'){
+    S.sub='ramscene';
+    playScene(scRam(),()=>{
+      // the crew appears among the flock, past the giant
+      for(const s of [...party(),ody]){
+        s.hidden=false;
+        s.x=CAVE.x-74+rnd(-10,10);s.y=CAVE.y+74+rnd(-8,8);
+        s.tx=SHIP0.x+26+rnd(-8,8);s.ty=SHIP0.y+rnd(-12,12);
+      }
+      // only six companions and Odysseus came out
+      let shown=0;
+      for(const s of party()){
+        shown++;
+        if(shown>6)s.hidden=true;
+      }
+      S.stage='runtoship';S.sub='';
+      cine('escape');
+      narrate('The escape',
+       `<p>Clear of the yard you cut each other free, and drive the fat of the flock down the hill ahead
+        of you, six companions and their captain, looking back at every third stride. At the ship no one
+        cheers; the ones who waited see the count and understand. You stow the sheep, you shove off, and
+        you row.</p>`);
+    });
+  }
+}
+function updRunToShip(dt){
+  let done=0,total=0;
+  for(const s of [...party(),ody]){
+    if(s.hidden)continue;
+    total++;
+    if(moveToward(s,0.85,dt))done++;
+  }
+  if(total&&done>=total){
+    for(const s of S.soldiers)s.hidden=true;   // all aboard
+    S.stage='rowout';S.subT=0;
+    shipS.tx=140;shipS.ty=310;
+    giantS.tx=SHORE_X+40;giantS.ty=300;        // he follows the voice to the shore
+    setControls([]);
+  }
+}
+function updRowOut(dt){
+  S.subT+=dt;
+  shipUpdate(dt,0.4);
+  giantUpdate(dt,0.5);
+  if(S.subT>5&&S.sub!=='taunt1'){
+    S.sub='taunt1';
+    cine('sea');
+    narrate('The escape · a shout across the water',
+     `<p>At a shout's distance you cannot help yourself; the words are up and out over the water:
+      Cyclops! It was no weakling's companions you ate in your hollow cave, and your crimes came home
+      to you. Zeus and the gods have paid you out!</p>
+      <p>The answer is the top of a mountain. He tears it loose and throws it by sound alone.</p>`);
+    throwRock(shipS.x-16,shipS.y+2,30);
+    setTimeout(()=>{
+      // the wave shoves the ship back toward the beach
+      shipS.tx=210;shipS.ty=322;
+      narrate('The escape · the backwash',
+       `<p>The rock falls ahead of the bow and the backwash lifts the whole ship and carries it, like a
+        toy, back toward the beach you just escaped. You claw off with a pole and the crew rows for
+        their lives, and when you fill your lungs to shout again, hands grab you all over the ship.</p>`);
+      setTimeout(tauntChoice,2600);
+    },2000);
+  }
+}
+function tauntChoice(){
+  setPhase(5);
+  S.stage='drift';
+  shipS.tx=120;shipS.ty=300;
+  narrate('The curse · the choice',
+   `<p>Eurylochus has your arm and Polites your shoulder, and the whole crew is hissing the same thing:
+    <em>why provoke him, he throws by your voice, he nearly put us back on his beach, in the gods'
+    names be silent.</em></p>
+    <p>And in your chest, swelling against every rational thing, is the unbearable fact that he does
+    not know. He will nurse that eye forever thinking Nobody did it. Nobody. Not the man who took
+    Troy. It is the oldest itch in you: to be known.</p>`);
+  setChoices([
+    {title:'Hold your tongue',
+     body:'The crew\u2019s plea and wisdom\u2019s whole case: you have won, you are free, and no god can avenge a name he never hears. Row, and be Nobody a little longer.',
+     fn:()=>{
+       recordChoice('taunt','A shout across the water','Hold your tongue',41,'the name burst out of him');
+       FLAGS.resisted=true;
+       narrate('The curse · what if',
+        `<p>You swallow it, and it goes down like a whole burning city. The oars bite, the island
+         shrinks, and Polyphemus rages at a sea that never learns your name. So Poseidon never learns
+         it either. No curse follows you. The winds are merely winds; you are in Ithaca, perhaps,
+         before the next moon.</p>
+         <p class="aside">And again there is no Odyssey. Ten more years, every shipwreck, every death
+         still to come, all of it hangs on the next thirty seconds and one man's need to sign his work.
+         Homer knew exactly what he was doing when he made his cleverest hero unable to do the clever
+         thing here. You already know what bursts out of him.</p>`);
+       setControls([{label:'Rewind · the name bursts out', fn:shoutName}]);
+     }},
+    {title:'Shout your name',
+     body:'What Odysseus did: "If anyone asks who blinded you, tell them it was Odysseus, sacker of cities, son of Laertes, whose home is on Ithaca!"',
+     fn:()=>{recordChoice('taunt','A shout across the water','Shout your name',59,'the name burst out of him');shoutName();}},
+  ]);
+}
+function shoutName(){
+  S.stage='curse';S.subT=0;
+  addHubris(FLAGS.resisted?1:2,FLAGS.resisted?'It escapes you anyway':'A name, freely given');
+  setControls([]);
+  playScene([
+    {who:'nar',text:`It comes out of you over the water, every syllable a gift to your enemy: not Nobody. Odysseus. Sacker of cities. Son of Laertes. Of Ithaca. A name, a father, and an address.`},
+    {who:'poly',text:`Ah. Then the old prophecy finds me. I was told a great Odysseus would take my sight, and I watched all my days for a tall man, a strong man. Not this small, worthless, wine-thief of a thing.`},
+    {who:'poly',text:`Hear me, Poseidon, dark-haired shaker of the earth, if I am truly yours: grant that Odysseus, sacker of cities, son of Laertes, never reach his home. Or if it is fated that he must, then let him come late, and broken, all companions lost, on a stranger's ship, to find sorrow filling his house.`},
+    {who:'nar',text:`And the dark-haired god, the poem says, heard him.`},
+  ],()=>{
+    throwRock(shipS.x+14,shipS.y-3,34);
+    setTimeout(()=>{
+      shipS.tx=55;shipS.ty=280;
+      narrate('The curse',
+       `<p>The second mountaintop falls astern, and this wave, at least, drives you seaward. You run for
+        the goat island, divide the flock, and every man gets his share; the great ram, by the crew's
+        one vote, is yours.</p>`);
+      setControls([{label:'The open sea', fn:()=>playScene(scShip(),gotoAftermath)}]);
+    },2200);
+  });
+}
+function updCurse(dt){
+  shipUpdate(dt,0.35);
+  giantUpdate(dt,0);
+}
+
+function gotoAftermath(){
+  S.stage='sail';
+  shipS.tx=25;shipS.ty=250;
+  cine('sea');
+  setDay('After');
+  narrate('The reckoning',
+   `<p>The score of the island: six companions eaten, a god made into a lifelong enemy, and a curse
+    spoken in the exact legal form Greek prayer required, name, patronym, and homeland, all three
+    freely provided by the victim's own mouth. Every storm, witch, whirlpool, and shipwreck of the
+    next ten years flows from this shout. The Odyssey is the bill for one moment of being unable to
+    stay Nobody.</p>
+    <p>Which is the poem's deepest joke about its hero: the man of many turns survives by erasing
+    himself, and cannot bear it. He will spend the whole voyage becoming Nobody to live, a beggar in
+    his own hall at the end of it, and risking everything, every time, to be Somebody again. The
+    Cyclops's cave is the whole epic in one night.</p>
+    ${elpenorAside()}
+    ${hubrisReading()}`);
+  setControls([{label:'The chorus \u00b7 what others chose', fn:showChorus},{label:'Replay the episode', fn:enterStart, ghost:true}]);
+}
+function hubrisReading(){
+  if(SEASON.hubris>=4)return `<p class="aside">The season keeps a ledger the crew cannot see. Yours reads hubris ${SEASON.hubris}: you never once fought the shout in your chest, and the sea has a long memory for men like that.</p>`;
+  if(SEASON.hubris>=2)return `<p class="aside">The season keeps a ledger the crew cannot see. Yours reads hubris ${SEASON.hubris}: you fought the shout, some of the time, and lost to it when it mattered. The sea will take note of both halves.</p>`;
+  return `<p class="aside">The season keeps a ledger the crew cannot see. Yours reads hubris ${SEASON.hubris}: for a sacker of cities, you carry the name lightly. It may buy you a kinder island or two.</p>`;
+}
+function elpenorAside(){
+  if(REL.elp>=2){
+    return `<p class="aside">And a note the poem will collect on later: the youngest of your crew, the one
+      who carried the wine in and out without dropping it, the one whose lot you palmed in the dark.
+      Learn Elpenor's name well. The story is not finished asking things of him, or of you.</p>`;
+  }
+  return `<p class="aside">And a note the poem will collect on later: keep an eye on the youngest of your
+    crew, the clumsy one, the one everyone protects without discussing it. Homer remembers Elpenor's
+    name for a reason, and the reason is three islands away.</p>`;
+}
+
+/* ================= main loop ================= */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05);
+  last=now;perfNow=now;S.st+=dt;
+  switch(S.stage){
+    case 'walkcave':updWalkCave(dt);break;
+    case 'cfleave':for(const s of [...party(),ody])moveToward(s,0.6,dt);break;
+    case 'giantin':updGiantIn(dt);break;
+    case 'giantout':updGiantOut(dt);break;
+    case 'giantin2':updGiantIn2(dt);break;
+    case 'blindflicker':updBlindFlicker(dt);break;
+    case 'flockout':updFlockOut(dt);giantUpdate(dt,0);break;
+    case 'runtoship':updRunToShip(dt);giantUpdate(dt,0);break;
+    case 'rowout':updRowOut(dt);break;
+    case 'drift':shipUpdate(dt,0.2);giantUpdate(dt,0);break;
+    case 'curse':updCurse(dt);break;
+    case 'sail':shipUpdate(dt,0.3);break;
+    default:giantUpdate(dt,0.4);shipUpdate(dt,0);break;
+  }
+  // boulder animation
+  boulderT+=(boulderTarget-boulderT)*Math.min(dt*1.6,1);
+  {
+    const x=BOULDER_OPEN.x+(BOULDER_SHUT.x-BOULDER_OPEN.x)*boulderT;
+    const z=BOULDER_OPEN.z+(BOULDER_SHUT.z-BOULDER_OPEN.z)*boulderT;
+    boulder.position.set(x,terrainH(x,z)+2.4,z);
+    boulder.rotation.y=boulderT*1.2;
+  }
+  updInteract(dt);
+  updFlock(dt);
+  updRocks(dt);
+  sea.position.y=-0.5+Math.sin(now*0.0012)*0.06;
+  applyDaylight(dt);
+  applyCamera(dt);
+  flushCrew();
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+
+/* ================= narration & UI ================= */
+const narrLabel=document.getElementById('narrLabel');
+const narrBody=document.getElementById('narrBody');
+const choiceArea=document.getElementById('choiceArea');
+const controls=document.getElementById('controls');
+function narrate(label,html){
+  narrLabel.textContent=label;
+  narrBody.innerHTML=html;
+  narrBody.classList.remove('fade-in');void narrBody.offsetWidth;
+  narrBody.classList.add('fade-in');
+  choiceArea.innerHTML='';
+}
+function setControls(btns){
+  controls.innerHTML='';
+  for(const b of btns){
+    const el=document.createElement('button');
+    el.className='btn'+(b.ghost?' ghost':'');el.textContent=b.label;el.onclick=b.fn;
+    controls.appendChild(el);
+  }
+}
+function setChoices(items){
+  choiceArea.innerHTML='';
+  const grid=document.createElement('div');grid.className='choices fade-in';
+  for(const it of items){
+    const c=document.createElement('button');c.className='choice';
+    c.innerHTML=`<h3>${it.title}</h3><p>${it.body}</p>`;
+    c.onclick=it.fn;grid.appendChild(c);
+  }
+  choiceArea.appendChild(grid);
+  controls.innerHTML='';
+}
+function setPhase(p){
+  S.phase=p;
+  document.querySelectorAll('.pill').forEach(el=>{
+    const n=+el.dataset.p;
+    el.classList.toggle('active',n===p);
+    el.classList.toggle('done',n<p);
+  });
+}
+
+/* ================= boot ================= */
+resize();
+enterStart();
+showOpenCard();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

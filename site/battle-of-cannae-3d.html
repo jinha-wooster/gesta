@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cannae, 216 BC · 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16120e; --ink-2:#1e1913; --panel:#221c15; --line:#3a3226;
+    --parchment:#e7dcc4; --muted:#a2957c; --faint:#6f6450;
+    --bronze:#d9a441; --bronze-dim:#8f6f2e;
+    --rome:#c0453a; --punic:#7a6db0;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{background:var(--ink)}
+  body{background:var(--ink);color:var(--parchment);font-family:'Source Serif 4',Georgia,serif;font-size:17px;line-height:1.65;min-height:100vh}
+  .wrap{max-width:1060px;margin:0 auto;padding:36px 18px 80px}
+
+  header{text-align:center;margin-bottom:26px}
+  .eyebrow{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  h1{font-family:'GFS Didot',serif;font-weight:400;font-size:clamp(44px,8vw,76px);letter-spacing:.06em;line-height:1}
+  .subtitle{color:var(--muted);font-style:italic;margin-top:12px;font-size:16px}
+  .meander{height:14px;margin:24px auto;max-width:520px;opacity:.55}
+
+  .phases{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+  .pill{font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:7px 13px;border:1px solid var(--line);border-radius:2px;color:var(--faint);transition:all .35s;white-space:nowrap}
+  .pill.active{color:var(--bronze);border-color:var(--bronze-dim);background:rgba(217,164,65,.06)}
+  .pill.done{color:var(--muted)}
+
+  .stage{position:relative;border:1px solid var(--line);background:#000;border-radius:3px;overflow:hidden}
+  #view{display:block;width:100%;height:560px;cursor:grab;touch-action:none}
+  #view.dragging{cursor:grabbing}
+  @media(max-width:700px){#view{height:420px}}
+
+  .counters{position:absolute;top:10px;left:12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;font-size:12px;letter-spacing:.08em;opacity:0;transition:opacity .6s}
+  .counters.show{opacity:1}
+  .counter{background:rgba(22,18,14,.72);padding:4px 10px;border-radius:2px;border:1px solid var(--line);width:max-content}
+  .counter b{font-weight:600}
+  .c-rom b{color:#e06a55} .c-pun b{color:#a89ad8}
+
+  .daytag{position:absolute;bottom:10px;left:12px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(231,220,196,.7);background:rgba(22,18,14,.6);padding:5px 10px;border-radius:2px;pointer-events:none}
+
+  #formHud{display:none;position:absolute;bottom:92px;left:50%;transform:translateX(-50%);
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--bronze);
+    background:rgba(22,18,14,.85);border:1px solid var(--bronze-dim);padding:8px 16px;
+    border-radius:2px;pointer-events:none;white-space:nowrap;z-index:6}
+
+  .camctl{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:6px}
+  .cambtn{font-family:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;background:rgba(22,18,14,.72);border:1px solid var(--line);border-radius:2px;color:var(--muted);cursor:pointer;transition:all .2s}
+  .cambtn:hover{color:var(--bronze);border-color:var(--bronze-dim)}
+  .camhint{position:absolute;bottom:10px;right:12px;font-size:11px;letter-spacing:.06em;color:rgba(231,220,196,.55);background:rgba(22,18,14,.6);padding:4px 9px;border-radius:2px;pointer-events:none}
+  @media(max-width:700px){.camhint{display:none}}
+
+  .narration{border:1px solid var(--line);border-top:none;background:var(--panel);padding:26px 30px;border-radius:0 0 3px 3px;min-height:150px}
+  .narr-label{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--bronze);margin-bottom:10px}
+  .narration p{margin-bottom:12px}
+  .narration p:last-child{margin-bottom:0}
+  .narration em{color:var(--muted)}
+  .aside{font-size:14px;color:var(--muted);font-style:italic;border-left:2px solid var(--bronze-dim);padding-left:14px;margin-top:14px}
+
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  @media(max-width:640px){.choices{grid-template-columns:1fr}}
+  .choice{border:1px solid var(--line);border-radius:3px;padding:20px;background:var(--ink-2);cursor:pointer;text-align:left;color:var(--parchment);font-family:inherit;font-size:16px;transition:border-color .25s,background .25s}
+  .choice:hover{border-color:var(--bronze-dim);background:#26201780}
+  .choice h3{font-family:'GFS Didot',serif;font-weight:400;font-size:20px;letter-spacing:.04em;margin-bottom:8px;color:var(--bronze)}
+  .choice p{font-size:14.5px;color:var(--muted);line-height:1.55}
+
+  .controls{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn{font-family:inherit;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:13px 28px;background:transparent;color:var(--bronze);border:1px solid var(--bronze-dim);border-radius:2px;cursor:pointer;transition:all .25s}
+  .btn:hover{background:rgba(217,164,65,.1);border-color:var(--bronze)}
+  .btn.ghost{color:var(--muted);border-color:var(--line)}
+  .btn.ghost:hover{color:var(--parchment);background:rgba(255,255,255,.04)}
+
+  #vn{display:none;position:absolute;left:0;right:0;bottom:0;padding:14px 16px 16px;
+      background:linear-gradient(transparent, rgba(12,12,10,.55) 18%, rgba(12,12,10,.92) 60%);z-index:5}
+  .vn-box{display:flex;gap:16px;max-width:860px;margin:0 auto;align-items:flex-end;cursor:pointer}
+  .vn-portrait{width:104px;height:128px;flex:0 0 auto;border:1px solid var(--bronze-dim);
+      border-radius:3px;background:#1c1814;overflow:hidden}
+  .vn-portrait svg{width:100%;height:100%;display:block}
+  .vn-main{flex:1;min-width:0}
+  .vn-name{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--bronze);margin-bottom:7px}
+  .vn-text{font-size:16.5px;line-height:1.6;color:var(--parchment);min-height:52px}
+  .vn-text em{color:var(--muted)}
+  .vn-next{font-size:11px;letter-spacing:.2em;color:var(--faint);margin-top:8px;text-transform:uppercase}
+  .vn-choices{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .vn-choice{font-family:inherit;font-size:14.5px;text-align:left;padding:11px 16px;background:rgba(24,22,18,.9);
+      border:1px solid var(--line);border-radius:2px;color:var(--parchment);cursor:pointer;transition:all .2s}
+  .vn-choice:hover{border-color:var(--bronze-dim);background:rgba(32,29,23,.95)}
+  #vntoast{position:absolute;right:16px;bottom:100%;margin-bottom:8px;font-size:11px;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--bronze);background:rgba(18,16,13,.85);border:1px solid var(--bronze-dim);
+      padding:6px 12px;border-radius:2px;opacity:0;transition:opacity .5s;pointer-events:none}
+  #vntoast.show{opacity:1}
+  .vn-narr .vn-text{font-style:italic;color:var(--muted)}
+  @media(max-width:640px){.vn-portrait{width:76px;height:96px}.vn-text{font-size:15px}}
+  /* decision dock overlaid on the simulation */
+  #dock{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:10px 14px 12px;
+      background:linear-gradient(transparent, rgba(12,12,10,.45) 18%, rgba(12,12,10,.9) 72%)}
+  #dock:not(:has(button)){display:none}
+  #dock .choices{max-width:880px;margin:0 auto;gap:10px}
+  #dock .choice{padding:12px 14px;background:rgba(24,22,18,.93)}
+  #dock .choice h3{font-size:17px;margin-bottom:5px}
+  #dock .choice p{font-size:13px;line-height:1.45}
+  #dock .controls{margin-top:0;padding-top:8px}
+  @media(max-width:640px){#dock .choice{padding:10px 12px}#dock .choice p{font-size:12px}}
+  footer{margin-top:44px;text-align:center;font-size:13px;color:var(--faint);line-height:1.7}
+  .fade-in{animation:fadeIn .6s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">2 August, 216 BC · The plain of the Aufidus · Apulia</div>
+    <h1>CANNAE</h1>
+    <p class="subtitle">The largest army Rome ever fielded, against a plan shaped like a bow</p>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true">
+      <defs><pattern id="key" width="26" height="14" patternUnits="userSpaceOnUse">
+        <path d="M0 12 H10 V2 H20 V8 H14 V6 H18 V4 H12 V10 H22 V0 H26" fill="none" stroke="#d9a441" stroke-width="1.4"/>
+      </pattern></defs>
+      <rect width="520" height="14" fill="url(#key)"/>
+    </svg>
+  </header>
+
+  <nav class="phases" aria-label="Battle phases">
+    <span class="pill" data-p="0">Prologue</span>
+    <span class="pill" data-p="1">Deployment</span>
+    <span class="pill" data-p="2">First blood</span>
+    <span class="pill" data-p="3">The yielding centre</span>
+    <span class="pill" data-p="4">The trap</span>
+    <span class="pill" data-p="5">Aftermath</span>
+  </nav>
+
+  <div class="stage">
+    <div id="view" role="img" aria-label="3D battlefield of the plain of Cannae beside the river Aufidus"></div>
+    <div class="counters" id="counters">
+      <span class="counter c-rom">Roman fallen&nbsp; <b id="romDead">0</b></span>
+      <span class="counter c-pun">Hannibal's fallen&nbsp; <b id="punDead">0</b></span>
+    </div>
+    <div class="daytag" id="daytag">Dawn, 2 August</div>
+    <div id="formHud"></div>
+    <div class="camctl">
+      <button class="cambtn" data-cam="over">Overview</button>
+      <button class="cambtn" data-cam="centre">The centre</button>
+      <button class="cambtn" data-cam="river">The river wing</button>
+      <button class="cambtn" data-cam="rear">Behind Rome</button>
+    </div>
+    <div class="camhint">drag · rotate&ensp;|&ensp;scroll · zoom&ensp;|&ensp;right-drag · pan</div>
+    <div id="dock"><div id="choiceArea"></div><div class="controls" id="controls"></div></div>
+    <div id="vn"><div id="vntoast"></div>
+      <div class="vn-box" id="vnbox">
+        <div class="vn-portrait" id="vnportrait"></div>
+        <div class="vn-main">
+          <div class="vn-name" id="vnname"></div>
+          <div class="vn-text" id="vntext"></div>
+          <div class="vn-choices" id="vnchoices"></div>
+          <div class="vn-next" id="vnnext">tap to continue &#9656;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="narration">
+    <div class="narr-label" id="narrLabel">Prologue</div>
+    <div id="narrBody"></div>
+  </div>
+
+
+  <footer>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true"><rect width="520" height="14" fill="url(#key)"/></svg>
+    Grounded in Polybius, book III, and Livy, book XXII. Numbers, the exact ground, and how much blame Varro
+    deserves are all debated; the traditional account was written by friends of the other consul's family.
+    One figure represents roughly 250 men.
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+
+/* ================= geography =================
+   Sim space 1000 x 620. The river Aufidus runs along the west (low x).
+   Rome deploys in the north (low y), Hannibal in the south. The hill and
+   citadel of Cannae, whose grain stores Hannibal seized, stand southeast. */
+const sx2w=x=>(x-500)*0.2, sy2w=y=>(y-310)*0.2;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const smooth=(x,a,b)=>THREE.MathUtils.smoothstep(x,a,b);
+const RIVER_X=145;
+const CC={x0:330,x1:670,base:432};       // the Carthaginian centre line
+
+const S={
+  phase:0, stage:'idle', sub:'', subT:0, st:0,
+  soldiers:[], arrows:[],
+  romDead:0, punDead:0,
+  bow:1, bowCur:1, press:0, shrink:1,
+};
+const MEN_PER=250;
+
+/* ================= three.js ================= */
+const view=document.getElementById('view');
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0xb4b2a0);
+scene.fog=new THREE.Fog(0xb4b2a0,170,460);
+
+const camera=new THREE.PerspectiveCamera(52,1,0.5,900);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const SHADOWS=window.innerWidth>700;
+if(SHADOWS){renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;}
+view.appendChild(renderer.domElement);
+function resize(){const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+
+scene.add(new THREE.HemisphereLight(0xdde3d6,0x6a5f44,0.85));
+const sun=new THREE.DirectionalLight(0xfff2d0,1.15);
+sun.position.set(50,95,70);
+if(SHADOWS){
+  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+  const sc=sun.shadow.camera;
+  sc.left=-130;sc.right=130;sc.top=130;sc.bottom=-130;sc.far=360;
+  sc.updateProjectionMatrix();
+  sun.shadow.bias=-0.0008;
+}
+scene.add(sun);
+
+/* ---------- terrain ---------- */
+function terrainH(wx,wz){
+  const x=wx/0.2+500,y=wz/0.2+310;
+  let h=Math.sin(wx*0.1)*0.3+Math.cos(wz*0.12+wx*0.05)*0.3;
+  if(x<RIVER_X)h-=Math.min((RIVER_X-x)*0.09,3.4);          // the Aufidus channel
+  if(x<RIVER_X+30&&x>=RIVER_X)h-=(RIVER_X+30-x)*0.02;      // low bank
+  const dx=(x-855)/95,dy=(y-520)/70;
+  h+=10.5*Math.exp(-(dx*dx+dy*dy));                          // the hill of Cannae
+  if(y>575)h+=(y-575)*0.05;
+  if(y<48)h+=(48-y)*0.04;
+  if(x>950)h+=(x-950)*0.05;
+  return h;
+}
+{
+  const g=new THREE.PlaneGeometry(230,150,160,110);
+  g.rotateX(-Math.PI/2);
+  const pos=g.attributes.position,colors=[];
+  const cDry=new THREE.Color(0x9a8f5c),cStub=new THREE.Color(0xa89a62),
+        cRock=new THREE.Color(0x7a6d4c),cBed=new THREE.Color(0x55604f),tmp=new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const wx=pos.getX(i),wz=pos.getZ(i),h=terrainH(wx,wz);
+    pos.setY(i,h);
+    tmp.copy(cDry);
+    tmp.lerp(cStub,smooth(Math.sin(wx*0.32)*Math.sin(wz*0.28),0,1)*0.5);   // reaped grain fields
+    tmp.lerp(cRock,smooth(h,5,11));
+    if(h<-1.2)tmp.lerp(cBed,0.7);
+    tmp.offsetHSL(0,0,(Math.sin(wx*1.5)*Math.sin(wz*1.9))*0.04);
+    colors.push(tmp.r,tmp.g,tmp.b);
+  }
+  g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  g.computeVertexNormals();
+  const terrain=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}));
+  terrain.receiveShadow=SHADOWS;
+  scene.add(terrain);
+}
+/* the Aufidus */
+const river=new THREE.Mesh(
+  new THREE.PlaneGeometry(26,152),
+  new THREE.MeshLambertMaterial({color:0x3f6a70,transparent:true,opacity:0.92}));
+river.rotation.x=-Math.PI/2;
+river.position.set(sx2w(118),-0.55,0);
+scene.add(river);
+/* the citadel of Cannae */
+{
+  const stone=new THREE.MeshLambertMaterial({color:0x9a8f78});
+  for(let i=0;i<7;i++){
+    const a=i/7*6.283;
+    const x=855+Math.cos(a)*26,y=520+Math.sin(a)*20;
+    const wx=sx2w(x),wz=sy2w(y);
+    const seg=new THREE.Mesh(new THREE.BoxGeometry(3.4,2.2,1),stone);
+    seg.position.set(wx,terrainH(wx,wz)+1,wz);
+    seg.rotation.y=-a;seg.castShadow=SHADOWS;
+    scene.add(seg);
+  }
+  const keep=new THREE.Mesh(new THREE.BoxGeometry(3,4,3),stone);
+  const wx=sx2w(855),wz=sy2w(520);
+  keep.position.set(wx,terrainH(wx,wz)+2,wz);keep.castShadow=SHADOWS;
+  scene.add(keep);
+}
+/* camps */
+function tents(cx,cy,n,color){
+  const mat=new THREE.MeshLambertMaterial({color});
+  for(let i=0;i<n;i++){
+    const t=new THREE.Mesh(new THREE.ConeGeometry(1.4,2,5),mat);
+    const x=cx+rnd(-30,30),y=cy+rnd(-12,12);
+    const wx=sx2w(x),wz=sy2w(y);
+    t.position.set(wx,terrainH(wx,wz)+1,wz);
+    t.rotation.y=rnd(0,1);t.castShadow=SHADOWS;
+    scene.add(t);
+  }
+}
+tents(480,52,9,0xb9a887);      // the Roman camps, north
+tents(430,575,9,0xa093b8);     // Hannibal's camp, south
+
+/* ---------- vertex-colored figures ---------- */
+function buildFigure(parts){
+  let vC=0,iC=0;
+  for(const p of parts){vC+=p.g.attributes.position.count;iC+=p.g.index.count;}
+  const P=new Float32Array(vC*3),N=new Float32Array(vC*3),C=new Float32Array(vC*3),I=new Uint16Array(iC);
+  const col=new THREE.Color();
+  let vO=0,iO=0;
+  for(const p of parts){
+    P.set(p.g.attributes.position.array,vO*3);
+    N.set(p.g.attributes.normal.array,vO*3);
+    col.set(p.c);
+    const n=p.g.attributes.position.count;
+    for(let i=0;i<n;i++){C[(vO+i)*3]=col.r;C[(vO+i)*3+1]=col.g;C[(vO+i)*3+2]=col.b;}
+    const idx=p.g.index.array;
+    for(let i=0;i<idx.length;i++)I[iO+i]=idx[i]+vO;
+    vO+=n;iO+=idx.length;
+  }
+  const out=new THREE.BufferGeometry();
+  out.setAttribute('position',new THREE.BufferAttribute(P,3));
+  out.setAttribute('normal',new THREE.BufferAttribute(N,3));
+  out.setAttribute('color',new THREE.BufferAttribute(C,3));
+  out.setIndex(new THREE.BufferAttribute(I,1));
+  return out;
+}
+function cyl(r1,r2,h,seg,x,y,z,rz){
+  const g=new THREE.CylinderGeometry(r1,r2,h,seg);
+  if(rz)g.rotateZ(rz);
+  g.translate(x,y,z);return g;
+}
+function sph(r,x,y,z){const g=new THREE.SphereGeometry(r,6,5);g.translate(x,y,z);return g;}
+function box(w,h,d,x,y,z){const g=new THREE.BoxGeometry(w,h,d);g.translate(x,y,z);return g;}
+
+/* the legionary of 216: mail, Montefortino helmet, the tall oval scutum, pilum.
+   Forward is +x; the shield rides the left arm. */
+function buildLegionary(pal){
+  const FL=0xc9a075,WD=0x6b4a2c;
+  return buildFigure([
+    {g:cyl(.07,.085,.36,5, 0,.18,-.11),c:FL},
+    {g:cyl(.07,.085,.36,5, 0,.18, .11),c:FL},
+    {g:cyl(.08,.09,.32,5,  0,.5,-.11),c:pal.tunic},
+    {g:cyl(.08,.09,.32,5,  0,.5, .11),c:pal.tunic},
+    {g:cyl(.17,.22,.26,6,  0,.78,0),c:pal.tunic},
+    {g:cyl(.19,.165,.5,6,  0,1.15,0),c:pal.mail},
+    {g:cyl(.055,.06,.5,5,  0,1.12,-.245),c:FL},
+    {g:cyl(.055,.06,.5,5,  0,1.12, .245),c:FL},
+    {g:sph(.15,0,1.72,0),c:FL},
+    {g:sph(.17,0,1.79,0),c:pal.helm},
+    {g:cyl(.05,.09,.14,5, 0,1.98,0),c:pal.helm},           // Montefortino knob
+    {g:box(.07,.62,.42, .17,1.02,-.27),c:pal.shield},       // the scutum
+    {g:sph(.06, .22,1.02,-.27),c:0x8a8578},                 // iron boss
+    {g:cyl(.03,.03,2.2,4, .1,1.4,.26,-0.13),c:WD},          // pilum
+    {g:cyl(.012,.012,.5,4, .27,2.58,.26,-0.13),c:0x8a8578},
+  ]);
+}
+/* the Iberian and Gallic swordsmen of the centre: white tunics with crimson
+   borders beside bare-chested Gauls; flat oval shields, long blades */
+function buildCelt(){
+  const FL=0xc9a075,WD=0x6b4a2c;
+  return buildFigure([
+    {g:cyl(.075,.09,.68,5, 0,.34,-.11),c:0x8a6a4a},
+    {g:cyl(.075,.09,.68,5, 0,.34, .11),c:0x8a6a4a},
+    {g:cyl(.17,.22,.42,6,  0,.9,0),c:0xe2d8c0},             // white tunic
+    {g:cyl(.18,.18,.06,6,  0,.7,0),c:0x8c2f2a},             // crimson border
+    {g:cyl(.18,.155,.36,6, 0,1.28,0),c:0xd8cdb0},
+    {g:cyl(.055,.06,.5,5,  0,1.12,-.245),c:FL},
+    {g:cyl(.055,.06,.5,5,  0,1.12, .245),c:FL},
+    {g:sph(.15,0,1.7,0),c:FL},
+    {g:sph(.16,0,1.82,0),c:0x5c452c},                       // long hair
+    {g:box(.06,.56,.34, .18,1.03,-.25),c:0x5c7a4a},         // flat oval shield
+    {g:cyl(.028,.028,1.1,4, .12,1.35,.24,-0.3),c:0x9a9588}, // the long sword raised
+  ]);
+}
+/* Hannibal's Africans: veterans re-armed head to foot in Roman spoils from
+   Trasimene, so that Rome's own panoply came walking back at her */
+const legionRome={tunic:0x8c2f2a,mail:0x8a8a8a,helm:0xb8912f,shield:0xa03028};
+const legionAfrica={tunic:0x4a3f66,mail:0x8a8a8a,helm:0xb8912f,shield:0xc0b088};
+/* cavalry: horse and rider, palette-tinted */
+function buildCav(pal){
+  const FL=0xc9a075;
+  return buildFigure([
+    {g:box(1.8,.62,.56, 0,1.05,0),c:pal.horse},
+    {g:box(.5,.66,.4, .95,1.45,0),c:pal.horse},
+    {g:box(.42,.3,.32, 1.28,1.62,0),c:pal.horse},
+    {g:box(.18,1.0,.5, -.6,.5,0),c:pal.horse},
+    {g:box(.18,1.0,.5, .6,.5,0),c:pal.horse},
+    {g:box(.9,.1,.5, -.05,1.42,0),c:pal.cloth},             // saddle cloth
+    {g:cyl(.24,.3,.9,6, -.1,1.95,0),c:pal.rider},
+    {g:sph(.2, -.1,2.6,0),c:FL},
+    {g:sph(.22,-.1,2.68,0),c:pal.helm},
+    {g:cyl(.026,.026,1.7,4, .1,2.4,.3,-0.2),c:0x6b4a2c},
+  ]);
+}
+const GEO={
+  ri:buildLegionary(legionRome),
+  ca:buildLegionary(legionAfrica),
+  cc:buildCelt(),
+  rc:buildCav({horse:0x6b5a48,cloth:0x8c2f2a,rider:0xd8cdb0,helm:0xb8912f}),
+  ch:buildCav({horse:0x4a3c30,cloth:0x4a3f66,rider:0x9a8a6c,helm:0x8a8578}),
+  cn:buildCav({horse:0x8a7a5e,cloth:0xd8cdb0,rider:0xc9a075,helm:0xc9a075}),
+};
+const MATS={};for(const k in GEO)MATS[k]=new THREE.MeshLambertMaterial({vertexColors:true});
+let MESH={};
+const M4=new THREE.Matrix4(),QT=new THREE.Quaternion(),V3=new THREE.Vector3(),SC=new THREE.Vector3(),EUL=new THREE.Euler();
+let perfNow=0;
+
+function soldier(x,y,side,grp,kind){
+  return {x,y,tx:x,ty:y,hx:x,hy:y,side,grp,kind,alive:true,flee:false,dieAt:null,
+          jit:rnd(0,6.28),face:side==='r'?-Math.PI/2:Math.PI/2,moving:false,escaped:false,
+          u:0,r:0,pi:0,wps:null,detached:false};
+}
+function buildInstances(){
+  for(const k in MESH)scene.remove(MESH[k]);
+  MESH={};
+  for(const k in GEO){
+    const list=S.soldiers.filter(s=>s.kind===k);
+    const m=new THREE.InstancedMesh(GEO[k],MATS[k],Math.max(list.length,1));
+    m.castShadow=SHADOWS;
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);
+    for(let i=0;i<m.count;i++)m.setMatrixAt(i,M4);
+    m.instanceMatrix.needsUpdate=true;
+    list.forEach((s,i)=>{s.idx=i;s.mesh=m;});
+    scene.add(m);MESH[k]=m;
+  }
+}
+function writeInstance(s){
+  const wx=sx2w(s.x),wz=sy2w(s.y);
+  if(s.escaped){SC.setScalar(0.0001);V3.set(wx,-80,wz);QT.set(0,0,0,1);}
+  else if(!s.alive){
+    V3.set(wx,terrainH(wx,wz)+0.22,wz);
+    EUL.set(Math.PI/2,s.jit,0);QT.setFromEuler(EUL);
+    SC.set(1,1,0.35);
+  }else{
+    const bob=s.moving?Math.abs(Math.sin(perfNow*0.012+s.jit))*0.12:0;
+    const lean=s.moving?0.14:0;
+    const sway=s.moving?Math.sin(perfNow*0.011+s.jit)*0.07:0;
+    V3.set(wx,terrainH(wx,wz)+bob,wz);
+    EUL.set(lean,s.face,sway,'YXZ');QT.setFromEuler(EUL);
+    SC.setScalar(1);
+  }
+  M4.compose(V3,QT,SC);
+  s.mesh.setMatrixAt(s.idx,M4);
+}
+function flushInstances(){
+  for(const s of S.soldiers)writeInstance(s);
+  for(const k in MESH)MESH[k].instanceMatrix.needsUpdate=true;
+}
+function moveToward(s,speed,dt){
+  const dx=s.tx-s.x,dy=s.ty-s.y,d=Math.hypot(dx,dy);
+  if(d<1.5){s.moving=false;return true;}
+  s.moving=true;
+  s.x+=(dx/d)*speed*dt*60;s.y+=(dy/d)*speed*dt*60;
+  s.face=Math.atan2(-dy,dx);
+  return false;
+}
+function followWps(s,speed,dt){
+  if(!s.wps||s.pi>=s.wps.length)return true;
+  s.tx=s.wps[s.pi][0];s.ty=s.wps[s.pi][1];
+  if(moveToward(s,speed,dt))s.pi++;
+  return s.pi>=s.wps.length;
+}
+function kill(s){
+  if(!s.alive)return;
+  s.alive=false;
+  if(s.side==='r')S.romDead++;else S.punDead++;
+  updateCounters();
+}
+function alive(side,grp){return S.soldiers.filter(s=>s.alive&&s.side===side&&(!grp||s.grp===grp));}
+function killRandom(list,n){
+  const pool=list.filter(s=>s.alive);
+  for(let i=0;i<n&&pool.length;i++){
+    const j=Math.floor(Math.random()*pool.length);
+    kill(pool[j]);pool.splice(j,1);
+  }
+}
+function fleeDeaths(dt){
+  for(const s of S.soldiers){
+    if(s.alive&&s.flee&&s.dieAt!=null){
+      s.dieAt-=dt*0.25;
+      if(s.dieAt<=0)kill(s);
+    }
+  }
+}
+function updateCounters(){
+  document.getElementById('romDead').textContent='~'+(S.romDead*MEN_PER).toLocaleString();
+  document.getElementById('punDead').textContent='~'+(S.punDead*MEN_PER).toLocaleString();
+}
+function setDay(t){document.getElementById('daytag').textContent=t;}
+
+/* ---------- banners ---------- */
+const banners={};
+function makeBanner(color){
+  const g=new THREE.Group();
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,5.4,5),new THREE.MeshLambertMaterial({color:0x4a3b26}));
+  pole.position.y=2.7;
+  const flag=new THREE.Mesh(new THREE.PlaneGeometry(2.2,1.3),new THREE.MeshLambertMaterial({color,side:THREE.DoubleSide}));
+  flag.position.set(1.15,4.5,0);
+  g.add(pole,flag);g.userData.flag=flag;
+  scene.add(g);g.visible=false;
+  return g;
+}
+banners.ri=makeBanner(0xc0453a);
+banners.cc=makeBanner(0x6a5da0);
+function updateBanners(){
+  const sel={ri:s=>s.grp==='ri'&&!s.flee, cc:s=>(s.grp==='cc'||s.grp==='ca')&&!s.flee};
+  for(const k in banners){
+    const list=S.soldiers.filter(s=>s.alive&&sel[k](s));
+    const b=banners[k];
+    if(list.length<6){b.visible=false;continue;}
+    let mx=0,my=0;for(const s of list){mx+=s.x;my+=s.y;}
+    mx/=list.length;my/=list.length;
+    const wx=sx2w(mx),wz=sy2w(my);
+    b.position.set(wx,terrainH(wx,wz),wz);
+    b.userData.flag.rotation.y=Math.sin(perfNow*0.002)*0.35;
+    b.visible=true;
+  }
+}
+
+/* ---------- pila ---------- */
+const ARROW_MAX=200;
+const arrowMesh=new THREE.InstancedMesh(
+  new THREE.CylinderGeometry(0.05,0.05,1.5,4),
+  new THREE.MeshLambertMaterial({color:0x2d251a}),ARROW_MAX);
+arrowMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(arrowMesh);
+const UP=new THREE.Vector3(0,1,0),DIR=new THREE.Vector3();
+function fireArrowAt(fromList,targetList,hit){
+  if(!fromList.length||!targetList.length)return;
+  const from=fromList[Math.floor(Math.random()*fromList.length)];
+  const t=targetList[Math.floor(Math.random()*targetList.length)];
+  const fx=sx2w(from.x),fz=sy2w(from.y),tx=sx2w(t.x+rnd(-3,3)),tz=sy2w(t.y+rnd(-3,3));
+  S.arrows.push({fx,fy:terrainH(fx,fz)+1.9,fz,tx,ty:terrainH(tx,tz)+0.3,tz,
+    t:0,dur:rnd(0.55,0.8),arc:rnd(3,5),simx:t.x,simy:t.y,px:fx,py:2,pz:fz,vx:0,vy:1,vz:0,side:t.side,hit});
+}
+function updArrowFlight(dt){
+  for(let i=S.arrows.length-1;i>=0;i--){
+    const a=S.arrows[i];a.t+=dt;
+    const u=Math.min(a.t/a.dur,1);
+    const nx=a.fx+(a.tx-a.fx)*u,nz=a.fz+(a.tz-a.fz)*u;
+    const ny=a.fy+(a.ty-a.fy)*u+Math.sin(u*Math.PI)*a.arc;
+    a.vx=nx-a.px;a.vy=ny-a.py;a.vz=nz-a.pz;
+    a.px=nx;a.py=ny;a.pz=nz;
+    if(u>=1){
+      if(Math.random()<a.hit){
+        const near=S.soldiers.filter(s=>s.alive&&s.side===a.side&&Math.hypot(s.x-a.simx,s.y-a.simy)<9);
+        if(near.length)kill(near[0]);
+      }
+      S.arrows.splice(i,1);
+    }
+  }
+}
+function flushArrows(){
+  let i=0;
+  for(const a of S.arrows){
+    if(i>=ARROW_MAX)break;
+    V3.set(a.px,a.py,a.pz);
+    DIR.set(a.vx,a.vy,a.vz).normalize();
+    QT.setFromUnitVectors(UP,DIR);
+    SC.setScalar(1);M4.compose(V3,QT,SC);
+    arrowMesh.setMatrixAt(i++,M4);
+  }
+  for(;i<ARROW_MAX;i++){SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);arrowMesh.setMatrixAt(i,M4);}
+  arrowMesh.instanceMatrix.needsUpdate=true;
+}
+
+/* ================= camera ================= */
+const cam={yaw:0.4,pitch:0.95,dist:200,tx:0,ty:2,tz:0,auto:null};
+function applyCamera(dt){
+  if(cam.auto){
+    const a=cam.auto,k=1-Math.pow(0.001,dt);
+    cam.yaw+=(a.yaw-cam.yaw)*k;cam.pitch+=(a.pitch-cam.pitch)*k;cam.dist+=(a.dist-cam.dist)*k;
+    cam.tx+=(a.tx-cam.tx)*k;cam.ty+=(a.ty-cam.ty)*k;cam.tz+=(a.tz-cam.tz)*k;
+    if(Math.abs(a.dist-cam.dist)<0.5&&Math.abs(a.yaw-cam.yaw)<0.01)cam.auto=null;
+  }
+  cam.pitch=THREE.MathUtils.clamp(cam.pitch,0.14,1.42);
+  cam.dist=THREE.MathUtils.clamp(cam.dist,20,290);
+  const cp=Math.cos(cam.pitch);
+  camera.position.set(
+    cam.tx+Math.sin(cam.yaw)*cp*cam.dist,
+    cam.ty+Math.sin(cam.pitch)*cam.dist,
+    cam.tz+Math.cos(cam.yaw)*cp*cam.dist);
+  camera.lookAt(cam.tx,cam.ty,cam.tz);
+}
+const PRESETS={
+  over:{yaw:0.4,pitch:0.95,dist:200,tx:0,ty:2,tz:0},
+  centre:{yaw:0.3,pitch:0.45,dist:70,tx:0,ty:1,tz:sy2w(400)},
+  river:{yaw:1.3,pitch:0.45,dist:70,tx:sx2w(230),ty:1,tz:sy2w(330)},
+  rear:{yaw:Math.PI,pitch:0.5,dist:85,tx:0,ty:1,tz:sy2w(160)},
+  trap:{yaw:0.5,pitch:0.8,dist:120,tx:0,ty:2,tz:sy2w(280)},
+};
+document.querySelectorAll('.cambtn').forEach(b=>b.onclick=()=>{cam.auto={...PRESETS[b.dataset.cam]};});
+function cine(name){cam.auto={...PRESETS[name]};}
+
+let drag=null,formDrag=null;
+view.addEventListener('pointerdown',e=>{
+  view.setPointerCapture(e.pointerId);
+  if(S.stage==='deploy'&&e.button===0&&!e.shiftKey){
+    const hit=castAt(e,[formPlane]);
+    if(hit.length){formDrag={y0:e.clientY,b0:S.bow};return;}
+  }
+  drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,btn:e.button,shift:e.shiftKey};
+  view.classList.add('dragging');cam.auto=null;
+});
+view.addEventListener('pointermove',e=>{
+  if(formDrag){
+    const b=THREE.MathUtils.clamp(formDrag.b0+ (formDrag.y0-e.clientY)/90, 0, 1);
+    const q=Math.round(b*4)/4;
+    if(q!==S.bow){S.bow=q;placeCentre(q);formHudText();}
+    return;
+  }
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  drag.x=e.clientX;drag.y=e.clientY;
+  if(drag.btn===2||drag.shift){
+    const cp=Math.cos(cam.yaw),sp=Math.sin(cam.yaw),k=cam.dist*0.0016;
+    cam.tx-=(dx*cp-dy*sp)*k;
+    cam.tz-=(-dx*sp-dy*cp)*k;
+    cam.tx=THREE.MathUtils.clamp(cam.tx,-105,105);
+    cam.tz=THREE.MathUtils.clamp(cam.tz,-66,66);
+  }else{cam.yaw-=dx*0.0055;cam.pitch+=dy*0.0045;}
+});
+const endDrag=()=>{drag=null;view.classList.remove('dragging');};
+view.addEventListener('pointerup',e=>{
+  if(formDrag){formDrag=null;return;}
+  if(drag&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<12)tryPick(e);
+  endDrag();
+});
+view.addEventListener('pointercancel',endDrag);
+view.addEventListener('wheel',e=>{e.preventDefault();cam.auto=null;cam.dist*=(1+Math.sign(e.deltaY)*0.09);},{passive:false});
+view.addEventListener('contextmenu',e=>e.preventDefault());
+let pinch=null;
+view.addEventListener('touchstart',e=>{if(e.touches.length===2)pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);});
+view.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&pinch){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    cam.dist*=pinch/d;pinch=d;cam.auto=null;
+  }
+},{passive:true});
+view.addEventListener('touchend',()=>pinch=null);
+
+/* ================= command layer ================= */
+const ORDER={given:false};
+const raycaster=new THREE.Raycaster();
+const ndc=new THREE.Vector2();
+function castAt(e,objects){
+  const r=renderer.domElement.getBoundingClientRect();
+  ndc.x=((e.clientX-r.left)/r.width)*2-1;
+  ndc.y=-((e.clientY-r.top)/r.height)*2+1;
+  raycaster.setFromCamera(ndc,camera);
+  return raycaster.intersectObjects(objects,false);
+}
+const formPlane=new THREE.Mesh(
+  new THREE.PlaneGeometry(76,26),
+  new THREE.MeshBasicMaterial({color:0xd9a441,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
+formPlane.rotation.x=-Math.PI/2;
+formPlane.position.set(0,terrainH(0,sy2w(420))+0.6,sy2w(420));
+scene.add(formPlane);
+const formHud=document.getElementById('formHud');
+function formHudText(){
+  formHud.textContent=S.bow>=0.5
+    ?'The centre bowed forward \u00b7 the crescent of Cannae \u00b7 drag to flatten or deepen'
+    :'A straight, orthodox line \u00b7 drag the centre forward to bow it';
+}
+function ringMesh(color){
+  const m=new THREE.Mesh(new THREE.TorusGeometry(9,0.45,8,32),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.85}));
+  m.rotation.x=-Math.PI/2;
+  m.visible=false;
+  const hit=new THREE.Mesh(new THREE.CircleGeometry(17,16),
+    new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
+  hit.rotation.x=-Math.PI/2;hit.visible=false;hit.userData.owner=m;
+  m.userData.hit=hit;
+  const fill=new THREE.Mesh(new THREE.CircleGeometry(8.2,24),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.13,depthWrite:false,side:THREE.DoubleSide}));
+  fill.position.z=0.02;
+  m.add(fill);
+  scene.add(m);scene.add(hit);
+  return m;
+}
+const wheelRing=ringMesh(0xd9a441);
+const pursueRing=ringMesh(0xc45540);
+const RINGS=[wheelRing,pursueRing];
+let ringT=0;
+function updCommandFx(dt){
+  ringT+=dt;
+  formPlane.material.opacity=(S.stage==='deploy')?0.06+Math.sin(ringT*3)*0.03:0;
+  for(const r of [wheelRing,pursueRing]){
+    if(!r.visible)continue;
+    const k=1+Math.sin(ringT*3.4)*0.08;
+    r.scale.setScalar(k);
+    r.material.opacity=0.55+Math.sin(ringT*3.4)*0.3;
+  }
+}
+function placeRing(r,sx,sy){
+  const wx=sx2w(sx),wz=sy2w(sy);
+  r.position.set(wx,terrainH(wx,wz)+0.6,wz);
+  r.visible=true;
+  const h=r.userData.hit;
+  h.position.set(wx,terrainH(wx,wz)+0.5,wz);
+  h.visible=true;
+}
+function hideRings(){for(const r of RINGS){r.visible=false;r.userData.hit.visible=false;}}
+
+/* ================= armies ================= */
+function arcY(bow,u){return CC.base - bow*62*Math.sin(Math.PI*u);}
+function placeCentre(bow){
+  for(const s of S.soldiers){
+    if(s.grp!=='cc')continue;
+    const y=arcY(bow,s.u)+s.r*7.4;
+    s.x=s.hx;s.y=y;s.tx=s.x;s.ty=y;
+    s.face=Math.PI/2;
+  }
+}
+function spawnAll(){
+  S.soldiers=[];
+  /* the Roman mass: abnormally narrow, abnormally deep */
+  for(let r=0;r<14;r++)for(let c=0;c<18;c++){
+    const s=soldier(405+c*10.6+rnd(-1.4,1.4),140+r*7.4+rnd(-1.4,1.4),'r','ri','ri');
+    s.r=r;
+    S.soldiers.push(s);
+  }
+  /* citizen cavalry on the river wing, allied cavalry east */
+  for(let i=0;i<18;i++)S.soldiers.push(soldier(225+rnd(-24,24),195+rnd(-16,16),'r','rc','rc'));
+  for(let i=0;i<22;i++)S.soldiers.push(soldier(775+rnd(-26,26),195+rnd(-16,16),'r','ra','rc'));
+  /* the Iberian and Gallic centre, three ranks thin */
+  const cols=31;
+  for(let r=0;r<3;r++)for(let c=0;c<cols;c++){
+    const u=c/(cols-1);
+    const s=soldier(CC.x0+u*(CC.x1-CC.x0)+rnd(-1.4,1.4),CC.base,'p','cc','cc');
+    s.u=u;s.r=r;
+    S.soldiers.push(s);
+  }
+  /* the African veterans, in Roman spoils, refused in echelon at both ends */
+  for(let r=0;r<5;r++)for(let c=0;c<6;c++){
+    S.soldiers.push(soldier(272+c*9+rnd(-1,1),468+r*7.4+rnd(-1,1),'p','caW','ca'));
+    S.soldiers.push(soldier(672+c*9+rnd(-1,1),468+r*7.4+rnd(-1,1),'p','caE','ca'));
+  }
+  /* Hasdrubal's heavy horse by the river; the Numidians east */
+  for(let i=0;i<26;i++)S.soldiers.push(soldier(225+rnd(-26,26),435+rnd(-18,18),'p','ch','ch'));
+  for(let i=0;i<20;i++)S.soldiers.push(soldier(775+rnd(-26,26),435+rnd(-18,18),'p','cn','cn'));
+  buildInstances();
+  placeCentre(S.bow);
+}
+
+/* ================= battle ================= */
+function startAdvance(){
+  setPhase(2);setDay('Mid-morning \u00b7 the Volturnus rising');
+  document.getElementById('counters').classList.add('show');
+  S.stage='advance';S.st=0;S.bowCur=S.bow;S.press=0;S.shrink=1;S.pilaThrown=false;
+  cine('centre');
+  narrate('First blood',
+   `<p>The lines go forward under a hot south wind, the Volturnus, which Hannibal has arranged to have at
+    his back; it lifts the dust of the trampled grain fields and carries it into eighty thousand Roman
+    faces. On both wings the cavalry goes in at once: Hasdrubal's Spanish and Gallic heavy horse against
+    the citizen cavalry by the river, packed so tight against the bank that there is no room to
+    manoeuvre, only to grapple; the Numidians swirling and feinting against the allied horse in the open
+    east.</p>
+    <p>And in the centre, the great machine of Rome begins to walk into the bow.</p>`);
+  setControls([]);
+  for(const s of S.soldiers){
+    if(s.grp==='ri'){
+      const u=THREE.MathUtils.clamp((s.hx-CC.x0)/(CC.x1-CC.x0),0,1);
+      s.tx=s.hx;s.ty=arcY(S.bow,u)-12-(13-s.r)*6.4;
+    }
+    if(s.grp==='rc'){s.tx=225+rnd(-14,14);s.ty=315+rnd(-12,12);}
+    if(s.grp==='ch'){s.tx=225+rnd(-14,14);s.ty=325+rnd(-12,12);}
+    if(s.grp==='ra'){s.tx=775+rnd(-16,16);s.ty=315+rnd(-12,12);}
+    if(s.grp==='cn'){s.tx=775+rnd(-16,16);s.ty=325+rnd(-12,12);}
+  }
+}
+function updAdvance(dt){
+  for(const s of S.soldiers){
+    if(!s.alive)continue;
+    if(s.grp==='ri')moveToward(s,0.5,dt);
+    else if(s.kind==='rc'||s.kind==='ch'||s.kind==='cn')moveToward(s,1.0,dt);
+  }
+  /* the pila go in at close range */
+  const front=alive('r','ri').filter(s=>s.y>300);
+  if(front.length>20&&!S.pilaThrown){
+    S.pilaThrown=true;
+    for(let i=0;i<26;i++)fireArrowAt(alive('r','ri'),alive('p','cc'),0.25);
+  }
+  /* cavalry melee, west decided fast, east a swirl */
+  if(S.st>2){
+    if(Math.random()<dt*5)killRandom(alive('r','rc'),1);
+    if(Math.random()<dt*1.4)killRandom(alive('p','ch'),1);
+    if(Math.random()<dt*1.1)killRandom(alive('r','ra'),1);
+    if(Math.random()<dt*1.0)killRandom(alive('p','cn'),1);
+  }
+  const contact=alive('r','ri').some(s=>Math.abs(s.y-(arcY(S.bowCur,THREE.MathUtils.clamp((s.hx-CC.x0)/(CC.x1-CC.x0),0,1))-10))<14||s.y>arcY(S.bowCur,0.5)-24);
+  if(S.st>4&&contact){
+    if(S.bow>=0.5)startPress();
+    else startCfStraight();
+  }
+}
+function startPress(){
+  setPhase(3);S.stage='press';S.st=0;
+  narrate('The yielding centre',
+   `<p>The mass meets the crescent's apex and begins to push, and the crescent does the thing it was shaped
+    to do: it bends. Hannibal and his brother Mago fight in this line in person, because a controlled
+    fighting retreat is the hardest manoeuvre in ancient warfare and the men performing it need to see
+    their general bleeding beside them.</p>
+    <p>Yard by yard the bow reverses, convex to concave, and the Romans, feeling themselves winning, pour
+    forward into it, ranks folding inward as the frontage narrows, until the deepest army Rome ever built
+    is compressing itself into a pocket shaped exactly like its own success. On the flanks, the African
+    veterans in their captured Roman armour have not moved at all.</p>`);
+  setControls([]);
+}
+function updPress(dt){
+  /* the bow reverses under pressure */
+  S.bowCur=Math.max(S.bowCur-dt*0.24,-0.9);
+  for(const s of S.soldiers){
+    if(!s.alive)continue;
+    if(s.grp==='cc'){
+      const y=arcY(S.bowCur,s.u)+s.r*7.4;
+      s.tx=s.hx;s.ty=y;moveToward(s,0.5,dt);
+      s.face=Math.PI/2;
+    }
+    else if(s.grp==='ri'){
+      const u=THREE.MathUtils.clamp((s.hx-CC.x0)/(CC.x1-CC.x0),0,1);
+      s.tx=500+(s.hx-500)*S.shrink;
+      s.ty=arcY(S.bowCur,u)-12-(13-s.r)*6.4;
+      moveToward(s,0.34,dt);
+    }
+    else if(s.kind==='rc'||s.kind==='ch'||s.kind==='cn'){if(!s.flee)moveToward(s,0.8,dt);}
+  }
+  S.shrink=Math.max(S.shrink-dt*0.03,0.72);
+  fleeDeaths(dt);
+  if(Math.random()<dt*3.2)killRandom(alive('p','cc'),1);
+  if(Math.random()<dt*1.2)killRandom(alive('r','ri'),1);
+  if(Math.random()<dt*4.5)killRandom(alive('r','rc'),1);
+  if(Math.random()<dt*1.2)killRandom(alive('p','ch'),1);
+  /* the river wing breaks */
+  if(S.st>4.5&&!S.rcBroken){
+    S.rcBroken=true;
+    for(const s of alive('r','rc')){
+      s.flee=true;s.tx=rnd(160,240);s.ty=rnd(60,110);
+      if(Math.random()<0.35)s.dieAt=rnd(0.2,0.9);
+    }
+  }
+  if(S.st>6.5&&!ORDER.given&&!S.orderCue){S.orderCue=true;playScene(SC_C_ORDER,enterOrderMode);}
+}
+function enterOrderMode(){
+  S.stage='order';
+  placeRing(pursueRing,200,85);
+  placeRing(wheelRing,500,100);
+  cine('river');
+  narrate('The yielding centre \u00b7 Hasdrubal\u2019s moment',
+   `<p>By the river, the citizen cavalry of Rome is destroyed, and its survivors are galloping north past
+    their own camps. Hasdrubal has two thousand victorious heavy horsemen, blood up, on an open flank, and
+    the whole future of the battle rides on what no ancient cavalry commander ever managed to make his men
+    do: not chase.</p>
+    <p><em>Give Hasdrubal his order. Tap the fleeing Romans to pursue them from the field. Tap the ground
+    behind the Roman army to rally, ride the long way around, and strike the rear.</em></p>`);
+  setControls([]);
+}
+function pickRing(e){
+  const rect=renderer.domElement.getBoundingClientRect();
+  let best=null,bestD=1e9;
+  for(const r of RINGS){
+    if(!r.visible)continue;
+    V3.copy(r.position).project(camera);
+    if(V3.z>1)continue;
+    const px=(V3.x*0.5+0.5)*rect.width+rect.left;
+    const py=(-V3.y*0.5+0.5)*rect.height+rect.top;
+    const d=Math.hypot(e.clientX-px,e.clientY-py);
+    if(d<bestD){bestD=d;best=r;}
+  }
+  return bestD<Math.max(56,rect.width*0.08)?best:null;
+}
+function tryPick(e){
+  if(S.stage!=='order')return;
+  const r=pickRing(e);
+  if(!r)return;
+  if(r===wheelRing){
+    ORDER.given=true;hideRings();
+    startWheel();
+  }else startPursueCF();
+}
+function startPursueCF(){
+  ORDER.given=true;hideRings();
+  S.stage='cfpursue';S.st=0;
+  narrate('The yielding centre \u00b7 what if',
+   `<p>You loose them after the runners, and it feels like victory: two thousand horsemen hunting broken men
+    across the stubble. It is also the last influence Hasdrubal will have on this battle. Watch the centre,
+    where your Iberians and Gauls have been dying by the hundred to hold a shape that only matters if
+    someone closes the box.</p>`);
+  for(const s of alive('p','ch')){s.tx=rnd(140,260);s.ty=rnd(40,90);}
+}
+function updCfPursue(dt){
+  for(const s of S.soldiers){if(s.alive)moveToward(s,(s.grp==='ch')?1.3:0.4,dt);}
+  fleeDeaths(dt);
+  S.bowCur=Math.max(S.bowCur-dt*0.2,-1.4);
+  for(const s of alive('p','cc')){
+    const y=arcY(S.bowCur,s.u)+s.r*7.4;
+    s.tx=s.hx;s.ty=y;
+  }
+  if(Math.random()<dt*8)killRandom(alive('p','cc'),1);
+  if(Math.random()<dt*1)killRandom(alive('r','ri'),1);
+  if(S.st>5.5){
+    S.stage='cffrozen';
+    narrate('The yielding centre \u00b7 what if',
+     `<p>Without the hammer at its back, the pocket is just a retreat. The centre stretches past breaking,
+      the Iberians and Gauls stream away south, and eighty thousand Romans walk forward out of the trap
+      that never closed. The crescent, the dust, the dead of the centre, all of it spent to arrange a
+      battle of attrition against the one state on earth that cannot lose one.</p>
+      <p class="aside">Every step of the plan existed to purchase this single moment of cavalry discipline.
+      Polybius's verdict on Hasdrubal's actual choice: his conduct that day, as much as any other cause,
+      won the battle.</p>`);
+    setControls([{label:'Rewind \u00b7 rally and ride around', fn:()=>{
+      for(const s of alive('p','ch')){s.x=rnd(180,260);s.y=rnd(120,170);s.tx=s.x;s.ty=s.y;s.flee=false;}
+      startWheel();
+    }}]);
+  }
+}
+function startWheel(){
+  S.stage='wheel';S.st=0;
+  cine('rear');
+  narrate('The trap \u00b7 the ride around',
+   `<p>Hasdrubal hauls his squadrons out of the pursuit, rallies them under the riverbank, and takes them
+    north at the trot, around the whole boiling mass of the Roman rear. On the far wing the allied cavalry,
+    already half-hypnotised by the Numidians' feints, sees two thousand fresh heavy horse coming around
+    the world at them, and does not wait.</p>`);
+  setControls([]);
+  for(const s of alive('p','ch')){
+    s.wps=[[190,150],[300,95],[470,90],[520+rnd(-40,40),135+rnd(-10,10)]];
+    s.pi=0;
+  }
+}
+function updWheel(dt){
+  let arrived=0,total=0;
+  for(const s of S.soldiers){
+    if(!s.alive)continue;
+    if(s.grp==='ch'){total++;if(followWps(s,1.3,dt))arrived++;}
+    else if(s.grp==='cc'){
+      const y=arcY(S.bowCur,s.u)+s.r*7.4;
+      s.tx=s.hx;s.ty=y;moveToward(s,0.4,dt);
+    }
+    else if(s.grp==='ri')moveToward(s,0.3,dt);
+    else if(s.flee)moveToward(s,1.2,dt);
+    else if(s.kind==='rc'||s.kind==='cn')moveToward(s,0.8,dt);
+  }
+  fleeDeaths(dt);
+  if(Math.random()<dt*2.4)killRandom(alive('p','cc'),1);
+  if(Math.random()<dt*1)killRandom(alive('r','ri'),1);
+  if(total&&arrived>total*0.55)startTrap();
+}
+function startTrap(){
+  setPhase(4);S.stage='trap';S.st=0;
+  cine('trap');
+  narrate('The trap',
+   `<p>Now everything moves at once, the way it was designed to months ago in an army's winter quarters.
+    Hasdrubal's horse charges the Roman rear. The allied cavalry bolts east with the Numidians on its
+    heels. And on the flanks the African veterans, fresh, silent, and dressed head to foot in the armour
+    of Romans killed at Trasimene, face inward, wheel, and close the sides of the box.</p>
+    <p>Eighty thousand men are now pressed so tight that most cannot raise their arms. The outer layer
+    fights; the inner mass can only wait its turn to become the outer layer. It is the most complete
+    encirclement in the history of battle, and it was performed by the smaller army.</p>`);
+  setControls([]);
+  /* allied cavalry flees; Numidians pursue */
+  for(const s of alive('r','ra')){s.flee=true;s.tx=rnd(880,960);s.ty=rnd(90,180);if(Math.random()<0.3)s.dieAt=rnd(0.3,1);}
+  for(const s of alive('p','cn')){s.tx=rnd(860,940);s.ty=rnd(120,220);}
+  /* the Africans wheel inward */
+  for(const s of alive('p','caW')){s.tx=rnd(345,395);s.ty=rnd(220,330);}
+  for(const s of alive('p','caE')){s.tx=rnd(605,655);s.ty=rnd(220,330);}
+  /* the heavy horse into the rear */
+  for(const s of alive('p','ch')){s.tx=rnd(430,570);s.ty=rnd(150,200);}
+  /* a remnant cuts its way out toward the southeast */
+  const ri=alive('r','ri');
+  for(const s of ri){
+    if(s.hx>560&&s.r>10&&Math.random()<0.45){s.runner=true;}
+  }
+}
+function updTrap(dt){
+  S.shrink=Math.max(S.shrink-dt*0.04,0.5);
+  for(const s of S.soldiers){
+    if(!s.alive)continue;
+    if(s.grp==='ri'){
+      if(s.runner){s.tx=rnd(820,900);s.ty=rnd(420,520);moveToward(s,0.7,dt);if(s.x>800){s.alive=false;s.escaped=true;}}
+      else{
+        s.tx=500+(s.hx-500)*S.shrink;
+        s.ty=250+(s.hy-190)*S.shrink*0.6;
+        moveToward(s,0.3,dt);
+      }
+    }
+    else if(s.grp==='cc'){
+      const y=arcY(-0.9,s.u)+s.r*7.4;
+      s.tx=s.hx;s.ty=y-10;moveToward(s,0.3,dt);
+    }
+    else moveToward(s,0.7,dt);
+  }
+  fleeDeaths(dt);
+  const pocket=alive('r','ri').filter(s=>!s.runner);
+  for(let i=0;i<3;i++)if(Math.random()<dt*7)killRandom(pocket,1);
+  if(Math.random()<dt*1.4)killRandom(alive('p','cc'),1);
+  if(Math.random()<dt*0.5)killRandom(alive('p','ca'),1);
+  if(S.st>13||pocket.length<30){
+    S.stage='done';
+    narrate('The trap \u00b7 evening',
+     `<p>It goes on until dark, because killing that many men takes that long even when they cannot fight
+      back. The consul Paullus, wounded early by a slinger's stone, refuses a tribune's horse and dies in
+      the press with his men; with him die both consular staffs, twenty-nine military tribunes, and eighty
+      men of senatorial rank, a fifth of Rome's governing class in one afternoon. Varro escapes with a
+      handful of horsemen. Of the great army, perhaps one man in seven walks away.</p>`);
+    setControls([{label:'The reckoning', fn:maharbal}]);
+  }
+}
+
+/* ================= counterfactual: the straight line ================= */
+function startCfStraight(){
+  setPhase(3);S.stage='cfstraight';S.st=0;
+  narrate('Deployment \u00b7 what if',
+   `<p>Your line is straight, orthodox, and honest, and the deepest infantry column ever assembled hits it
+    like a falling wall. A straight line has nothing to trade. No ground to give by design, no shape that
+    turns the enemy's push into his own funnel. It can only stand, and against sixteen men deep, three
+    men thin does not stand.</p>`);
+  setControls([]);
+}
+function updCfStraight(dt){
+  S.bowCur=Math.max(S.bowCur-dt*0.3,-0.5);
+  for(const s of S.soldiers){
+    if(!s.alive)continue;
+    if(s.grp==='cc'){
+      const y=arcY(S.bowCur,s.u)+s.r*7.4;
+      s.tx=s.hx;s.ty=y;moveToward(s,0.5,dt);
+    }
+    else if(s.grp==='ri'){
+      s.tx=s.hx;s.ty=Math.min(s.ty+dt*22,arcY(S.bowCur,0.5)+40);
+      moveToward(s,0.4,dt);
+    }
+    else if(s.kind==='rc'||s.kind==='ch'||s.kind==='cn')if(!s.flee)moveToward(s,0.8,dt);
+  }
+  if(Math.random()<dt*9)killRandom(alive('p','cc'),1);
+  if(Math.random()<dt*0.8)killRandom(alive('r','ri'),1);
+  if(S.st>6){
+    S.stage='cffrozen';
+    narrate('Deployment \u00b7 what if',
+     `<p>The centre bursts, the mass pours through the hole, and your army is cut in two before the cavalry
+      battle is even decided. Numbers win, the way numbers usually do, and the way they had already won
+      for Rome in a hundred ordinary battles.</p>
+      <p class="aside">The crescent was never a formation; it was a machine for converting the enemy's
+      greatest strength, his mass and his confidence, into his own compression. It had to be shaped before
+      the battle, because no order can bend a line already fighting. Bow the centre.</p>`);
+    setControls([{label:'Rewind \u00b7 shape the crescent', fn:()=>{enterDeployment(true);}}]);
+  }
+}
+
+/* ================= narration & UI ================= */
+const narrLabel=document.getElementById('narrLabel');
+const narrBody=document.getElementById('narrBody');
+const choiceArea=document.getElementById('choiceArea');
+const controls=document.getElementById('controls');
+function narrate(label,html){
+  narrLabel.textContent=label;
+  narrBody.innerHTML=html;
+  narrBody.classList.remove('fade-in');void narrBody.offsetWidth;
+  narrBody.classList.add('fade-in');
+  choiceArea.innerHTML='';
+}
+function setControls(btns){
+  controls.innerHTML='';
+  for(const b of btns){
+    const el=document.createElement('button');
+    el.className='btn'+(b.ghost?' ghost':'');el.textContent=b.label;el.onclick=b.fn;
+    controls.appendChild(el);
+  }
+}
+function setChoices(items){
+  choiceArea.innerHTML='';
+  const grid=document.createElement('div');grid.className='choices fade-in';
+  for(const it of items){
+    const c=document.createElement('button');c.className='choice';
+    c.innerHTML=`<h3>${it.title}</h3><p>${it.body}</p>`;
+    c.onclick=it.fn;grid.appendChild(c);
+  }
+  choiceArea.appendChild(grid);
+  controls.innerHTML='';
+}
+function setPhase(p){
+  S.phase=p;
+  document.querySelectorAll('.pill').forEach(el=>{
+    const n=+el.dataset.p;
+    el.classList.toggle('active',n===p);
+    el.classList.toggle('done',n<p);
+  });
+}
+
+/* ================= dialogue layer ================= */
+const REL={};
+const FLAGSV={};
+function PT(o){
+ const hats={
+  crest:`<path d="M34 46 Q34 24 52 22 Q70 24 70 46 L64 42 Q52 34 40 42 Z" fill="${o.hatC}"/><rect x="47" y="5" width="10" height="20" rx="4" fill="${o.crestC||'#a03028'}"/>`,
+  cap:`<path d="M34 46 Q34 26 52 24 Q70 26 70 46 Q52 36 34 46 Z" fill="${o.hatC}"/>`,
+  band:`<path d="M36 44 Q52 30 68 44 Z" fill="${o.hairC||'#3a2c1a'}"/><rect x="34" y="43" width="36" height="6" rx="2" fill="${o.hatC}"/>`,
+  hood:`<path d="M30 68 Q28 24 52 22 Q76 24 74 68 L66 60 Q52 40 38 60 Z" fill="${o.hatC}"/>`,
+  coif:`<path d="M33 64 Q31 26 52 24 Q73 26 71 64 L64 58 Q52 42 40 58 Z" fill="${o.hatC}"/>`,
+  scholar:`<rect x="36" y="26" width="32" height="11" rx="2" fill="${o.hatC}"/><rect x="48" y="15" width="8" height="13" fill="${o.hatC}"/>`,
+  longhair:`<path d="M32 74 Q28 28 52 26 Q76 28 72 74 L66 70 Q68 40 52 40 Q36 40 38 70 Z" fill="${o.hairC||'#7a5c38'}"/>`,
+  none:`<path d="M34 48 Q34 28 52 26 Q70 28 70 48 Q64 38 52 39 Q40 38 34 48 Z" fill="${o.hairC||'#3a2c1a'}"/>`,
+ };
+ const beard=o.beard?`<path d="M40 84 Q52 96 64 84 L62 ${o.beard==='long'?102:94} Q52 ${o.beard==='long'?110:100} 42 ${o.beard==='long'?102:94} Z" fill="${o.beardC||o.hairC||'#3a2c1a'}"/>`:'';
+ const stache=o.stache?`<path d="M41 76 Q52 71 63 76" stroke="${o.beardC||o.hairC||'#3a2c1a'}" stroke-width="3" fill="none" stroke-linecap="round"/>`:'';
+ return `<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="${o.bg}"/>
+<ellipse cx="52" cy="122" rx="40" ry="26" fill="${o.robe}"/><path d="M14 122 Q52 86 90 122" fill="${o.robe2}"/>
+${o.extra||''}
+<ellipse cx="52" cy="64" rx="20" ry="23" fill="${o.skin||'#c9a075'}"/>
+${hats[o.hat||'none']||''}
+<path d="M40 58 L48 57 M56 57 L64 58" stroke="#2a2012" stroke-width="2.2" stroke-linecap="round"/>
+<circle cx="44" cy="63" r="1.9" fill="#20180e"/><circle cx="60" cy="63" r="1.9" fill="#20180e"/>
+${stache}${beard}
+<path d="M46 80 Q52 ${o.stern?79:84} 58 80" stroke="#8a5a3a" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>`;
+}
+const CAST={
+ mah:{name:'Maharbal \u00b7 master of horse',svg:PT({bg:'#1d1916',robe:'#6b5a3e',robe2:'#7c6a48',hat:'cap',hatC:'#4a3626',beard:'short',beardC:'#2a2016',stern:1})},
+ gis:{name:'Gisgo \u00b7 officer of the line',svg:PT({bg:'#1c1a17',robe:'#5c5244',robe2:'#6c6252',hat:'none',hairC:'#3a2c1a',beard:'short'})},
+ mago:{name:'Mago Barca \u00b7 the general\u2019s brother',svg:PT({bg:'#1b1a1e',robe:'#4a3f66',robe2:'#5a4c7a',hat:'none',hairC:'#2c2014',beard:'short',beardC:'#2c2014'})},
+ nar:{name:'',svg:null},
+};
+const vnEl=document.getElementById('vn');
+const vnPortrait=document.getElementById('vnportrait');
+const vnName=document.getElementById('vnname');
+const vnText=document.getElementById('vntext');
+const vnChoices=document.getElementById('vnchoices');
+const vnNextEl=document.getElementById('vnnext');
+const vnToast=document.getElementById('vntoast');
+let vnQueue=[],vnDone=null,vnBusy=false;
+function playScene(steps,done){
+  vnQueue=steps.slice();vnDone=done;
+  choiceArea.innerHTML='';
+  setControls([]);
+  vnEl.style.display='block';
+  vnAdvance();
+}
+function vnAdvance(){
+  while(vnQueue.length&&vnQueue[0].if&&!vnQueue[0].if()){vnQueue.shift();}
+  if(!vnQueue.length){
+    vnEl.style.display='none';
+    const d=vnDone;vnDone=null;
+    if(d)d();
+    return;
+  }
+  renderVn(vnQueue.shift());
+}
+function renderVn(st){
+  const who=CAST[st.who]||CAST.nar;
+  vnPortrait.innerHTML=who.svg||'';
+  vnPortrait.style.display=who.svg?'block':'none';
+  vnName.textContent=who.name;
+  document.getElementById('vnbox').classList.toggle('vn-narr',st.who==='nar');
+  vnText.innerHTML=typeof st.text==='function'?st.text():st.text||'';
+  vnChoices.innerHTML='';
+  if(st.choices){
+    vnNextEl.style.display='none';vnBusy=true;
+    for(const c of st.choices){
+      const b=document.createElement('button');
+      b.className='vn-choice';b.textContent=c.label;
+      b.onclick=(ev)=>{
+        ev.stopPropagation();
+        if(c.d)for(const k in c.d){REL[k]=(REL[k]||0)+c.d[k];}
+        if(c.flag)FLAGSV[c.flag]=true;
+        if(c.toast)vToast(c.toast);
+        if(c.reply)vnQueue=c.reply.concat(vnQueue);
+        vnBusy=false;
+        vnAdvance();
+      };
+      vnChoices.appendChild(b);
+    }
+  }else{vnNextEl.style.display='block';vnBusy=false;}
+}
+document.getElementById('vnbox').addEventListener('click',()=>{if(!vnBusy&&vnEl.style.display==='block')vnAdvance();});
+function vToast(t){
+  vnToast.textContent=t;vnToast.classList.add('show');
+  setTimeout(()=>vnToast.classList.remove('show'),1900);
+}
+const SC_C_OPEN=[
+ {who:'nar',text:`Dawn mist off the Aufidus, and across it, the largest army Rome has ever assembled shakes the ground forming up.`},
+ {who:'gis',text:`General... I will say it, since everyone is thinking it. The number of them. In my whole life I have never seen so many men standing in one place.`},
+ {who:'nar',text:`And you look at the officer beside you, and give the army the sentence it will repeat down the ranks for an hour: "One thing you have missed, Gisgo. In all that great number over there, there is not one man called Gisgo."`},
+ {who:'gis',text:`...Ha. HA! Did you hear him? Not one of them! Not ONE!`},
+ {who:'nar',text:`The laughter runs down the line like fire through dry grass, and fifty thousand men facing double their number are suddenly loose in the shoulders. Which was, of course, the entire point of the joke.`},
+];
+const SC_C_EVE=[
+ {who:'mago',text:`The centre knows its work, brother. The Iberians and the Gauls know it too, even the ones who cannot say it aloud: they are the coin this plan spends. I will stand in the line with them, so the coin knows its worth.`,choices:[
+  {label:'"I am spending you to buy Rome itself, Mago. Bend, do not break, and I will be in the line beside you."',d:{mago:1},toast:'Bond \u00b7 Mago',reply:[
+   {who:'mago',text:`Beside me. Good. A plan this cruel should be made to watch itself work.`}]},
+  {label:'"Hold the shape. That is the whole of the order."',reply:[
+   {who:'mago',text:`The shape. Aye. Then history had better learn our Gauls' names, brother. They are paying its tuition today.`}]},
+ ]},
+];
+const SC_C_ORDER=[
+ {who:'mah',text:`Hasdrubal signals, general: the Roman horse is destroyed, and his squadrons are begging for the chase! And I say LET THEM CHASE. Broken men rally if you give them air. Every rule of cavalry ever written says finish the runners!`},
+ {who:'nar',text:`Every rule but the one you wrote this morning. The rings are on the field. Give the order.`},
+];
+const SC_C_MAHARBAL=[
+ {who:'mah',text:`Rome has no army left between this field and her gates, general. Give me the cavalry tonight. In five days you dine on the Capitol. ...What is it? Why do you study the ground?`},
+ {who:'nar',text:`And when your pause has stretched too long, he says the sentence that will follow you both forever.`},
+ {who:'mah',text:`The gods have not given all their gifts to one man, Hannibal. You know how to win a victory. You do not know how to use one.`},
+];
+const SC_C_AFTER=[
+ {who:'gis',text:`They are calling it the perfect battle already, general. Men who were inside it an hour ago. Perfect. There is a word doing heavy labour tonight.`},
+ {who:'mago',text:`I sail for Carthage with a bushel of gold rings stripped from Roman fingers, brother, to pour across the senate floor and shake loose your reinforcements. I will pour well. Whether they pour back is another country's story.`},
+ {who:'mago',if:()=>(REL.mago||0)>=1,text:`And brother. You stood in the line beside us, as you said. Whatever the years do to this day, the centre will remember where you stood.`},
+];
+
+/* ================= phases ================= */
+function enterPrologue(){
+  setPhase(0);setDay('Dawn, 2 August, 216 BC');
+  S.romDead=0;S.punDead=0;updateCounters();
+  document.getElementById('counters').classList.remove('show');
+  S.bow=1;S.bowCur=1;S.press=0;S.shrink=1;S.rcBroken=false;S.pilaThrown=false;
+  ORDER.given=false;S.orderCue=false;hideRings();formHud.style.display='none';formDrag=null;
+  S.arrows=[];S.stage='idle';
+  spawnAll();
+  cine('over');
+  narrate('Prologue',
+   `<p>Two years ago Hannibal came over the Alps with the wreck of an army and no way home. Since then he
+    has destroyed one Roman force at the Trebia and another at Lake Trasimene, and Rome's answer, after a
+    year of Fabius's shadowing and refusing battle, is the largest army the Republic has ever put in one
+    place: eight legions and their allies, some 86,000 men, under both consuls at once, commanding on
+    alternate days. Hannibal has perhaps 50,000, nearly half of them the cavalry Rome lacks, and he has
+    seized the grain stores at Cannae and taken his stand on a treeless plain beside the river Aufidus,
+    which is to say: on cavalry country, by invitation.</p>
+    <p>Tradition says the rash consul Varro held command on the day and forced the battle over cautious
+    Paullus's objection. Tradition was written by the friends of Paullus's family; historians have
+    doubted it ever since. Either way, this morning Rome crossed the river to fight, and its plan is the
+    honest one: mass in the centre, deeper than any army has ever massed, and punch through.</p>
+    <p>You are Hannibal, and you have known Rome's plan for weeks, because you designed your ground to
+    invite exactly this. Now you must design the line that dies correctly.</p>`);
+  setControls([{label:'Draw up the line', fn:()=>playScene(SC_C_OPEN,()=>enterDeployment(false))}]);
+}
+function enterDeployment(fromRewind){
+  setPhase(1);
+  S.stage='deploy';
+  S.bow=fromRewind?1:0.25;S.bowCur=S.bow;
+  if(fromRewind){
+    for(const s of S.soldiers){if(s.side==='p'&&!s.escaped){s.alive=true;s.flee=false;}}
+    for(const s of S.soldiers){if(s.grp==='ri'&&!s.escaped){s.alive=true;s.x=s.hx;s.y=s.hy;s.tx=s.hx;s.ty=s.hy;}}
+    S.romDead=0;S.punDead=0;updateCounters();
+    S.rcBroken=false;S.pilaThrown=false;ORDER.given=false;
+    for(const s of S.soldiers){
+      if(s.grp==='rc'){s.x=s.hx;s.y=s.hy;s.tx=s.hx;s.ty=s.hy;s.flee=false;s.dieAt=null;}
+      if(s.grp==='ra'||s.grp==='ch'||s.grp==='cn'){s.x=s.hx;s.y=s.hy;s.tx=s.hx;s.ty=s.hy;s.flee=false;s.dieAt=null;s.pi=0;s.wps=null;}
+      if(s.grp==='caW'||s.grp==='caE'){s.x=s.hx;s.y=s.hy;s.tx=s.hx;s.ty=s.hy;}
+    }
+  }
+  placeCentre(S.bow);
+  cine('centre');
+  formHud.style.display='block';formHudText();
+  narrate('Deployment',
+   fromRewind?
+   `<p>The line re-forms, and this time you shape it as it was shaped on the day: the Iberians and Gauls
+    bowed forward toward the enemy, the Africans refused at the ends, the whole line a drawn bow waiting
+    for Rome to become the arrow. Drag the centre if you would adjust the curve, then let them come.</p>`
+   :`<p>Your infantry is outnumbered two to one, so the line cannot win by standing. It must win by
+    <em>shape</em>. In the centre stand your Iberians in white and crimson beside the Gauls, three ranks
+    thin, the men you can most afford to spend. At each end, motionless, the African veterans in Roman
+    armour stripped from Roman dead. The cavalry masses on the wings, Hasdrubal by the river.</p>
+    <p><em>The centre is in your hands. Drag it forward to bow the line toward Rome, the crescent, or
+    leave it straight and orthodox. Then let them come.</em></p>`);
+  setControls([{label:'Let them come', fn:confirmLine}]);
+}
+function confirmLine(){
+  formHud.style.display='none';
+  S.stage='idle';
+  narrate('Deployment',
+   S.bow>=0.5?
+   `<p>The line stands bowed, its apex a long bowshot ahead of its ends, so that the first fighting, the
+    first winning, and the first illusion of winning will all happen exactly where you have decided they
+    should. Across the plain the Roman mass steps off, sixteen ranks deep on a front too narrow for its
+    own numbers, each man, Polybius says, given barely three feet.</p>`
+   :`<p>The line stands straight. Across the plain the Roman mass steps off, sixteen ranks deep, the
+    heaviest single blow ever assembled, aimed at three ranks of Iberians and Gauls.</p>`);
+  setControls([{label:'The lines meet', fn:()=>playScene(SC_C_EVE,startAdvance)}]);
+}
+function maharbal(){
+  setPhase(5);setDay('The night after');
+  S.stage='done';cine('over');
+  playScene(SC_C_MAHARBAL,maharbalText);
+}
+function maharbalText(){
+  narrate('The reckoning',
+   `<p>The counting takes days. Polybius says 70,000 Romans dead; Livy, more careful, 48,000 dead and
+    nearly 20,000 taken, against some 6,000 to 8,000 of your own, most of them the Iberians and Gauls of
+    the centre, who bought the trap with their bodies exactly as the design required. Nothing on this
+    scale will happen again in European war until the twentieth century, and the twentieth century will
+    need machine guns to do it.</p>
+    <p>That night, Livy says, your cavalry commander Maharbal presses you: give him the horse, and in five
+    days you will dine on the Capitol. And when you hesitate, he says the sentence that will follow your
+    name forever: <em>you know how to win a victory, Hannibal; you do not know how to use one.</em></p>`);
+  setChoices([
+    {title:'March on Rome',
+     body:'Maharbal\u2019s counsel: Rome has no army left between this field and its gates. Terror travels faster than legions. Ride now, and end a war no one has ever ended.',
+     fn:()=>{
+       narrate('The reckoning \u00b7 what if',
+        `<p>It is the most argued-about road not taken in ancient history, so walk it honestly: Rome is
+         400 kilometres away, behind the Servian Wall, with two urban legions, a mobilised citizenry, and
+         a state that has just demonstrated it does not negotiate. You have no siege train, no supply
+         line, and an army that has been marching and killing since dawn. Every modern staff study that
+         has gamed it concludes the same thing you concluded: the ride ends under a wall you cannot take,
+         with the aura of invincibility, your one strategic weapon, spent on a gesture.</p>
+         <p class="aside">And yet Maharbal's sentence survives because it holds a truth anyway: you have
+         just proven you can destroy any army Rome sends, and it will not be enough, because Rome's true
+         weapon is not an army. It is the refusal to stop making them.</p>`);
+       setControls([{label:'What Hannibal chose', fn:()=>playScene(SC_C_AFTER,gotoAftermath)}]);
+     }},
+    {title:'Consolidate',
+     body:'What Hannibal did: rest the army, ransom the prisoners, and wait for Rome\u2019s allies, having watched Rome\u2019s ruin, to change sides. A rational plan, against a rational enemy.',
+     fn:()=>playScene(SC_C_AFTER,gotoAftermath)},
+  ]);
+}
+function gotoAftermath(){
+  narrate('Aftermath',
+   `<p>Rome's answer to the worst defeat in its history was a kind of institutional madness that became
+    the foundation of everything after: it refused to ransom the prisoners, forbade public mourning
+    beyond thirty days, enrolled slaves and boys into new legions, and sent the surviving consul Varro a
+    formal thanks <em>for not despairing of the Republic</em>. Capua and much of the south defected to
+    Hannibal; Rome simply kept making armies, refused pitched battle for years, and bled him white. In
+    Carthage, your brother Mago poured onto the senate floor a bushel of gold rings stripped from the
+    fingers of Roman knights; the senate voted reinforcements it then barely sent.</p>
+    <p>Fourteen years later a survivor of this field, a nineteen-year-old tribune named Publius Cornelius
+    Scipio who cut his way out of the pocket, beat you at Zama with your own tactics and ended the war.
+    Rome never forgot the lesson of the day, and neither did anyone else: Cannae became the most studied
+    battle on earth, the obsession of Schlieffen and of every staff college since, the noun generals use
+    for the perfect victory. Which is the final irony of the perfect victory: the side that suffered it
+    won the war, and the side that won it is remembered mainly for what the winning failed to change.</p>`);
+  setControls([{label:'Fight it again', fn:enterPrologue, ghost:true}]);
+}
+
+/* ================= main loop ================= */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05);
+  last=now;perfNow=now;S.st+=dt;
+  switch(S.stage){
+    case 'advance':updAdvance(dt);break;
+    case 'press':updPress(dt);break;
+    case 'wheel':updWheel(dt);break;
+    case 'trap':updTrap(dt);break;
+    case 'cfpursue':updCfPursue(dt);break;
+    case 'cfstraight':updCfStraight(dt);break;
+  }
+  updArrowFlight(dt);
+  updCommandFx(dt);
+  river.position.y=-0.55+Math.sin(now*0.0012)*0.04;
+  applyCamera(dt);
+  flushInstances();
+  flushArrows();
+  updateBanners();
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+
+/* ================= boot ================= */
+resize();
+enterPrologue();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

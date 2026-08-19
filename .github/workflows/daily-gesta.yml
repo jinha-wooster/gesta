@@ -1,0 +1,46 @@
+name: GESTA daily battle
+on:
+  schedule:
+    - cron: "0 14 * * *"   # 14:00 UTC = 10:00 AM New York during DST (use 15:00 in winter)
+  workflow_dispatch:        # manual run button for testing
+
+jobs:
+  build-battle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Configure git
+        run: |
+          git config user.name "gesta-pipeline"
+          git config user.email "pipeline@users.noreply.github.com"
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            You are the GESTA content pipeline. Produce today's catalogue entry.
+
+            1. Read pipeline/FORMAT.md in full. It is the house spec and is binding.
+            2. Open pipeline/queue.yaml. Take the FIRST entry with status: pending.
+            3. Build it exactly per FORMAT.md, using site/battle-of-zama-3d.html as the
+               canonical template to clone engine code from (or the saga template it names).
+            4. Update site/index.html per FORMAT.md section "Index update procedure":
+               new card, new map marker at the entry's true coordinates, increment the
+               catalogue count. Resolve any label collisions on the map.
+            5. Run bash pipeline/validate.sh and fix everything until it exits 0.
+            6. In queue.yaml set the entry to status: built and add built: <today's date>.
+            7. Create branch gesta/daily-<slug>, commit all changes with message
+               "GESTA daily: <Title>", push it, and open a pull request with
+               gh pr create --fill. Do NOT push to main directly.
+          claude_args: |
+            --model claude-sonnet-4-6
+            --max-turns 60
+            --allowedTools "Bash,Read,Write,Edit,Glob,Grep"

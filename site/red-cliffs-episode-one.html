@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Red Cliffs · Episode One: The East Wind</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16120e; --ink-2:#1e1913; --panel:#221c15; --line:#3a3226;
+    --parchment:#e7dcc4; --muted:#a2957c; --faint:#6f6450;
+    --bronze:#d9a441; --bronze-dim:#8f6f2e;
+    --wu:#c04a3d; --wei:#6f93c4;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{background:var(--ink)}
+  body{background:var(--ink);color:var(--parchment);font-family:'Source Serif 4',Georgia,serif;font-size:17px;line-height:1.65;min-height:100vh}
+  .wrap{max-width:1060px;margin:0 auto;padding:36px 18px 80px}
+
+  header{text-align:center;margin-bottom:26px}
+  .eyebrow{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  h1{font-family:'GFS Didot',serif;font-weight:400;font-size:clamp(38px,7vw,68px);letter-spacing:.06em;line-height:1}
+  .subtitle{color:var(--muted);font-style:italic;margin-top:12px;font-size:16px}
+  .meander{height:14px;margin:24px auto;max-width:520px;opacity:.55}
+
+  .phases{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+  .pill{font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:7px 13px;border:1px solid var(--line);border-radius:2px;color:var(--faint);transition:all .35s;white-space:nowrap}
+  .pill.active{color:var(--bronze);border-color:var(--bronze-dim);background:rgba(217,164,65,.06)}
+  .pill.done{color:var(--muted)}
+
+  .stage{position:relative;border:1px solid var(--line);background:#000;border-radius:3px;overflow:hidden}
+  #view{display:block;width:100%;height:560px;cursor:grab;touch-action:none}
+  #view.dragging{cursor:grabbing}
+  @media(max-width:700px){#view{height:420px}}
+
+  .counters{position:absolute;top:10px;left:12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;font-size:12px;letter-spacing:.08em;opacity:0;transition:opacity .6s}
+  .counters.show{opacity:1}
+  .counter{background:rgba(22,18,14,.72);padding:4px 10px;border-radius:2px;border:1px solid var(--line);width:max-content}
+  .counter b{font-weight:600}
+  .c-ship b{color:#f0954f} .c-men b{color:#8fb4d8}
+
+  .daytag{position:absolute;bottom:10px;left:12px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(231,220,196,.7);background:rgba(22,18,14,.6);padding:5px 10px;border-radius:2px;pointer-events:none}
+  .windtag{position:absolute;bottom:38px;left:12px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(240,180,110,.85);background:rgba(22,18,14,.6);padding:5px 10px;border-radius:2px;pointer-events:none}
+
+  .camctl{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:6px}
+  .cambtn{font-family:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;background:rgba(22,18,14,.72);border:1px solid var(--line);border-radius:2px;color:var(--muted);cursor:pointer;transition:all .2s}
+  .cambtn:hover{color:var(--bronze);border-color:var(--bronze-dim)}
+  .camhint{position:absolute;bottom:10px;right:12px;font-size:11px;letter-spacing:.06em;color:rgba(231,220,196,.55);background:rgba(22,18,14,.6);padding:4px 9px;border-radius:2px;pointer-events:none}
+  @media(max-width:700px){.camhint{display:none}}
+
+  .narration{border:1px solid var(--line);border-top:none;background:var(--panel);padding:26px 30px;border-radius:0 0 3px 3px;min-height:150px}
+  .narr-label{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--bronze);margin-bottom:10px}
+  .narration p{margin-bottom:12px}
+  .narration p:last-child{margin-bottom:0}
+  .narration em{color:var(--muted)}
+  .aside{font-size:14px;color:var(--muted);font-style:italic;border-left:2px solid var(--bronze-dim);padding-left:14px;margin-top:14px}
+
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  @media(max-width:640px){.choices{grid-template-columns:1fr}}
+  .choice{border:1px solid var(--line);border-radius:3px;padding:20px;background:var(--ink-2);cursor:pointer;text-align:left;color:var(--parchment);font-family:inherit;font-size:16px;transition:border-color .25s,background .25s}
+  .choice:hover{border-color:var(--bronze-dim);background:#26201780}
+  .choice h3{font-family:'GFS Didot',serif;font-weight:400;font-size:20px;letter-spacing:.04em;margin-bottom:8px;color:var(--bronze)}
+  .choice p{font-size:14.5px;color:var(--muted);line-height:1.55}
+
+  .controls{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn{font-family:inherit;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:13px 28px;background:transparent;color:var(--bronze);border:1px solid var(--bronze-dim);border-radius:2px;cursor:pointer;transition:all .25s}
+  .btn:hover{background:rgba(217,164,65,.1);border-color:var(--bronze)}
+  .btn.ghost{color:var(--muted);border-color:var(--line)}
+  .btn.ghost:hover{color:var(--parchment);background:rgba(255,255,255,.04)}
+
+  /* decision dock overlaid on the simulation */
+  #dock{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:10px 14px 12px;
+      background:linear-gradient(transparent, rgba(12,12,10,.45) 18%, rgba(12,12,10,.9) 72%)}
+  #dock:not(:has(button)){display:none}
+  #dock .choices{max-width:880px;margin:0 auto;gap:10px}
+  #dock .choice{padding:12px 14px;background:rgba(24,22,18,.93)}
+  #dock .choice h3{font-size:17px;margin-bottom:5px}
+  #dock .choice p{font-size:13px;line-height:1.45}
+  #dock .controls{margin-top:0;padding-top:8px}
+  @media(max-width:640px){#dock .choice{padding:10px 12px}#dock .choice p{font-size:12px}}
+  footer{margin-top:44px;text-align:center;font-size:13px;color:var(--faint);line-height:1.7}
+  .fade-in{animation:fadeIn .6s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* ---- visual novel layer ---- */
+  #vn{display:none;position:absolute;left:0;right:0;bottom:0;padding:14px 16px 16px;
+      background:linear-gradient(transparent, rgba(14,11,8,.55) 18%, rgba(14,11,8,.92) 60%);z-index:5}
+  .vn-box{display:flex;gap:16px;max-width:860px;margin:0 auto;align-items:flex-end;cursor:pointer}
+  .vn-portrait{width:104px;height:128px;flex:0 0 auto;border:1px solid var(--bronze-dim);
+      border-radius:3px;background:#221c15;overflow:hidden}
+  .vn-portrait svg{width:100%;height:100%;display:block}
+  .vn-main{flex:1;min-width:0}
+  .vn-name{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--bronze);margin-bottom:7px}
+  .vn-text{font-size:16.5px;line-height:1.6;color:var(--parchment);min-height:52px}
+  .vn-text em{color:var(--muted)}
+  .vn-next{font-size:11px;letter-spacing:.2em;color:var(--faint);margin-top:8px;text-transform:uppercase}
+  .vn-choices{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .vn-choice{font-family:inherit;font-size:14.5px;text-align:left;padding:11px 16px;background:rgba(30,25,19,.9);
+      border:1px solid var(--line);border-radius:2px;color:var(--parchment);cursor:pointer;transition:all .2s}
+  .vn-choice:hover{border-color:var(--bronze-dim);background:rgba(38,32,23,.95)}
+  #vntoast{position:absolute;right:16px;bottom:100%;margin-bottom:8px;font-size:11px;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--bronze);background:rgba(22,18,14,.85);border:1px solid var(--bronze-dim);
+      padding:6px 12px;border-radius:2px;opacity:0;transition:opacity .5s;pointer-events:none}
+  #vntoast.show{opacity:1}
+  .vn-narr .vn-text{font-style:italic;color:var(--muted)}
+  @media(max-width:640px){.vn-portrait{width:76px;height:96px}.vn-text{font-size:15px}}
+
+  /* ---- episode cards ---- */
+  #epcard{display:none;position:absolute;inset:0;z-index:8;background:rgba(14,11,8,.9);
+      text-align:center;padding:0 20px;cursor:pointer}
+  .ep-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;max-width:640px}
+  .ep-k{font-size:11px;letter-spacing:.4em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+  .ep-t{font-family:'GFS Didot',serif;font-size:clamp(38px,7vw,64px);letter-spacing:.08em;color:var(--parchment);line-height:1.05}
+  .ep-s{font-size:16px;font-style:italic;color:var(--bronze);margin-top:14px}
+  .ep-x{font-size:14px;color:var(--muted);margin-top:22px;line-height:1.7}
+  .ep-hint{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--faint);margin-top:30px}
+  .ep-btns{display:flex;gap:12px;justify-content:center;margin-top:26px}
+
+  /* ---- the drop mini-game ---- */
+  #minigame{display:none;position:absolute;inset:0;z-index:6;background:rgba(14,11,8,.55)}
+  .mg-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(420px,86%);
+      background:rgba(22,18,14,.94);border:1px solid var(--bronze-dim);border-radius:3px;padding:24px;text-align:center}
+  .mg-k{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--bronze);margin-bottom:8px}
+  .mg-t{font-family:'GFS Didot',serif;font-size:26px;letter-spacing:.06em;margin-bottom:6px}
+  .mg-s{font-size:13.5px;color:var(--muted);font-style:italic;margin-bottom:18px}
+  .mg-track{position:relative;height:16px;border:1px solid var(--line);border-radius:2px;background:#171310;overflow:hidden}
+  .mg-zone{position:absolute;top:0;bottom:0;background:rgba(217,164,65,.28)}
+  .mg-zone.perfect{background:rgba(120,200,120,.35)}
+  .mg-marker{position:absolute;top:-3px;bottom:-3px;width:3px;background:#ffd35e;box-shadow:0 0 8px #ffb03a}
+  .mg-btn{margin-top:18px;font-family:inherit;font-size:14px;letter-spacing:.2em;text-transform:uppercase;
+      padding:13px 34px;background:rgba(217,164,65,.12);color:var(--bronze);border:1px solid var(--bronze);
+      border-radius:2px;cursor:pointer}
+  .mg-btn:hover{background:rgba(217,164,65,.22)}
+  .mg-verdict{margin-top:14px;font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:var(--parchment);min-height:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Winter, 208 AD · The Yangtze at Chibi · China</div>
+    <h1>RED CLIFFS</h1>
+    <p class="subtitle">Episode One · The East Wind &nbsp;&middot;&nbsp; a season in twelve weekly chapters</p>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true">
+      <defs><pattern id="key" width="26" height="14" patternUnits="userSpaceOnUse">
+        <path d="M0 12 H10 V2 H20 V8 H14 V6 H18 V4 H12 V10 H22 V0 H26" fill="none" stroke="#d9a441" stroke-width="1.4"/>
+      </pattern></defs>
+      <rect width="520" height="14" fill="url(#key)"/>
+    </svg>
+  </header>
+
+  <nav class="phases" aria-label="Battle phases">
+    <span class="pill" data-p="0">Prologue</span>
+    <span class="pill" data-p="1">The council</span>
+    <span class="pill" data-p="2">The fleets</span>
+    <span class="pill" data-p="3">The stratagem</span>
+    <span class="pill" data-p="4">The fire</span>
+    <span class="pill" data-p="5">Aftermath</span>
+  </nav>
+
+  <div class="stage">
+    <div id="view" role="img" aria-label="3D battlefield of the Yangtze river at Red Cliffs"></div>
+    <div class="counters" id="counters">
+      <span class="counter c-ship">Cao Cao's ships lost&nbsp; <b id="shipLost">0</b></span>
+      <span class="counter c-men">Cao Cao's men fallen&nbsp; <b id="menLost">0</b></span>
+    </div>
+    <div class="windtag" id="windtag">Wind · from the northwest</div>
+    <div class="daytag" id="daytag">Winter, 208 AD</div>
+    <div class="camctl">
+      <button class="cambtn" data-cam="over">Overview</button>
+      <button class="cambtn" data-cam="caof">Cao Cao's fleet</button>
+      <button class="cambtn" data-cam="anchor">Allied anchorage</button>
+      <button class="cambtn" data-cam="huarong">Huarong road</button>
+    </div>
+    <div class="camhint">drag · rotate&ensp;|&ensp;scroll · zoom&ensp;|&ensp;right-drag · pan</div>
+    <div id="dock"><div id="choiceArea"></div><div class="controls" id="controls"></div></div>
+    <div id="vn"><div id="vntoast"></div>
+      <div class="vn-box" id="vnbox">
+        <div class="vn-portrait" id="vnportrait"></div>
+        <div class="vn-main">
+          <div class="vn-name" id="vnname"></div>
+          <div class="vn-text" id="vntext"></div>
+          <div class="vn-choices" id="vnchoices"></div>
+          <div class="vn-next" id="vnnext">tap to continue &#9656;</div>
+        </div>
+      </div>
+    </div>
+    <div id="minigame"></div>
+    <div id="epcard"></div>
+  </div>
+
+  <div class="narration">
+    <div class="narr-label" id="narrLabel">Prologue</div>
+    <div id="narrBody"></div>
+  </div>
+
+
+  <footer>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true"><rect width="520" height="14" fill="url(#key)"/></svg>
+    Grounded in the <em>Records of the Three Kingdoms</em> and Sima Guang's history, and carefully separated from
+    the <em>Romance of the Three Kingdoms</em>, the 14th-century novel that made this the most famous battle in
+    Chinese history and invented many of its best moments. Numbers, the site itself, and who chained the ships
+    are all debated. One model ship stands for a squadron; one figure is roughly 500 men. Old Gan, Shen Lan, and Zhao Tu are
+    inventions in the manner of historical fiction; the fleet, the wind, and the fire are not.
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+
+/* ================= geography =================
+   Sim space 1000 x 620. The Yangtze runs west-east across the middle.
+   North bank (low y): Wulin, Cao Cao's camps, and the marshes of the Huarong road to the northwest.
+   South bank (high y): the red cliffs and the allied camp. */
+const sx2w=x=>(x-500)*0.2, sy2w=y=>(y-310)*0.2;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const smooth=(x,a,b)=>THREE.MathUtils.smoothstep(x,a,b);
+const RIVER={y0:195,y1:435};
+const HUARONG=[[380,165],[300,142],[215,120],[130,95],[60,70]];
+
+const S={
+  phase:0, stage:'idle', sub:'', subT:0, st:0,
+  soldiers:[], arrows:[], ships:[],
+  shipsLost:0, menLost:0,
+  daylight:1, dayTarget:1,
+  windTo:{x:0.86,y:0.5},       // northwest wind: blows toward the southeast
+  seWind:false,
+  chained:false,
+  savedShips:0, savedMen:0,
+  spreadMul:1,
+};
+const MEN_PER=500, SHIP_MEN=800;
+
+/* ================= three.js ================= */
+const view=document.getElementById('view');
+const scene=new THREE.Scene();
+const DAY_SKY=new THREE.Color(0xa8b2ac), NIGHT_SKY=new THREE.Color(0x10151f);
+scene.background=DAY_SKY.clone();
+scene.fog=new THREE.Fog(0xa8b2ac,170,470);
+
+const camera=new THREE.PerspectiveCamera(52,1,0.5,950);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const SHADOWS=window.innerWidth>700;
+if(SHADOWS){renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;}
+view.appendChild(renderer.domElement);
+function resize(){const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+
+const hemi=new THREE.HemisphereLight(0xd0dbd4,0x54503c,0.85);
+scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xfff0d2,1.05);
+sun.position.set(60,100,70);
+if(SHADOWS){
+  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+  const sc=sun.shadow.camera;
+  sc.left=-135;sc.right=135;sc.top=135;sc.bottom=-135;sc.far=380;
+  sc.updateProjectionMatrix();
+  sun.shadow.bias=-0.0008;
+}
+scene.add(sun);
+const firelight=new THREE.PointLight(0xff8a30,0,180,1.6);
+firelight.position.set(sx2w(470),8,sy2w(255));
+scene.add(firelight);
+
+/* ---------- terrain ---------- */
+function marshF(x,y){
+  const dx=(x-190)/170,dy=(y-115)/95;
+  return Math.exp(-(dx*dx+dy*dy));
+}
+function terrainH(wx,wz){
+  const x=wx/0.2+500,y=wz/0.2+310;
+  let h=Math.sin(wx*0.1)*0.3+Math.cos(wz*0.12+wx*0.05)*0.3;
+  // the river channel
+  const inR=smooth(y,RIVER.y0-26,RIVER.y0+16)*(1-smooth(y,RIVER.y1-16,RIVER.y1+26));
+  h-=inR*4.2;
+  // the red cliffs of the south bank
+  if(y>RIVER.y1+8){
+    const t=(y-RIVER.y1-8)/28;
+    h+=Math.min(t,1)*13+Math.max(t-1,0)*4+Math.sin(x*0.05)*Math.min(t,1)*1.6;
+  }
+  // northern shore: low, then gentle hills far north
+  if(y<RIVER.y0-40)h+=(RIVER.y0-40-y)*0.028;
+  h-=marshF(x,y)*1.8;
+  if(x>930)h+=(x-930)*0.05;
+  return h;
+}
+{
+  const g=new THREE.PlaneGeometry(230,150,160,110);
+  g.rotateX(-Math.PI/2);
+  const pos=g.attributes.position,colors=[];
+  const cPlain=new THREE.Color(0x7c7c50),cShore=new THREE.Color(0x8b8058),
+        cRed=new THREE.Color(0x8a4536),cRedHi=new THREE.Color(0xa25a42),
+        cMarsh=new THREE.Color(0x556247),cBed=new THREE.Color(0x4c5b52),tmp=new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const wx=pos.getX(i),wz=pos.getZ(i),h=terrainH(wx,wz);
+    const x=wx/0.2+500,y=wz/0.2+310;
+    pos.setY(i,h);
+    tmp.copy(cPlain);
+    tmp.lerp(cShore,smooth(-Math.abs(y-315),-140,-95));
+    if(y>RIVER.y1){tmp.lerp(cRed,smooth(h,1,7));tmp.lerp(cRedHi,smooth(h,9,16));}
+    tmp.lerp(cMarsh,THREE.MathUtils.clamp(marshF(x,y)*1.5,0,1));
+    if(h<-1.6)tmp.lerp(cBed,0.75);
+    tmp.offsetHSL(0,0,(Math.sin(wx*1.5)*Math.sin(wz*1.9))*0.04);
+    colors.push(tmp.r,tmp.g,tmp.b);
+  }
+  g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  g.computeVertexNormals();
+  const terrain=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}));
+  terrain.receiveShadow=SHADOWS;
+  scene.add(terrain);
+}
+/* the Yangtze */
+const water=new THREE.Mesh(
+  new THREE.PlaneGeometry(232,52),
+  new THREE.MeshLambertMaterial({color:0x26424e,transparent:true,opacity:0.93}));
+water.rotation.x=-Math.PI/2;
+water.position.set(0,-0.45,sy2w((RIVER.y0+RIVER.y1)/2));
+scene.add(water);
+
+/* camps */
+const tents={cao:[],allied:[]};
+function tentCluster(list,cx,cy,n,color,big){
+  const mat=new THREE.MeshLambertMaterial({color});
+  for(let i=0;i<n;i++){
+    const t=new THREE.Mesh(new THREE.ConeGeometry(big&&i===0?2.4:1.4,big&&i===0?3.2:2,5),mat);
+    const x=cx+rnd(-40,40),y=cy+rnd(-14,14);
+    const wx=sx2w(x),wz=sy2w(y);
+    t.position.set(wx,terrainH(wx,wz)+1,wz);
+    t.rotation.y=rnd(0,1);t.castShadow=SHADOWS;
+    scene.add(t);
+    list.push({x,y,mesh:t,burning:false});
+  }
+}
+tentCluster(tents.cao,470,158,16,0x8b8ea0,true);      // Wulin, the northern camps
+tentCluster(tents.allied,720,472,9,0xa08b6b,true);    // under the red cliffs
+/* reeds in the marsh */
+{
+  const reedMat=new THREE.MeshLambertMaterial({color:0x6d7a45});
+  const reeds=new THREE.InstancedMesh(new THREE.ConeGeometry(0.13,2.0,4),reedMat,80);
+  const m=new THREE.Matrix4(),q=new THREE.Quaternion(),v=new THREE.Vector3(),s=new THREE.Vector3();
+  for(let i=0;i<80;i++){
+    const x=rnd(60,320),y=rnd(60,175);
+    const wx=sx2w(x),wz=sy2w(y);
+    v.set(wx,terrainH(wx,wz)+0.9,wz);
+    q.setFromEuler(new THREE.Euler(rnd(-.08,.08),rnd(0,6.28),rnd(-.08,.08)));
+    s.setScalar(rnd(.7,1.3));
+    m.compose(v,q,s);reeds.setMatrixAt(i,m);
+  }
+  scene.add(reeds);
+}
+
+/* ---------- geometry helpers ---------- */
+function mergeGeos(geos){
+  let vC=0,iC=0;
+  for(const g of geos){vC+=g.attributes.position.count;iC+=g.index.count;}
+  const P=new Float32Array(vC*3),N=new Float32Array(vC*3),I=new Uint16Array(iC);
+  let vO=0,iO=0;
+  for(const g of geos){
+    P.set(g.attributes.position.array,vO*3);
+    N.set(g.attributes.normal.array,vO*3);
+    const idx=g.index.array;
+    for(let i=0;i<idx.length;i++)I[iO+i]=idx[i]+vO;
+    vO+=g.attributes.position.count;iO+=idx.length;
+  }
+  const out=new THREE.BufferGeometry();
+  out.setAttribute('position',new THREE.BufferAttribute(P,3));
+  out.setAttribute('normal',new THREE.BufferAttribute(N,3));
+  out.setIndex(new THREE.BufferAttribute(I,1));
+  return out;
+}
+const footGeo=(()=>{
+  const body=new THREE.CylinderGeometry(0.32,0.42,1.5,6);body.translate(0,0.75,0);
+  const head=new THREE.SphereGeometry(0.26,6,5);head.translate(0,1.72,0);
+  const spear=new THREE.CylinderGeometry(0.04,0.04,2.6,4);spear.translate(0,1.5,0.42);
+  return mergeGeos([body,head,spear]);
+})();
+const cavGeo=(()=>{
+  const barrel=new THREE.BoxGeometry(1.8,0.62,0.56);barrel.translate(0,1.05,0);
+  const neck=new THREE.BoxGeometry(0.5,0.66,0.4);neck.translate(0.95,1.45,0);
+  const hd=new THREE.BoxGeometry(0.42,0.3,0.32);hd.translate(1.28,1.62,0);
+  const legs=new THREE.BoxGeometry(0.18,1.0,0.5);legs.translate(-0.6,0.5,0);
+  const legs2=new THREE.BoxGeometry(0.18,1.0,0.5);legs2.translate(0.6,0.5,0);
+  const rider=new THREE.CylinderGeometry(0.24,0.3,1.0,6);rider.translate(-0.1,1.95,0);
+  const rhead=new THREE.SphereGeometry(0.22,6,5);rhead.translate(-0.1,2.6,0);
+  return mergeGeos([barrel,neck,hd,legs,legs2,rider,rhead]);
+})();
+/* ship hull and sail geometries */
+const hullGeo=(()=>{
+  const hull=new THREE.BoxGeometry(6.0,1.2,2.1);hull.translate(0,0.55,0);
+  const bow=new THREE.BoxGeometry(1.6,1.0,1.4);bow.translate(3.2,0.9,0);
+  const stern=new THREE.BoxGeometry(1.7,1.5,1.7);stern.translate(-2.6,1.5,0);
+  const mast=new THREE.CylinderGeometry(0.12,0.14,5.6,5);mast.translate(0.4,3.4,0);
+  return mergeGeos([hull,bow,stern,mast]);
+})();
+const smallHullGeo=(()=>{
+  const hull=new THREE.BoxGeometry(4.2,0.9,1.6);hull.translate(0,0.45,0);
+  const heap=new THREE.ConeGeometry(0.9,1.4,5);heap.translate(-0.7,1.4,0);
+  const heap2=new THREE.ConeGeometry(0.8,1.2,5);heap2.translate(0.7,1.3,0);
+  const mast=new THREE.CylinderGeometry(0.09,0.11,4.4,5);mast.translate(0.6,2.6,0);
+  return mergeGeos([hull,heap,heap2,mast]);
+})();
+const sailGeo=(()=>{
+  const p=new THREE.PlaneGeometry(3.4,3.0,1,3);
+  p.rotateY(Math.PI/2);p.translate(0.4,4.1,0);
+  return p;
+})();
+const smallSailGeo=(()=>{
+  const p=new THREE.PlaneGeometry(2.4,2.2,1,3);
+  p.rotateY(Math.PI/2);p.translate(0.6,3.1,0);
+  return p;
+})();
+
+/* ---------- ships ---------- */
+const SHIPKIND={
+  cw:{hull:hullGeo,sail:sailGeo,hullC:0x5a4632,sailC:0xc3b68d,max:40},
+  aw:{hull:hullGeo,sail:sailGeo,hullC:0x4b3a29,sailC:0xa53a2e,max:16},
+  fs:{hull:smallHullGeo,sail:smallSailGeo,hullC:0x453425,sailC:0xa89263,max:16},
+};
+const SHIPMESH={};
+{
+  for(const k in SHIPKIND){
+    const d=SHIPKIND[k];
+    const hm=new THREE.InstancedMesh(d.hull,new THREE.MeshLambertMaterial({color:d.hullC}),d.max);
+    const sm=new THREE.InstancedMesh(d.sail,new THREE.MeshLambertMaterial({color:d.sailC,side:THREE.DoubleSide}),d.max);
+    hm.castShadow=SHADOWS;
+    hm.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    sm.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    scene.add(hm);scene.add(sm);
+    SHIPMESH[k]={hull:hm,sail:sm,used:0};
+  }
+}
+function ship(kind,x,y,face){
+  const rec=SHIPMESH[kind];
+  const sp={kind,x,y,face,tx:x,ty:y,idx:rec.used++,state:'ok',burnT:0,sinkY:0,
+            bob:rnd(0,6.28),roll:0,speed:0,moving:false,gone:false,flames:[],row:0,col:0};
+  S.ships.push(sp);
+  return sp;
+}
+const _m=new THREE.Matrix4(),_q=new THREE.Quaternion(),_v=new THREE.Vector3(),_s=new THREE.Vector3(),_e=new THREE.Euler();
+let perfNow=0;
+function writeShip(sp){
+  const rec=SHIPMESH[sp.kind];
+  if(sp.gone){
+    _s.setScalar(0.0001);_v.set(0,-80,0);_q.set(0,0,0,1);_m.compose(_v,_q,_s);
+    rec.hull.setMatrixAt(sp.idx,_m);rec.sail.setMatrixAt(sp.idx,_m);
+    return;
+  }
+  const wx=sx2w(sp.x),wz=sy2w(sp.y);
+  const chainCalm=(S.chained&&sp.kind==='cw')?0.15:1;
+  const bobA=(sp.state==='sink')?0:0.12*chainCalm;
+  const y=-0.35+Math.sin(perfNow*0.0013+sp.bob)*bobA - sp.sinkY;
+  const rollA=(sp.state==='list')?0.32:0.035*chainCalm;
+  _e.set(Math.sin(perfNow*0.0011+sp.bob)*rollA + (sp.state==='sink'?0.25:0), sp.face, 0,'YXZ');
+  _q.setFromEuler(_e);
+  _v.set(wx,y,wz);
+  _s.setScalar(1);
+  _m.compose(_v,_q,_s);
+  rec.hull.setMatrixAt(sp.idx,_m);
+  rec.sail.setMatrixAt(sp.idx,_m);
+}
+function flushShips(){
+  for(const sp of S.ships)writeShip(sp);
+  for(const k in SHIPMESH){SHIPMESH[k].hull.instanceMatrix.needsUpdate=true;SHIPMESH[k].sail.instanceMatrix.needsUpdate=true;}
+}
+function shipMove(sp,speed,dt){
+  const dx=sp.tx-sp.x,dy=sp.ty-sp.y,d=Math.hypot(dx,dy);
+  if(d<2){sp.moving=false;return true;}
+  sp.moving=true;
+  sp.x+=(dx/d)*speed*dt*60;sp.y+=(dy/d)*speed*dt*60;
+  const target=Math.atan2(-dy,dx);
+  let diff=target-sp.face;
+  while(diff>Math.PI)diff-=6.283;while(diff<-Math.PI)diff+=6.283;
+  sp.face+=diff*Math.min(dt*3,1);
+  return false;
+}
+
+/* chains */
+let chainLines=null;
+function forgeChains(){
+  S.chained=true;
+  const pts=[];
+  const grid=S.ships.filter(s=>s.kind==='cw'&&s.inGrid);
+  for(const a of grid){
+    for(const b of grid){
+      if(a===b)continue;
+      if(b.col===a.col+1&&b.row===a.row){
+        pts.push(new THREE.Vector3(sx2w(a.x)+2.8,0.5,sy2w(a.y)));
+        pts.push(new THREE.Vector3(sx2w(b.x)-2.8,0.5,sy2w(b.y)));
+      }
+      if(b.row===a.row+1&&b.col===a.col){
+        pts.push(new THREE.Vector3(sx2w(a.x),0.5,sy2w(a.y)+1.4));
+        pts.push(new THREE.Vector3(sx2w(b.x),0.5,sy2w(b.y)-1.4));
+      }
+    }
+  }
+  chainLines=new THREE.LineSegments(
+    new THREE.BufferGeometry().setFromPoints(pts),
+    new THREE.LineBasicMaterial({color:0x30302c}));
+  scene.add(chainLines);
+}
+
+/* ---------- fire ---------- */
+const FLAME_MAX=220;
+const flameOuter=new THREE.InstancedMesh(new THREE.ConeGeometry(0.65,2.2,5),
+  new THREE.MeshBasicMaterial({color:0xff7a26}),FLAME_MAX);
+const flameInner=new THREE.InstancedMesh(new THREE.ConeGeometry(0.34,1.3,5),
+  new THREE.MeshBasicMaterial({color:0xffd35e}),FLAME_MAX);
+scene.add(flameOuter);scene.add(flameInner);
+const flames=[];
+function addFlame(host,lx,ly,base){
+  if(flames.length>=FLAME_MAX)return;
+  flames.push({host,lx,ly,base,phase:rnd(0,6.28),on:true});
+}
+function igniteShip(sp){
+  if(sp.state==='burn'||sp.state==='sink'||sp.gone)return;
+  sp.state='burn';sp.burnT=0;sp.spreadCd=rnd(0.35,0.8);
+  addFlame(sp,1.6,0,1);addFlame(sp,-1.4,0.3,1.15);addFlame(sp,0.2,-0.3,0.85);
+  if(sp.kind==='cw'){S.shipsLost++;S.menLost+=SHIP_MEN;updateCounters();}
+}
+function igniteTent(t){
+  if(t.burning)return;t.burning=true;
+  addFlame(null,t.x,t.y,1.3);
+  t.mesh.material=t.mesh.material.clone();
+  t.mesh.material.color.set(0x3a2a1c);
+}
+function flushFlames(){
+  let i=0;
+  for(const f of flames){
+    if(!f.on)continue;
+    let wx,wz,wy;
+    if(f.host){
+      if(f.host.gone||f.host.sinkY>1.4){f.on=false;continue;}
+      const c=Math.cos(f.host.face),s2=Math.sin(f.host.face);
+      wx=sx2w(f.host.x)+f.lx*c - f.ly*(-s2);
+      wz=sy2w(f.host.y)+f.lx*(-s2)+f.ly*c;
+      wy=0.6-f.host.sinkY;
+    }else{
+      wx=sx2w(f.lx);wz=sy2w(f.ly);wy=terrainH(wx,wz)+1.1;
+    }
+    const k=f.base*(0.75+0.35*Math.sin(perfNow*0.013+f.phase)+0.12*Math.sin(perfNow*0.031+f.phase*2));
+    _v.set(wx,wy+1.0*k,wz);
+    _q.set(0,0,0,1);
+    _s.set(k,k,k);
+    _m.compose(_v,_q,_s);
+    flameOuter.setMatrixAt(i,_m);
+    _v.y+=0.25;_s.setScalar(k*0.9);_m.compose(_v,_q,_s);
+    flameInner.setMatrixAt(i,_m);
+    i++;
+    if(i>=FLAME_MAX)break;
+  }
+  for(;i<FLAME_MAX;i++){_s.setScalar(0.0001);_v.set(0,-80,0);_q.set(0,0,0,1);_m.compose(_v,_q,_s);flameOuter.setMatrixAt(i,_m);flameInner.setMatrixAt(i,_m);}
+  flameOuter.instanceMatrix.needsUpdate=true;
+  flameInner.instanceMatrix.needsUpdate=true;
+}
+function clearFlamesFor(host){for(const f of flames)if(f.host===host)f.on=false;}
+
+/* wind streaks */
+const STREAKS=new THREE.InstancedMesh(new THREE.BoxGeometry(3.2,0.05,0.08),
+  new THREE.MeshBasicMaterial({color:0xdfe8e2,transparent:true,opacity:0.22}),16);
+scene.add(STREAKS);
+const streaks=[];
+for(let i=0;i<16;i++)streaks.push({x:rnd(150,850),y:rnd(RIVER.y0+10,RIVER.y1-10),sp:rnd(1.6,2.6)});
+function updStreaks(dt){
+  const ang=Math.atan2(-S.windTo.y,S.windTo.x);
+  streaks.forEach((st,i)=>{
+    st.x+=S.windTo.x*st.sp*dt*60;st.y+=S.windTo.y*st.sp*dt*60;
+    if(st.x>900){st.x=120;st.y=rnd(RIVER.y0+10,RIVER.y1-10);}
+    if(st.x<100){st.x=880;st.y=rnd(RIVER.y0+10,RIVER.y1-10);}
+    if(st.y>RIVER.y1-6)st.y=RIVER.y0+12;
+    if(st.y<RIVER.y0+6)st.y=RIVER.y1-12;
+    _v.set(sx2w(st.x),0.6+Math.sin(perfNow*0.002+i)*0.3,sy2w(st.y));
+    _e.set(0,ang,0);_q.setFromEuler(_e);
+    _s.setScalar(1);_m.compose(_v,_q,_s);
+    STREAKS.setMatrixAt(i,_m);
+  });
+  STREAKS.instanceMatrix.needsUpdate=true;
+}
+function setWind(se){
+  S.seWind=se;
+  S.windTo=se?{x:-0.86,y:-0.5}:{x:0.86,y:0.5};
+  document.getElementById('windtag').textContent=se?'Wind · from the southeast, rising':'Wind · from the northwest';
+}
+
+/* ---------- soldiers ---------- */
+const KINDS={
+  cs:{geo:footGeo,color:0x5e77a0},   // Cao Cao's army
+  am:{geo:footGeo,color:0xb0463a},   // allied marines
+  cc:{geo:cavGeo, color:0xd9b23e},   // Cao Cao
+  cg:{geo:cavGeo, color:0x5e77a0},   // his riders
+};
+const MATS={};for(const k in KINDS)MATS[k]=new THREE.MeshLambertMaterial({color:KINDS[k].color});
+let MESH={};
+function soldier(x,y,side,grp,kind){
+  return {x,y,tx:x,ty:y,hx:x,hy:y,side,grp,kind,alive:true,flee:false,dieAt:null,
+          jit:rnd(0,6.28),face:rnd(0,6.28),moving:false,escaped:false,pi:0,wps:null};
+}
+function buildInstances(){
+  for(const k in MESH)scene.remove(MESH[k]);
+  MESH={};
+  for(const k in KINDS){
+    const list=S.soldiers.filter(s=>s.kind===k);
+    const m=new THREE.InstancedMesh(KINDS[k].geo,MATS[k],Math.max(list.length,1));
+    m.castShadow=SHADOWS;
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    _s.setScalar(0.0001);_v.set(0,-80,0);_q.set(0,0,0,1);_m.compose(_v,_q,_s);
+    for(let i=0;i<m.count;i++)m.setMatrixAt(i,_m);
+    m.instanceMatrix.needsUpdate=true;
+    list.forEach((s,i)=>{s.idx=i;s.mesh=m;});
+    scene.add(m);MESH[k]=m;
+  }
+}
+function writeSoldier(s){
+  const wx=sx2w(s.x),wz=sy2w(s.y);
+  if(s.escaped){_s.setScalar(0.0001);_v.set(wx,-80,wz);_q.set(0,0,0,1);}
+  else if(!s.alive){
+    _v.set(wx,terrainH(wx,wz)+0.22,wz);
+    _e.set(Math.PI/2,s.jit,0);_q.setFromEuler(_e);
+    _s.set(1,1,0.35);
+  }else{
+    const bob=s.moving?Math.abs(Math.sin(perfNow*0.012+s.jit))*0.13:0;
+    _v.set(wx,terrainH(wx,wz)+bob,wz);
+    _e.set(0,s.face,0);_q.setFromEuler(_e);
+    _s.setScalar(1);
+  }
+  _m.compose(_v,_q,_s);
+  s.mesh.setMatrixAt(s.idx,_m);
+}
+function flushSoldiers(){
+  for(const s of S.soldiers)writeSoldier(s);
+  for(const k in MESH)MESH[k].instanceMatrix.needsUpdate=true;
+}
+function moveToward(s,speed,dt){
+  const dx=s.tx-s.x,dy=s.ty-s.y,d=Math.hypot(dx,dy);
+  if(d<1.5){s.moving=false;return true;}
+  s.moving=true;
+  s.x+=(dx/d)*speed*dt*60;s.y+=(dy/d)*speed*dt*60;
+  s.face=Math.atan2(-dy,dx);
+  return false;
+}
+function followWps(s,speed,dt){
+  if(!s.wps||s.pi>=s.wps.length)return true;
+  s.tx=s.wps[s.pi][0];s.ty=s.wps[s.pi][1];
+  if(moveToward(s,speed,dt))s.pi++;
+  return s.pi>=s.wps.length;
+}
+function kill(s){
+  if(!s.alive)return;
+  s.alive=false;
+  if(s.side==='c'){S.menLost+=MEN_PER;updateCounters();}
+}
+function aliveGrp(g){return S.soldiers.filter(s=>s.alive&&s.grp===g);}
+function killRandom(list,n){
+  const pool=list.filter(s=>s.alive);
+  for(let i=0;i<n&&pool.length;i++){
+    const j=Math.floor(Math.random()*pool.length);
+    kill(pool[j]);pool.splice(j,1);
+  }
+}
+function updateCounters(){
+  document.getElementById('shipLost').textContent=S.shipsLost+' of 40 squadrons';
+  document.getElementById('menLost').textContent='~'+S.menLost.toLocaleString();
+}
+
+/* banners */
+const banners={};
+function makeBanner(color){
+  const g=new THREE.Group();
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,5.6,5),new THREE.MeshLambertMaterial({color:0x4a3b26}));
+  pole.position.y=2.8;
+  const flag=new THREE.Mesh(new THREE.PlaneGeometry(2.4,1.4),new THREE.MeshLambertMaterial({color,side:THREE.DoubleSide}));
+  flag.position.set(1.2,4.7,0);
+  g.add(pole,flag);g.userData.flag=flag;
+  scene.add(g);
+  return g;
+}
+const caoBanner=makeBanner(0x5e77a0);
+const wuBanner=makeBanner(0xb0463a);
+{
+  let wx=sx2w(470),wz=sy2w(150);
+  caoBanner.position.set(wx,terrainH(wx,wz),wz);
+  wx=sx2w(722);wz=sy2w(466);
+  wuBanner.position.set(wx,terrainH(wx,wz),wz);
+}
+function updateBanners(){
+  const ang=Math.atan2(-S.windTo.y,S.windTo.x);
+  for(const b of [caoBanner,wuBanner]){
+    b.userData.flag.rotation.y=ang-b.rotation.y+Math.sin(perfNow*0.003)*0.25;
+  }
+}
+
+/* arrows */
+const ARROW_MAX=260;
+const arrowMat=new THREE.MeshLambertMaterial({color:0x2d251a});
+const fireArrowMat=new THREE.MeshBasicMaterial({color:0xffa040});
+const arrowMesh=new THREE.InstancedMesh(new THREE.CylinderGeometry(0.05,0.05,1.5,4),arrowMat,ARROW_MAX);
+arrowMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(arrowMesh);
+const UP=new THREE.Vector3(0,1,0),DIR=new THREE.Vector3();
+function fireArrowPt(fx,fy,tx,ty){
+  const wfx=sx2w(fx),wfz=sy2w(fy),wtx=sx2w(tx),wtz=sy2w(ty);
+  S.arrows.push({fx:wfx,fy:2.2,fz:wfz,tx:wtx,ty:0.5,tz:wtz,t:0,dur:rnd(0.7,1.0),arc:rnd(4,8),
+    simx:tx,simy:ty,px:wfx,py:2.2,pz:wfz,vx:0,vy:1,vz:0});
+}
+function updArrowFlight(dt,onLand){
+  for(let i=S.arrows.length-1;i>=0;i--){
+    const a=S.arrows[i];a.t+=dt;
+    const u=Math.min(a.t/a.dur,1);
+    const nx=a.fx+(a.tx-a.fx)*u,nz=a.fz+(a.tz-a.fz)*u;
+    const ny=a.fy+(a.ty-a.fy)*u+Math.sin(u*Math.PI)*a.arc;
+    a.vx=nx-a.px;a.vy=ny-a.py;a.vz=nz-a.pz;
+    a.px=nx;a.py=ny;a.pz=nz;
+    if(u>=1){if(onLand)onLand(a);S.arrows.splice(i,1);}
+  }
+}
+function flushArrows(){
+  let i=0;
+  for(const a of S.arrows){
+    if(i>=ARROW_MAX)break;
+    _v.set(a.px,a.py,a.pz);
+    DIR.set(a.vx,a.vy,a.vz).normalize();
+    _q.setFromUnitVectors(UP,DIR);
+    _s.setScalar(1);_m.compose(_v,_q,_s);
+    arrowMesh.setMatrixAt(i++,_m);
+  }
+  for(;i<ARROW_MAX;i++){_s.setScalar(0.0001);_v.set(0,-80,0);_q.set(0,0,0,1);_m.compose(_v,_q,_s);arrowMesh.setMatrixAt(i,_m);}
+  arrowMesh.instanceMatrix.needsUpdate=true;
+}
+
+/* ================= camera ================= */
+const cam={yaw:0.4,pitch:0.95,dist:210,tx:0,ty:2,tz:0,auto:null};
+function applyCamera(dt){
+  if(cam.auto){
+    const a=cam.auto,k=1-Math.pow(0.001,dt);
+    cam.yaw+=(a.yaw-cam.yaw)*k;cam.pitch+=(a.pitch-cam.pitch)*k;cam.dist+=(a.dist-cam.dist)*k;
+    cam.tx+=(a.tx-cam.tx)*k;cam.ty+=(a.ty-cam.ty)*k;cam.tz+=(a.tz-cam.tz)*k;
+    if(Math.abs(a.dist-cam.dist)<0.5&&Math.abs(a.yaw-cam.yaw)<0.01)cam.auto=null;
+  }
+  cam.pitch=THREE.MathUtils.clamp(cam.pitch,0.14,1.42);
+  cam.dist=THREE.MathUtils.clamp(cam.dist,20,300);
+  const cp=Math.cos(cam.pitch);
+  camera.position.set(
+    cam.tx+Math.sin(cam.yaw)*cp*cam.dist,
+    cam.ty+Math.sin(cam.pitch)*cam.dist,
+    cam.tz+Math.cos(cam.yaw)*cp*cam.dist);
+  camera.lookAt(cam.tx,cam.ty,cam.tz);
+}
+const PRESETS={
+  over:{yaw:0.4,pitch:0.95,dist:210,tx:0,ty:2,tz:0},
+  caof:{yaw:0.5,pitch:0.5,dist:78,tx:sx2w(470),ty:1,tz:sy2w(250)},
+  anchor:{yaw:-0.6,pitch:0.45,dist:62,tx:sx2w(720),ty:1,tz:sy2w(395)},
+  run:{yaw:0.9,pitch:0.42,dist:88,tx:sx2w(580),ty:1,tz:sy2w(320)},
+  huarong:{yaw:0.9,pitch:0.55,dist:95,tx:sx2w(230),ty:1,tz:sy2w(125)},
+  council:{yaw:-0.4,pitch:0.4,dist:55,tx:sx2w(722),ty:2,tz:sy2w(466)},
+};
+document.querySelectorAll('.cambtn').forEach(b=>b.onclick=()=>{cam.auto={...PRESETS[b.dataset.cam]};});
+function cine(name){cam.auto={...PRESETS[name]};}
+
+let drag=null;
+view.addEventListener('pointerdown',e=>{view.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,btn:e.button,shift:e.shiftKey};view.classList.add('dragging');cam.auto=null;});
+view.addEventListener('pointermove',e=>{
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  drag.x=e.clientX;drag.y=e.clientY;
+  if(drag.btn===2||drag.shift){
+    const cp=Math.cos(cam.yaw),sp=Math.sin(cam.yaw),k=cam.dist*0.0016;
+    cam.tx-=(dx*cp-dy*sp)*k;
+    cam.tz-=(-dx*sp-dy*cp)*k;
+    cam.tx=THREE.MathUtils.clamp(cam.tx,-105,105);
+    cam.tz=THREE.MathUtils.clamp(cam.tz,-66,66);
+  }else{cam.yaw-=dx*0.0055;cam.pitch+=dy*0.0045;}
+});
+const endDrag=()=>{drag=null;view.classList.remove('dragging');};
+view.addEventListener('pointerup',endDrag);
+view.addEventListener('pointercancel',endDrag);
+view.addEventListener('wheel',e=>{e.preventDefault();cam.auto=null;cam.dist*=(1+Math.sign(e.deltaY)*0.09);},{passive:false});
+view.addEventListener('contextmenu',e=>e.preventDefault());
+let pinch=null;
+view.addEventListener('touchstart',e=>{if(e.touches.length===2)pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);});
+view.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&pinch){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    cam.dist*=pinch/d;pinch=d;cam.auto=null;
+  }
+},{passive:true});
+view.addEventListener('touchend',()=>pinch=null);
+
+/* day / night */
+function setDay(t){document.getElementById('daytag').textContent=t;}
+function night(on){S.dayTarget=on?0:1;}
+function applyDaylight(dt){
+  S.daylight+=(S.dayTarget-S.daylight)*Math.min(dt*1.0,1);
+  const d=S.daylight;
+  sun.intensity=0.08+0.95*d;
+  hemi.intensity=0.18+0.65*d;
+  scene.background.copy(NIGHT_SKY).lerp(DAY_SKY,d);
+  scene.fog.color.copy(scene.background);
+}
+
+/* ================= fleets & armies ================= */
+let caoCao=null;
+function spawnAll(){
+  S.ships=[];S.soldiers=[];S.arrows=[];
+  for(const k in SHIPMESH)SHIPMESH[k].used=0;
+  // Cao Cao's armada, moored off Wulin: 5 ranks of 8
+  for(let r=0;r<5;r++)for(let c=0;c<8;c++){
+    const sp=ship('cw',318+c*44+rnd(-2,2),218+r*19+rnd(-1.5,1.5),Math.PI/2);
+    sp.inGrid=true;sp.row=r;sp.col=c;
+  }
+  // the allied fleet at anchor beneath the cliffs
+  for(let i=0;i<16;i++){
+    ship('aw',652+(i%4)*36+rnd(-3,3),358+Math.floor(i/4)*18+rnd(-2,2),-Math.PI/2-0.5);
+  }
+  // fire ships, hidden among them
+  for(let i=0;i<8;i++){
+    ship('fs',700+(i%4)*22+rnd(-3,3),408+Math.floor(i/4)*14+rnd(-2,2),-Math.PI/2-0.5);
+  }
+  // Cao Cao's shore army
+  for(let i=0;i<110;i++){
+    S.soldiers.push(soldier(340+rnd(0,270),128+rnd(0,52),'c','cs','cs'));
+  }
+  caoCao=soldier(470,150,'c','cc','cc');
+  S.soldiers.push(caoCao);
+  for(let i=0;i<4;i++)S.soldiers.push(soldier(470+rnd(-10,10),150+rnd(-8,8),'c','cg','cg'));
+  // allied marines waiting by the south camp
+  for(let i=0;i<26;i++){
+    S.soldiers.push(soldier(690+rnd(0,70),452+rnd(0,26),'a','am','am'));
+  }
+  buildInstances();
+}
+
+/* ================= stages ================= */
+
+/* --- first clash --- */
+function startSkirmish(){
+  setPhase(2);setDay('First contact');
+  document.getElementById('counters').classList.add('show');
+  S.stage='skirmish';S.sub='advance';S.subT=0;
+  cine('run');
+  narrate('The fleets · first blood',
+   `<p>The armada comes down the Yangtze from Jiangling, so many ships that Cao Cao's letter claims the
+    masts blot the river. Off the red cliffs it meets Zhou Yu's van, and the war's first exchange goes badly
+    for the north: the fleet is fresh from a forced march, the northern crews are green on water, and a
+    sickness is already moving through the holds.</p>
+    <p>Cao Cao breaks off and moors on the north bank at Wulin, lashing his fleet into ranks. The allies
+    anchor opposite, under the cliffs. The two largest armies in China sit a river's width apart.</p>`);
+  setControls([]);
+  const caoVan=S.ships.filter(s=>s.kind==='cw'&&s.row===4).slice(0,6);
+  caoVan.forEach((sp,i)=>{sp.van=true;sp.tx=430+i*34;sp.ty=318;});
+  const allyVan=S.ships.filter(s=>s.kind==='aw').slice(0,6);
+  allyVan.forEach((sp,i)=>{sp.van=true;sp.tx=450+i*34;sp.ty=352;});
+}
+function updSkirmish(dt){
+  S.subT+=dt;
+  for(const sp of S.ships){if(sp.van)shipMove(sp,0.55,dt);}
+  if(S.sub==='advance'&&S.subT>4){S.sub='volley';S.subT=0;}
+  if(S.sub==='volley'){
+    if(Math.random()<dt*14){
+      const from=S.ships.filter(s=>s.van&&s.kind==='aw');
+      const to=S.ships.filter(s=>s.van&&s.kind==='cw');
+      if(from.length&&to.length){
+        const f=from[Math.floor(Math.random()*from.length)],t=to[Math.floor(Math.random()*to.length)];
+        fireArrowPt(f.x,f.y,t.x+rnd(-4,4),t.y+rnd(-3,3));
+      }
+    }
+    if(Math.random()<dt*8){
+      const from=S.ships.filter(s=>s.van&&s.kind==='cw');
+      const to=S.ships.filter(s=>s.van&&s.kind==='aw');
+      if(from.length&&to.length){
+        const f=from[Math.floor(Math.random()*from.length)],t=to[Math.floor(Math.random()*to.length)];
+        fireArrowPt(f.x,f.y,t.x+rnd(-4,4),t.y+rnd(-3,3));
+      }
+    }
+    if(S.subT>4){
+      S.sub='withdraw';S.subT=0;
+      let listed=0;
+      for(const sp of S.ships){
+        if(!sp.van)continue;
+        if(sp.kind==='cw'){
+          if(listed<2){sp.state='list';listed++;}
+          const home=S.ships.find(o=>o===sp);
+          sp.tx=318+sp.col*44;sp.ty=218+sp.row*19;
+        }else{
+          sp.tx=652+rnd(0,110);sp.ty=358+rnd(0,60);
+        }
+      }
+    }
+  }
+  if(S.sub==='withdraw'){
+    for(const sp of S.ships){if(sp.van)shipMove(sp,0.6,dt);}
+    if(S.subT>6){
+      S.stage='idle';
+      for(const sp of S.ships){sp.van=false;if(sp.state==='list')sp.state='ok';}
+      forgeChains();
+      narrate('The fleets · the chains',
+       `<p>Then Cao Cao does the thing the battle will be remembered for. To steady the decks for his
+        seasick northerners, and to make the fleet fight like a floating fortress, he has the ships lashed
+        and chained together, stem to stern, rank to rank. Watch the fleet: the rocking stops. Men and even
+        horses can cross it like a parade ground.</p>
+        <p>On the south bank, a veteran officer named Huang Gai looks at forty squadrons bound into one
+        wooden raft and sees what you have perhaps already seen.</p>
+        <p class="aside">The novel gives the chaining to a planted adviser, Pang Tong, whose "chain-link
+        scheme" tricks Cao Cao. The histories are crueller: no one tricked him. The idea was his own.</p>`);
+      setControls([{label:'Stand the night watch', fn:()=>playScene(SC_WATCH,enterStratagem)}]);
+    }
+  }
+}
+
+/* --- the stratagem --- */
+function enterStratagem(){
+  setPhase(3);setDay('The eve');
+  cine('anchor');
+  narrate('The stratagem',
+   `<p>Huang Gai has served three generations of the Sun family. His counsel to Zhou Yu is brief: the enemy
+    is many and we are few; this cannot be long; but their ships are bound bow to stern, and <em>burn them
+    we can</em>.</p>
+    <p>A letter goes across the river over Huang Gai's seal, offering his defection. Cao Cao has spent the
+    autumn watching the south surrender to him piecemeal, a province here, a fleet there; one more senior
+    officer reading the wind is exactly what he expects to see. The letter is believed.</p>
+    <p>Zhou Yu gives you the decision the south's survival rides on.</p>`);
+  setChoices([
+    {title:'A fleet action',
+     body:'Fight the orthodox battle: form line and fall on the moored armada with everything, before more of Cao\u2019s reinforcements arrive. Fifty thousand veterans of the river against landsmen on chained decks.',
+     fn:startCfAssault},
+    {title:'Huang Gai\u2019s fire',
+     body:'Load a squadron of boats with dry reeds, kindling, and oil. Sail them across under the surrender signal Cao Cao is expecting. Light them at the last moment, and let the chains do the rest.',
+     fn:chooseFire},
+  ]);
+}
+function startCfAssault(){
+  S.savedShips=S.shipsLost;S.savedMen=S.menLost;
+  S.stage='cfassault';S.sub='advance';S.subT=0;
+  cine('run');
+  narrate('The stratagem · what if',
+   `<p>The allied fleet stands out into the stream in line of battle, red sails filling. It is a brave sight,
+    and it is exactly the battle Cao Cao's numbers want.</p>`);
+  setControls([]);
+  const aw=S.ships.filter(s=>s.kind==='aw');
+  aw.forEach((sp,i)=>{sp.van=true;sp.tx=340+i*22;sp.ty=308;});
+}
+function updCfAssault(dt){
+  S.subT+=dt;
+  for(const sp of S.ships){if(sp.van)shipMove(sp,0.5,dt);}
+  if(S.subT>3){
+    if(Math.random()<dt*30){
+      const cw=S.ships.filter(s=>s.kind==='cw'&&!s.gone);
+      const aw=S.ships.filter(s=>s.kind==='aw'&&s.van&&s.state==='ok');
+      if(cw.length&&aw.length){
+        const f=cw[Math.floor(Math.random()*cw.length)],t=aw[Math.floor(Math.random()*aw.length)];
+        fireArrowPt(f.x,f.y,t.x+rnd(-3,3),t.y+rnd(-3,3));
+        if(Math.random()<0.06){
+          if(Math.random()<0.5)t.state='list';else igniteShip(t);
+        }
+      }
+    }
+  }
+  if(S.subT>8){
+    S.stage='cffrozen';
+    narrate('The stratagem · what if',
+     `<p>The chained fleet is not a fleet; it is a wall with ten thousand crossbows on it, and behind it a
+      shore black with archers. Your line staggers in the current under the arrow storm, ships listing,
+      ships burning, and nothing to grip: you cannot break a formation that does not need to manoeuvre.
+      Zhou Yu's thirty thousand are the only navy the south has. Spend them here and the war is over
+      by spring.</p>
+      <p class="aside">Zhou Yu knew this arithmetic, which is why Huang Gai's plan was not a trick to
+      avoid battle. It was the only battle worth fighting.</p>`);
+    setControls([{label:'Rewind · hear Huang Gai out', fn:()=>{restoreFleet();chooseFire();}}]);
+  }
+}
+function restoreFleet(){
+  S.shipsLost=S.savedShips;S.menLost=S.savedMen;updateCounters();
+  for(const sp of S.ships){
+    if(sp.kind!=='aw')continue;
+    sp.van=false;sp.state='ok';sp.burnT=0;sp.sinkY=0;sp.gone=false;
+    clearFlamesFor(sp);
+    sp.x=sp.tx=652+rnd(0,110);sp.y=sp.ty=358+rnd(0,60);sp.face=-Math.PI/2-0.5;
+  }
+}
+function chooseFire(){
+  S.stage='idle';
+  night(true);setDay('The night of the attack');
+  cine('anchor');
+  narrate('The stratagem · the wind',
+   `<p>The fire squadron is made ready in the dark: dry reeds and firewood soaked in fish oil, curtained
+    over so the shape reads as a defector's baggage, banners arranged as agreed in the letter. Fast boats
+    are tied astern of each fire ship so the skeleton crews can slip off after the torch falls.</p>
+    <p>One problem remains, and it is everything. It is deep winter, and the wind on this reach blows from
+    the northwest, from Cao Cao toward you. Fire launched tonight sails into your own anchorage. Huang Gai's
+    crews stand by the ropes and look at you.</p>`);
+  setChoices([
+    {title:'Launch now',
+     body:'Every hour of delay is an hour for the letter to unravel, for a deserter to talk, for Cao Cao\u2019s scouts to smell the oil. Surprise is worth more than a fair wind. Cast off.',
+     fn:startCfEarly},
+    {title:'Wait for the wind to turn',
+     body:'A fire attack downwind of the target is a suicide note. The river men say this stretch can throw a southeast wind when a winter front passes. Hold the boats, watch the banners, and wait.',
+     fn:waitForWind},
+  ]);
+}
+function startCfEarly(){
+  S.stage='cfearly';S.sub='run';S.subT=0;
+  cine('run');
+  narrate('The stratagem · what if',
+   `<p>The fire squadron casts off into the teeth of the wind, oars labouring where sails are useless.
+    Halfway across, by plan or by a spark, the torches go down into the oil.</p>`);
+  setControls([]);
+  for(const sp of S.ships){
+    if(sp.kind!=='fs'||sp.gone)continue;
+    sp.van=true;sp.tx=520;sp.ty=300;
+  }
+}
+function updCfEarly(dt){
+  S.subT+=dt;
+  const fs=S.ships.filter(s=>s.kind==='fs'&&!s.gone);
+  if(S.sub==='run'){
+    for(const sp of fs)shipMove(sp,0.35,dt);
+    if(S.subT>3.5){
+      S.sub='blowback';S.subT=0;
+      for(const sp of fs){igniteShip(sp);sp.tx=690+rnd(-30,50);sp.ty=390+rnd(-20,30);}
+      narrate('The stratagem · what if',
+       `<p>And the northwest wind does what wind does. The burning squadron slows, stalls, and comes back
+        at you, eight torches drifting down on your own crowded anchorage while the fleet cuts cables
+        and scatters.</p>`);
+      for(const sp of S.ships){
+        if(sp.kind==='aw'){sp.tx=sp.x+rnd(30,80);sp.ty=THREE.MathUtils.clamp(sp.y+rnd(-30,30),RIVER.y0+15,RIVER.y1-10);}
+      }
+    }
+  }else{
+    for(const sp of fs)shipMove(sp,0.5,dt);
+    for(const sp of S.ships){if(sp.kind==='aw')shipMove(sp,0.5,dt);}
+    for(const sp of fs){
+      sp.burnT+=dt;
+      if(sp.burnT>4&&sp.state==='burn'){sp.state='sink';}
+      if(sp.state==='sink'){sp.sinkY+=dt*1.1;if(sp.sinkY>3){sp.gone=true;clearFlamesFor(sp);}}
+    }
+    if(S.subT>5.5){
+      S.stage='cffrozen';
+      narrate('The stratagem · what if',
+       `<p>The boats and a night's advantage burn to the waterline in front of both armies, and across the
+        river Cao Cao's men line the rails to laugh. The letter is ash too: no one surrenders twice.</p>
+        <p class="aside">The histories say the southeast wind was blowing hard on the day Huang Gai actually
+        sailed, and every account hangs the battle on it. The novel goes further: Zhuge Liang, robed on a
+        star altar, borrows three days of east wind from heaven. The likelier truth is river men reading
+        a winter front. Either way: the wind first, then the fire.</p>`);
+      setControls([{label:'Rewind · watch the banners', fn:()=>{restoreFireShips();waitForWind();}}]);
+    }
+  }
+}
+function restoreFireShips(){
+  for(const sp of S.ships){
+    if(sp.kind==='fs'){
+      sp.van=false;sp.state='ok';sp.burnT=0;sp.sinkY=0;sp.gone=false;
+      clearFlamesFor(sp);
+      sp.x=sp.tx=700+rnd(-10,60);sp.y=sp.ty=408+rnd(-4,28);sp.face=-Math.PI/2-0.5;
+    }
+    if(sp.kind==='aw'){
+      sp.x=sp.tx=652+rnd(0,110);sp.y=sp.ty=358+rnd(0,60);sp.face=-Math.PI/2-0.5;
+    }
+  }
+}
+function waitForWind(){
+  S.stage='windwait';S.subT=0;
+  cine('anchor');
+  const ganLine=REL.gan>=2?`<p>Old Gan finds you first, hours before the banners move. "River's breathing backward,
+    staff boy, like I sold you for free at the boat lines. The cold snap came through at dusk. You have one
+    night of it, maybe less. Whatever headquarters is sitting on, tonight it should stop sitting."</p>`:'';
+  narrate('The stratagem · the turn',
+   `<p>A day passes, then another watch. The crews sleep by the ropes. Zhou Yu, the story goes, takes to his
+    bed with worry until Huang Gai's plan has its weather.</p>
+    ${ganLine}
+    <p>Then, near midnight, the camp banners lift, hesitate, and swing. Watch them. The wind is coming out
+    of the southeast now, hard, blowing straight from your anchorage across the river to the chained fleet
+    at Wulin.</p>`);
+  setControls([]);
+  setTimeout(()=>{
+    setWind(true);
+    setTimeout(()=>{
+      setControls([{label:'Loose the fire ships', fn:startFire}]);
+    },1800);
+  },1600);
+}
+
+/* --- the fire --- */
+function startFire(){
+  setPhase(4);setDay('The night of the fire');
+  S.stage='fire';S.sub='run';S.subT=0;
+  cine('run');
+  narrate('The fire · the crossing',
+   `<p>The squadron stands out into the stream under full sail, running dead before the wind, Huang Gai's
+    agreed signals flying. On the northern decks, soldiers crowd the rails, pointing, passing the word
+    along the chained ranks: <em>Huang Gai has come over.</em> No one beats to quarters. They are watching
+    a surrender.</p>`);
+  setControls([]);
+  const targets=S.ships.filter(s=>s.kind==='cw'&&s.row===4);
+  const fs=S.ships.filter(s=>s.kind==='fs'&&!s.gone);
+  fs.forEach((sp,i)=>{
+    const t=targets[i%targets.length];
+    sp.van=true;sp.fireTarget=t;
+    sp.tx=t.x+rnd(-3,3);sp.ty=t.y+6;
+  });
+}
+function updFire(dt){
+  S.subT+=dt;
+  for(const sp of S.ships){if(sp.detached)shipMove(sp,0.5,dt);}
+  const fs=S.ships.filter(s=>s.kind==='fs'&&!s.gone);
+  if(S.sub==='run'){
+    for(const sp of fs)shipMove(sp,0.85,dt);
+    const lead=fs.reduce((a,b)=>a&&a.y<b.y?a:b,fs[0]);
+    if(lead&&lead.y<330){
+      S.sub='aim';S.subT=0;
+      showTorchGame(applyDrop);
+    }
+  }
+  else if(S.sub==='aim'){
+    // boats hold way on, waiting for the drop
+  }
+  else if(S.sub==='torch'){
+    for(const sp of fs){
+      shipMove(sp,1.15,dt);
+      if(sp.fireTarget&&Math.hypot(sp.x-sp.fireTarget.x,sp.y-sp.fireTarget.y)<9){
+        igniteShip(sp.fireTarget);
+        sp.fireTarget=null;sp.moving=false;sp.state='burn';
+      }
+    }
+    const burningCw=S.ships.filter(s=>s.kind==='cw'&&(s.state==='burn'||s.state==='sink')).length;
+    if(burningCw>=3){
+      S.sub='spread';S.subT=0;
+      narrate('The fire · the chains',
+       `<p>The fire walks the chains. Each rank lights the next; crews hack at fastenings their own
+        carpenters made strong, and cannot part them in time. Burning men and horses go into the winter
+        river. The blaze leaps the shoreline into the camps at Wulin, and the histories say the glare and
+        smoke filled the sky.</p>
+        <p>Zhou Yu's whole fleet is coming across behind the fire, drums rolling. The allied light troops
+        will land into a burning camp.</p>`);
+    }
+  }
+  else if(S.sub==='spread'){
+    spreadFire(dt);
+    // the allied fleet follows the fire in
+    if(S.subT>1.5){
+      for(const sp of S.ships){
+        if(sp.kind!=='aw'||sp.assault)continue;
+        sp.assault=true;
+        sp.tx=380+rnd(0,240);sp.ty=316+rnd(-8,8);
+      }
+    }
+    for(const sp of S.ships){if(sp.assault)shipMove(sp,0.7,dt);}
+    const burnCount=S.ships.filter(s=>s.kind==='cw'&&s.state!=='ok').length;
+    if(burnCount>14&&S.subT>6){
+      S.sub='rout';S.subT=0;
+      cine('huarong');
+      narrate('The fire · Huarong road',
+       `<p>Cao Cao does the only thing left: he fires his remaining ships himself so the allies cannot take
+        them, abandons the shore camps, and rides west with the survivors for the Huarong road, a track
+        through the marshes. Rain has turned it to mire. The sick and the beaten carry grass and dirt to
+        fill the mud so the cavalry can pass, and the histories record that the horsemen rode over them;
+        the weak were trampled into the road they had just built.</p>
+        <p>The allied vanguard pursues by land and water. Half of one of the largest armies ever raised in
+        China is dying of fire, water, mud, and plague in a single night.</p>`);
+      // ignite what remains
+      for(const sp of S.ships){if(sp.kind==='cw'&&sp.state==='ok'&&Math.random()<0.7)igniteShip(sp);}
+      // the army takes the road
+      for(const s of S.soldiers){
+        if(s.side!=='c'||!s.alive)continue;
+        const wps=HUARONG.map(w=>[w[0]+rnd(-16,16),w[1]+rnd(-12,12)]);
+        s.wps=wps;s.pi=0;s.routing=true;
+        if(s.grp==='cs'&&Math.random()<0.3)s.dieAt=rnd(0.5,2.2);
+      }
+      // marines land and pursue
+      for(const s of S.soldiers){
+        if(s.grp!=='am')continue;
+        s.wps=[[560,300],[470,210],[420,175],[360,160]];s.pi=0;s.pursuing=true;
+      }
+    }
+    // fire arrows from the assault line onto the shore
+    if(S.subT>3&&Math.random()<dt*10){
+      const aw=S.ships.filter(s=>s.kind==='aw'&&s.assault);
+      const cs=aliveGrp('cs');
+      if(aw.length&&cs.length){
+        const f=aw[Math.floor(Math.random()*aw.length)],t=cs[Math.floor(Math.random()*cs.length)];
+        fireArrowPt(f.x,f.y,t.x+rnd(-4,4),t.y+rnd(-3,3));
+      }
+    }
+  }
+  else if(S.sub==='rout'){
+    spreadFire(dt);
+    let ccGone=false;
+    for(const s of S.soldiers){
+      if(!s.alive)continue;
+      if(s.routing){
+        const speed=(s.kind==='cc'||s.kind==='cg')?1.5:0.85;
+        if(followWps(s,speed,dt)){s.alive=false;s.escaped=true;if(s===caoCao)ccGone=true;}
+        if(s.grp==='cs'&&marshF(s.x,s.y)>0.5&&Math.random()<dt*0.5)kill(s);
+        if(s.dieAt!=null){s.dieAt-=dt*0.25;if(s.dieAt<=0)kill(s);}
+      }
+      if(s.pursuing)followWps(s,0.7,dt);
+    }
+    if(S.subT>13){
+      S.stage='idle';
+      narrate('The fire · dawn',
+       `<p>By morning the north bank is ash and drifting hulks, and Cao Cao is a fugitive on the road to
+        Jiangling with the remnant of his host. Crossing the worst of the marsh, the histories say, he
+        suddenly laughed: had Liu Bei thought to fire the reeds in time, he said, none of us would have
+        left this place. Liu Bei did fire them. He was half a day too late.</p>
+        <p class="aside">The novel stages an ambush here, where the warrior Guan Yu, owing Cao Cao an old
+        debt of honour, holds the road and lets him pass. It is the most beloved scene in the book, and it
+        is fiction. The mud was real.</p>`);
+      setControls([{label:'The deck at dawn', fn:()=>playScene(buildDawn(),gotoAftermath)}]);
+    }
+  }
+}
+function spreadFire(dt){
+  let burning=0;
+  for(const sp of S.ships){
+    if(sp.state==='burn'){
+      burning++;
+      sp.burnT+=dt;
+      sp.spreadCd-=dt;
+      if(sp.kind==='cw'&&sp.spreadCd<=0){
+        sp.spreadCd=rnd(0.4,0.9)*S.spreadMul;
+        const near=S.ships.filter(o=>o.kind==='cw'&&o.state==='ok'&&Math.abs(o.x-sp.x)<52&&Math.abs(o.y-sp.y)<26);
+        if(near.length)igniteShip(near[Math.floor(Math.random()*near.length)]);
+      }
+      if(sp.burnT>7)sp.state='sink';
+    }
+    if(sp.state==='sink'){
+      burning++;
+      sp.sinkY+=dt*0.8;
+      if(sp.sinkY>3.4){sp.gone=true;clearFlamesFor(sp);}
+    }
+  }
+  firelight.intensity=Math.min(burning*0.14,3.2);
+  // the fire leaps ashore
+  if(burning>10){
+    if(Math.random()<dt*2.2){
+      const t=tents.cao.find(t=>!t.burning);
+      if(t)igniteTent(t);
+    }
+  }
+}
+
+/* ================= main loop ================= */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05);
+  last=now;perfNow=now;S.st+=dt;
+  switch(S.stage){
+    case 'skirmish':updSkirmish(dt);break;
+    case 'cfassault':updCfAssault(dt);break;
+    case 'cfearly':updCfEarly(dt);break;
+    case 'fire':updFire(dt);break;
+  }
+  updArrowFlight(dt,null);
+  updStreaks(dt);
+  water.position.y=-0.45+Math.sin(now*0.0012)*0.05;
+  applyDaylight(dt);
+  applyCamera(dt);
+  flushShips();
+  flushSoldiers();
+  flushFlames();
+  flushArrows();
+  updateBanners();
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+
+/* ================= narration & UI ================= */
+const narrLabel=document.getElementById('narrLabel');
+const narrBody=document.getElementById('narrBody');
+const choiceArea=document.getElementById('choiceArea');
+const controls=document.getElementById('controls');
+function narrate(label,html){
+  narrLabel.textContent=label;
+  narrBody.innerHTML=html;
+  narrBody.classList.remove('fade-in');void narrBody.offsetWidth;
+  narrBody.classList.add('fade-in');
+  choiceArea.innerHTML='';
+}
+function setControls(btns){
+  controls.innerHTML='';
+  for(const b of btns){
+    const el=document.createElement('button');
+    el.className='btn'+(b.ghost?' ghost':'');el.textContent=b.label;el.onclick=b.fn;
+    controls.appendChild(el);
+  }
+}
+function setChoices(items){
+  choiceArea.innerHTML='';
+  const grid=document.createElement('div');grid.className='choices fade-in';
+  for(const it of items){
+    const c=document.createElement('button');c.className='choice';
+    c.innerHTML=`<h3>${it.title}</h3><p>${it.body}</p>`;
+    c.onclick=it.fn;grid.appendChild(c);
+  }
+  choiceArea.appendChild(grid);
+  controls.innerHTML='';
+}
+function setPhase(p){
+  S.phase=p;
+  document.querySelectorAll('.pill').forEach(el=>{
+    const n=+el.dataset.p;
+    el.classList.toggle('active',n===p);
+    el.classList.toggle('done',n<p);
+  });
+}
+
+/* ================= phases ================= */
+function enterPrologue(){
+  setPhase(0);setDay('Winter, 208 AD');
+  S.shipsLost=0;S.menLost=0;updateCounters();
+  document.getElementById('counters').classList.remove('show');
+  if(chainLines){scene.remove(chainLines);chainLines=null;}
+  S.chained=false;flames.length=0;firelight.intensity=0;
+  for(const t of tents.cao)if(t.burning){t.burning=false;t.mesh.material=new THREE.MeshLambertMaterial({color:0x8b8ea0});}
+  night(false);setWind(false);
+  REL.gan=0;REL.lan=0;REL.zhao=0;FLAGS.promise=false;FLAGS.drop=null;S.spreadMul=1;
+  for(const sp of S.ships||[])sp.detached=false;
+  spawnAll();
+  cine('over');
+  narrate('Prologue',
+   `<p>Four hundred years of Han rule are collapsing, and the warlord Cao Cao has nearly finished picking up
+    the pieces: the emperor is in his keeping, the north is unified behind him, and this autumn Jing province
+    on the middle Yangtze surrendered without a battle, handing him a river fleet ready-made. The warlord
+    Liu Bei fled south ahead of him with a column of refugees and was run down at Changban, escaping with
+    his life, his sworn companions, and not much else.</p>
+    <p>One power remains: the young Sun Quan, twenty-six years old, holding the lower Yangtze his brother
+    and father won. Cao Cao sends him a letter, pleasant as a knife: the chancellor is hunting traitors
+    southward with a fleet and, he writes, <em>800,000 marines</em>, and would enjoy going hunting with the
+    general in Wu. Modern historians read his real strength at perhaps 200,000, a quarter of them
+    surrendered Jing troops of untested loyalty. Against this: Liu Bei's 20,000 survivors, and whatever
+    Sun Quan chooses to risk.</p>
+    <p>Liu Bei's envoy, a tall young strategist named Zhuge Liang, is already in Sun Quan's hall,
+    arguing for an alliance. The council is waiting for you.</p>`);
+  setControls([{label:'Walk down to the boat lines', fn:()=>playScene(SC_DOCK,enterCouncil)}]);
+}
+function enterCouncil(){
+  setPhase(1);cine('council');
+  narrate('The council of Sun Quan',
+   `<p>The hall is split. The senior statesman Zhang Zhao speaks for most of the civil officials: Cao Cao
+    commands in the emperor's name, so resisting him is rebellion; he now holds the Yangtze's upper reaches
+    and a fleet, so the river moat is gone; the wise course is honourable submission while good terms can
+    still be had. Around the hall, heads nod. These are not cowards; they are men doing arithmetic.</p>
+    <p>Then the young admiral Zhou Yu answers with different arithmetic: the northerners cannot fight on
+    water; it is deep winter and their horses have no fodder; men marched two thousand li into a strange
+    climate are already sickening, and the surrendered Jing crews will fight for Cao Cao exactly until the
+    first ship burns. Give him thirty thousand picked men, he says, and he will break the invincible
+    chancellor on the river.</p>
+    <p>Every eye turns to you, Sun Quan. You are twenty-six, and this is the whole inheritance on the table.</p>`);
+  setChoices([
+    {title:'Submit to the chancellor',
+     body:'Zhang Zhao\u2019s course: yield with grace, keep your fief and your family\u2019s honours, and spare the south a war it cannot win against 800,000 men.',
+     fn:()=>{
+       narrate('The council · what if',
+        `<p>It is the reasonable choice, and everyone in the hall knows what it means for exactly one person.
+         As Zhou Yu and Lu Su put it privately: any officer in this room can surrender to Cao Cao and expect
+         office, rank, an ox-cart, a career. <em>The general alone cannot.</em> A surrendered rival heir with
+         his father's army and his brother's name does not get an ox-cart; he gets watched, then removed.
+         And with the Yangtze in Cao Cao's hands, China is one empire again by spring, under one man.</p>
+         <p class="aside">History records that Sun Quan listened to the surrender party, rose, drew his sword,
+         and cut the corner from the memorial desk in front of him: the next officer who counsels submission,
+         he said, gets what the desk got.</p>`);
+       setControls([{label:'Draw the sword instead', fn:chooseWar}]);
+     }},
+    {title:'Draw the sword',
+     body:'Zhou Yu\u2019s course: the alliance with Liu Bei, thirty thousand men, and a winter war on the water, where numbers rot and seamanship rules.',
+     fn:chooseWar},
+  ]);
+}
+function chooseWar(){
+  narrate('The council',
+   `<p>The sword comes down and takes the corner off the desk, and the argument is over. Zhou Yu gets his
+    thirty thousand and the command; Liu Bei's twenty thousand join under the alliance Zhuge Liang came to
+    build. Fifty thousand, against whatever number is actually true.</p>
+    <p>The combined fleet moves up the Yangtze to meet the armada coming down it. The two forces sight each
+    other at a bend in the river the locals name for the colour of its southern cliffs.</p>`);
+  setControls([{label:'To Red Cliffs', fn:startSkirmish}]);
+}
+function gotoAftermath(){
+  setPhase(5);setDay('After');
+  S.stage='idle';cine('over');
+  narrate('Aftermath',
+   `<p>Cao Cao limped back north, leaving garrisons that lost most of Jing province within the year. He was
+    still the strongest man in China, and he never again came this close to all of it. His own verdict,
+    in a letter to Sun Quan, is the sorest sentence a winner of everything else ever wrote: there was
+    sickness in the fleet, so <em>I burned my own ships and withdrew; it is absurd that Zhou Yu should get
+    this reputation from it.</em> The sickness was real. So was Huang Gai.</p>
+    <p>The fire fixed the shape of China for most of a century. Cao Cao's son took the Han throne as the
+    kingdom of Wei; Liu Bei crowned himself in the west as Shu Han; Sun Quan, last of the three, as emperor
+    of Wu. The Three Kingdoms, the most storied era in Chinese history, begins at this riverbank: one
+    battle, one wind, three thrones.</p>
+    <p class="aside">Where the riverbank is remains argued; a leading candidate renamed itself Chibi,
+    Red Cliffs, to settle the matter by paperwork. In 1082 the poet Su Shi, exiled downstream, drifted
+    beneath a different red cliff he knew was probably the wrong one and wrote the two Red Cliff odes
+    anyway, meditations on the fire, the moon, and how briefly even a Cao Cao owns anything. The wrong
+    cliff has the right poems, which in China settles it differently.</p>`);
+  narrBody.insertAdjacentHTML('beforeend',zhaoPayoffHtml());
+  setControls([{label:'End of Episode One', fn:showEndCard},{label:'Replay the episode', fn:enterPrologue, ghost:true}]);
+}
+
+/* ================= episode layer: cast, bonds, scenes ================= */
+const REL={gan:0,lan:0,zhao:0};
+const FLAGS={promise:false,drop:null};
+
+const SVG_GAN=`<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="#2a231a"/>
+<ellipse cx="52" cy="118" rx="38" ry="26" fill="#5a4632"/><path d="M20 118 Q52 84 84 118" fill="#6b5638"/>
+<ellipse cx="52" cy="62" rx="24" ry="27" fill="#b08a62"/>
+<path d="M34 44 Q52 30 70 44 L66 36 Q52 26 38 36 Z" fill="#8a8578"/>
+<rect x="46" y="24" width="12" height="12" rx="4" fill="#8a8578"/>
+<path d="M36 82 Q52 100 68 82 L68 96 Q52 110 36 96 Z" fill="#d8d2c2"/>
+<path d="M36 58 L46 56 M58 56 L68 58" stroke="#3a2c1e" stroke-width="2.4" stroke-linecap="round"/>
+<circle cx="41" cy="62" r="1.8" fill="#2a1e14"/><circle cx="63" cy="62" r="1.8" fill="#2a1e14"/>
+<path d="M40 50 L47 49 M57 49 L64 50" stroke="#8a8578" stroke-width="2.6" stroke-linecap="round"/>
+<path d="M46 74 Q52 76 58 74" stroke="#7a5a40" stroke-width="2" fill="none" stroke-linecap="round"/>
+<path d="M30 66 Q28 60 30 54 M74 66 Q76 60 74 54" stroke="#96744f" stroke-width="2" fill="none"/></svg>`;
+const SVG_LAN=`<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="#22261f"/>
+<ellipse cx="52" cy="120" rx="36" ry="24" fill="#4b3a29"/><path d="M22 120 Q52 88 82 120" fill="#5e6a5a"/>
+<path d="M40 96 L64 96 L60 120 L44 120 Z" fill="#a53a2e"/>
+<ellipse cx="52" cy="60" rx="21" ry="24" fill="#c99b70"/>
+<path d="M31 56 Q30 30 52 28 Q74 30 73 56 Q68 40 52 40 Q36 40 31 56 Z" fill="#1e1712"/>
+<circle cx="52" cy="26" r="9" fill="#1e1712"/><rect x="42" y="30" width="20" height="4" rx="2" fill="#a53a2e"/>
+<path d="M37 55 L46 54 M58 54 L67 55" stroke="#241a12" stroke-width="2" stroke-linecap="round"/>
+<circle cx="42" cy="60" r="1.9" fill="#241a12"/><circle cx="62" cy="60" r="1.9" fill="#241a12"/>
+<path d="M46 71 Q52 74 58 71" stroke="#8a5138" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
+const SVG_ZHAO=`<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="#232028"/>
+<ellipse cx="52" cy="120" rx="40" ry="26" fill="#4a5468"/><path d="M18 120 Q52 82 86 120" fill="#5e77a0"/>
+<ellipse cx="52" cy="60" rx="25" ry="27" fill="#b58a5e"/>
+<path d="M29 52 Q30 30 52 29 Q74 30 75 52 Q68 38 52 38 Q36 38 29 52 Z" fill="#241c14"/>
+<path d="M38 78 Q52 92 66 78 L64 88 Q52 98 40 88 Z" fill="#241c14"/>
+<path d="M35 55 L45 53 M59 53 L69 55" stroke="#241c14" stroke-width="2.6" stroke-linecap="round"/>
+<circle cx="41" cy="60" r="2" fill="#1c140e"/><circle cx="63" cy="60" r="2" fill="#1c140e"/>
+<path d="M46 74 Q52 75 58 74" stroke="#6e4a30" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
+
+const CAST={
+  gan:{name:'Old Gan · boat-master',svg:SVG_GAN},
+  lan:{name:'Shen Lan · signal-hand',svg:SVG_LAN},
+  zhao:{name:'Zhao Tu · oarsman',svg:SVG_ZHAO},
+  nar:{name:'',svg:null},
+};
+
+/* --- VN engine --- */
+const vnEl=document.getElementById('vn');
+const vnPortrait=document.getElementById('vnportrait');
+const vnName=document.getElementById('vnname');
+const vnText=document.getElementById('vntext');
+const vnChoices=document.getElementById('vnchoices');
+const vnNextEl=document.getElementById('vnnext');
+const vnToast=document.getElementById('vntoast');
+let vnQueue=[],vnDone=null,vnBusy=false;
+function playScene(steps,done){
+  vnQueue=steps.slice();vnDone=done;
+  choiceArea.innerHTML='';
+  setControls([]);
+  vnEl.style.display='block';
+  vnAdvance();
+}
+function vnAdvance(){
+  while(vnQueue.length&&vnQueue[0].if&&!vnQueue[0].if()){vnQueue.shift();}
+  if(!vnQueue.length){
+    vnEl.style.display='none';
+    const d=vnDone;vnDone=null;
+    if(d)d();
+    return;
+  }
+  const st=vnQueue.shift();
+  renderVn(st);
+}
+function renderVn(st){
+  const who=CAST[st.who]||CAST.nar;
+  vnPortrait.innerHTML=who.svg||'';
+  vnPortrait.style.display=who.svg?'block':'none';
+  vnName.textContent=who.name;
+  document.getElementById('vnbox').classList.toggle('vn-narr',st.who==='nar');
+  vnText.innerHTML=typeof st.text==='function'?st.text():st.text||'';
+  vnChoices.innerHTML='';
+  if(st.choices){
+    vnNextEl.style.display='none';vnBusy=true;
+    for(const c of st.choices){
+      const b=document.createElement('button');
+      b.className='vn-choice';b.textContent=c.label;
+      b.onclick=(e)=>{
+        e.stopPropagation();
+        if(c.d)for(const k in c.d){REL[k]=Math.max(0,REL[k]+c.d[k]);}
+        if(c.flag)FLAGS[c.flag]=true;
+        if(c.toast)toast(c.toast);
+        if(c.reply)vnQueue=c.reply.concat(vnQueue);
+        vnBusy=false;
+        vnAdvance();
+      };
+      vnChoices.appendChild(b);
+    }
+  }else{
+    vnNextEl.style.display='block';vnBusy=false;
+  }
+}
+document.getElementById('vnbox').addEventListener('click',()=>{if(!vnBusy&&vnEl.style.display==='block')vnAdvance();});
+function toast(t){
+  vnToast.textContent=t;vnToast.classList.add('show');
+  setTimeout(()=>vnToast.classList.remove('show'),1900);
+}
+
+/* --- scenes --- */
+const SC_DOCK=[
+ {who:'nar',text:`Before the council meets, an errand takes you down to the boat lines, where the river men are caulking hulls and saying very little. This is where Zhou Yu sends young staff officers he wants educated.`},
+ {who:'gan',text:`Mind the pitch bucket, staff boy. That robe costs more than my boat.`},
+ {who:'gan',text:`Well? Headquarters doesn't send silk down here to admire my caulking.`,choices:[
+   {label:'"Zhou Yu wants to know what the river men are thinking."',d:{gan:1},toast:'Bond · Old Gan',reply:[
+     {who:'gan',text:`Ha. First sensible order of the whole war. What we think is this: the north brought a hundred thousand men down this river, and not one of them can read water.`}]},
+   {label:'"Just carrying orders."',reply:[
+     {who:'gan',text:`Mm. Orders float downstream easy enough. Watch how they row back up.`}]},
+   {label:'"I came to learn what I don\u2019t know."',d:{gan:2},toast:'Bond deepened · Old Gan',reply:[
+     {who:'gan',text:`Did you now. Then hold this rope and shut up. That's lesson one, and most of lesson two.`}]},
+ ]},
+ {who:'gan',text:`Look across the water. See how their hulls sit? High and skittish, loaded like ox-carts. Landsmen. A deck is not a road, and a river is not a moat that stays where you put it.`},
+ {who:'gan',text:`And I'll tell you a thing for free, because you'll want it later. This reach breathes. Deep winter, when a cold snap rolls through, the wind swings out of the southeast for one night. Old boats know it. Remember that I said so.`},
+ {who:'nar',text:`He goes back to his caulking as if you had already left. On the walk back up to the hall, you notice you are reading the enemy fleet the way he does: high, crowded, wrong.`},
+];
+
+const SC_WATCH=[
+ {who:'nar',text:`After the chaining, the night watches run long. On Huang Gai's ship the signal-hand is a boat family's daughter, Shen Lan, sixteen years on this river and four of them at war. Beside her at the rail, the oarsman Zhao Tu, who came over with the Jing squadrons in autumn.`},
+ {who:'lan',text:`Forty-one fires on their decks tonight. I count them every watch. It steadies the hands.`},
+ {who:'lan',text:`Staff officer. When it finally comes, whatever it is they're planning with our boat. Will it be quick?`,choices:[
+   {label:'"No. Fire on water is slow, and it is loud. But you will be off this boat before it starts. That, I can promise."',d:{lan:2},toast:'Bond deepened · Shen Lan',reply:[
+     {who:'lan',text:`Good. Never lie to signal-hands, we read flags upside down for a living. Slow and loud, then. I can work with slow and loud.`}]},
+   {label:'"You won\u2019t be close enough to see it."',reply:[
+     {who:'lan',text:`Now that was a staff answer. I'll count fires. You go count whatever it is they teach you to count up there.`}]},
+   {label:'"Mind your signals, officer. Not your fears."',d:{lan:-1},reply:[
+     {who:'lan',text:`Aye, sir. Forty-one fires, sir.`},
+     {who:'nar',text:`She turns back to the rail. The count is the same, but the voice has gone flat.`}]},
+ ]},
+ {who:'zhao',text:`Those forty-one fires. My brother An tends one of them. He pulls an oar in the Jing squadron, third rank of the chained fleet. He surrendered because the governor surrendered, same as I did. We just stood on different docks that morning.`},
+ {who:'zhao',text:`Whatever you gentlemen decide up at the hall, I don't ask you to spare him. I ask you to know that he's there. Half those decks are us.`,choices:[
+   {label:'"Then I will know it. And when this is over, you and I go through the prisoner lines together until we find An."',d:{zhao:2},flag:'promise',toast:'A promise made · Zhao Tu',reply:[
+     {who:'zhao',text:`...Then I'll row you there myself, staff officer.`}]},
+   {label:'"War doesn\u2019t sort brothers. I\u2019m sorry."',reply:[
+     {who:'zhao',text:`No. It doesn't. Forget I spoke.`}]},
+   {label:'Say nothing, and stand the watch with them.',d:{zhao:1,lan:1},toast:'Bond · the night watch',reply:[
+     {who:'nar',text:`You stay at the rail until the watch turns. Nobody says anything worth recording, which is its own kind of answer.`}]},
+ ]},
+ {who:'nar',text:`Across the black water, forty-one fires. You will think about that number again.`},
+];
+
+function buildDawn(){
+  const steps=[];
+  steps.push({who:'nar',text:`Dawn. The squadron's tow-boats come home black with soot, crews counting each other out loud as they climb the side.`});
+  if(REL.lan>=2){
+    steps.push({who:'lan',text:`Forty-one fires, staff officer. I counted them all the way down. You were right: slow, and loud. And I could work with it.`});
+  }else if(FLAGS.drop==='late'){
+    steps.push({who:'lan',text:`Old Gan says winter river water improves the temper. He is wrong, and you may write that in your report.`});
+  }else{
+    steps.push({who:'lan',text:`So that's what it was. Next time headquarters plans to burn a river I stand watch on, send word down first.`});
+  }
+  if(FLAGS.promise){
+    steps.push({who:'zhao',text:`The prisoner columns muster on the Jiangling road at noon. You said together, staff officer.`});
+  }else{
+    steps.push({who:'zhao',text:`Permission to ask nothing, sir.`});
+    steps.push({who:'nar',text:`He rows. The river carries everything downstream, the way it always has.`});
+  }
+  if(REL.gan>=2){
+    steps.push({who:'gan',text:`Breathes backward one night a winter, I told you. Cheapest lesson anybody ever sold headquarters.`});
+  }
+  return steps;
+}
+
+function zhaoPayoffHtml(){
+  if(FLAGS.promise){
+    return `<p class="aside">And one small history the chronicles are too grand to keep: three days later, in the prisoner
+      lines on the Jiangling road, Zhao Tu found his brother An. Alive, coughing river water, furious at absolutely
+      everyone, and rowing home by the week's end. Not every fire takes everything. You kept the promise; the
+      episode remembers it.</p>`;
+  }
+  return `<p class="aside">And one small history the chronicles do not keep: Zhao Tu walked the prisoner lines at
+    Jiangling for six days. The muster rolls from that winter are lost, and this story keeps what he found
+    to itself.</p>`;
+}
+
+/* --- the drop mini-game --- */
+const mgEl=document.getElementById('minigame');
+function showTorchGame(cb){
+  mgEl.innerHTML=`<div class="mg-inner">
+    <div class="mg-k">Huang Gai's rule</div>
+    <div class="mg-t">The Drop</div>
+    <div class="mg-s">Light at two li. No closer, or the crews burn with the boats. No farther, or the fleet cuts loose in time.</div>
+    <div class="mg-track"><div class="mg-zone" style="left:0;width:38%"></div>
+      <div class="mg-zone perfect" style="left:38%;width:24%"></div>
+      <div class="mg-zone" style="left:62%;width:38%"></div>
+      <div class="mg-marker" id="mgmarker"></div></div>
+    <button class="mg-btn" id="mgbtn">Drop the torches</button>
+    <div class="mg-verdict" id="mgverdict"></div>
+  </div>`;
+  mgEl.style.display='block';
+  const marker=document.getElementById('mgmarker');
+  const t0=performance.now();
+  let raf,resolved=false;
+  function anim(now){
+    const p=0.5+0.48*Math.sin((now-t0)*0.0033);
+    marker.style.left=(p*100)+'%';
+    if(!resolved)raf=requestAnimationFrame(anim);
+  }
+  raf=requestAnimationFrame(anim);
+  document.getElementById('mgbtn').onclick=()=>{
+    if(resolved)return;resolved=true;
+    const p=parseFloat(marker.style.left)/100;
+    let res;
+    if(p>=0.38&&p<=0.62)res='perfect';
+    else if(p<0.38)res='early';
+    else res='late';
+    const verdict=document.getElementById('mgverdict');
+    verdict.textContent=res==='perfect'?'On the mark. Two li exactly.':res==='early'?'Early. Their drums are beating.':'Late. Cut the tow-boats loose!';
+    setTimeout(()=>{mgEl.style.display='none';cb(res);},1100);
+  };
+}
+function applyDrop(res){
+  FLAGS.drop=res;
+  const fs=S.ships.filter(s=>s.kind==='fs'&&!s.gone);
+  for(const sp of fs)igniteShip(sp);
+  let extra='';
+  if(res==='perfect'){
+    S.spreadMul=0.68;
+    if(REL.lan>=1)REL.lan=Math.min(REL.lan+1,3);
+    extra=`<p>The drop lands exactly on Huang Gai's mark, all eight torches within a breath of each other.
+      Old Gan, watching from the tow line, will describe it for years as the river being read correctly for once.</p>`;
+  }else if(res==='early'){
+    const edge=S.ships.filter(s=>s.kind==='cw'&&s.row===4).slice(0,2);
+    for(const sp of edge){sp.detached=true;sp.tx=sp.x<470?sp.x-75:sp.x+75;sp.ty=sp.y-6;}
+    extra=`<p>The torches go down early, a li too far out. On the chained decks the watch drums finally begin,
+      and two squadrons at the fleet's edge hack themselves free in time to stand clear. The rest cannot.
+      The drop was early; the wind, tonight, forgives you.</p>`;
+  }else{
+    if(REL.lan>=2){
+      extra=`<p>The drop is late, and the last boats cut loose almost inside the fleet's shadow. Except one:
+        Shen Lan did not wait for the order. Signal-hands read flags upside down; she read your hesitation,
+        dropped her torch at the mark, and was in the tow-boat before the oil caught.</p>`;
+    }else{
+      extra=`<p>The drop is late. The last boats cut loose almost inside the fleet's shadow and swamp in their
+        own wake; Old Gan puts his tiller over and drags six swimmers out of the winter river, Shen Lan among
+        them, half frozen and swearing at the entire chain of command by name.</p>`;
+    }
+  }
+  S.sub='torch';S.subT=0;
+  narrate('The fire · two li out',
+   `<p>The torches go down into the oil and the crews drop into the fast boats towing astern. Eight fires,
+    running before a gale, straight at a wooden fortress that cannot scatter, because it chained itself
+    together to keep its decks steady.</p>
+    ${extra}
+    <p>The histories use four characters for what happens next: the fire was fierce, the wind was strong.</p>`);
+}
+
+/* --- episode cards --- */
+const epEl=document.getElementById('epcard');
+function showOpenCard(){
+  epEl.innerHTML=`<div class="ep-inner">
+    <div class="ep-k">A Wooster narrative simulation · week one of twelve</div>
+    <div class="ep-t">RED CLIFFS</div>
+    <div class="ep-s">Episode One · The East Wind</div>
+    <div class="ep-hint">tap to begin</div>
+  </div>`;
+  epEl.style.display='block';
+  epEl.onclick=()=>{epEl.style.display='none';};
+}
+function showEndCard(){
+  epEl.innerHTML=`<div class="ep-inner">
+    <div class="ep-k">End of episode one</div>
+    <div class="ep-t">THE EAST WIND</div>
+    <div class="ep-s">Next week · Episode Two: The Huarong Road</div>
+    <div class="ep-x">Cao Cao is a fugitive in the marshes with the wreck of an army, Zhao Tu is walking the
+      prisoner lines, and the alliance that won the river is already arguing about who owns it.<br>
+      Every line in this episode is a voice cue, written to be cast.</div>
+    <div class="ep-btns">
+      <button class="btn" id="epreplay">Replay the episode</button>
+      <button class="btn ghost" id="epclose">Close</button>
+    </div>
+  </div>`;
+  epEl.style.display='block';
+  epEl.onclick=null;
+  document.getElementById('epreplay').onclick=()=>{epEl.style.display='none';enterPrologue();};
+  document.getElementById('epclose').onclick=()=>{epEl.style.display='none';};
+}
+
+/* ================= boot ================= */
+resize();
+enterPrologue();
+showOpenCard();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

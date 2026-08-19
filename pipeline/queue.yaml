@@ -1,0 +1,181 @@
+# GESTA content queue. The pipeline builds the first pending entry each day.
+- slug: battle-of-hastings
+  title: Hastings
+  year: "14 October 1066"
+  player: William of Normandy
+  lat: 50.91
+  lon: 0.49
+  brief: Shield wall on Senlac ridge, the feigned flights, Harold's housecarls, and one arrow that renamed a country.
+  type: battle
+  status: pending
+- slug: battle-of-salsu
+  title: Salsu River
+  year: "612"
+  player: Eulji Mundeok
+  lat: 39.6
+  lon: 125.7
+  brief: Goguryeo's Eulji Mundeok lures a vast Sui host deep, then breaks the river on it. Korea's other great water battle, and a poem sent as a taunt.
+  type: battle
+  status: pending
+- slug: battle-of-gaugamela
+  title: Gaugamela
+  year: "1 October 331 BC"
+  player: Alexander
+  lat: 36.56
+  lon: 43.44
+  brief: The oblique advance, the gap that opens in Darius's line, and the charge into it. The hammer of the ancient world at full swing.
+  type: battle
+  status: pending
+- slug: battle-of-sekigahara
+  title: Sekigahara
+  year: "21 October 1600"
+  player: Tokugawa Ieyasu
+  lat: 35.37
+  lon: 136.47
+  brief: Japan decided in a morning fog, hinging on Kobayakawa's silence on Mount Matsuo. The greatest betrayal decision in military history.
+  type: battle
+  status: pending
+- slug: the-odyssey-episode-two
+  title: The Odyssey, Episode Two
+  year: "Circe and the dead"
+  player: Odysseus
+  lat: 41.22
+  lon: 13.06
+  brief: Aeaea, the moly herb, a year lost to comfort, and the voyage to the edge of the world to ask a dead prophet the way home.
+  type: saga
+  status: pending
+- slug: battle-of-salamis
+  title: Salamis
+  year: "480 BC"
+  player: Themistocles
+  lat: 37.95
+  lon: 23.55
+  brief: The message that lured the Persian fleet into the narrows, and the strait that did to ships what Thermopylae's wall did to men.
+  type: battle
+  status: pending
+- slug: battle-of-ain-jalut
+  title: Ain Jalut
+  year: "3 September 1260"
+  player: Baibars
+  lat: 32.55
+  lon: 35.35
+  brief: The Mamluks turn the Mongols' own feigned retreat against them at Goliath's Spring. The day the tide of the Horde met its mirror.
+  type: battle
+  status: pending
+- slug: battle-of-hansando
+  title: Hansando
+  year: "14 August 1592"
+  player: Yi Sun-sin
+  lat: 34.79
+  lon: 128.5
+  brief: The crane wing opens. Yi Sun-sin's masterpiece of formation warfare, and the second GESTA entry for the admiral of the Roaring Channel.
+  type: battle
+  status: pending
+- slug: battle-of-tours
+  title: Tours
+  year: "October 732"
+  player: Charles Martel
+  lat: 47.08
+  lon: 0.61
+  brief: The Frankish square on the wooded hill between Tours and Poitiers, and the rumor about the baggage camp that ended a charge.
+  type: battle
+  status: pending
+- slug: red-cliffs-episode-two
+  title: Red Cliffs, Episode Two
+  year: "The Huarong Road"
+  player: Cao Cao
+  lat: 29.85
+  lon: 113.5
+  brief: The escape through the marshes after the fire, laughing three times at ambushes not set, and the debt on the Huarong road.
+  type: saga
+  status: pending
+- slug: battle-of-manzikert
+  title: Manzikert
+  year: "26 August 1071"
+  player: Romanos IV Diogenes
+  lat: 39.15
+  lon: 42.54
+  brief: The Seljuk crescent, the false retreat at dusk, the betrayal in the reserve line, and the captured emperor who dined with the sultan.
+  type: battle
+  status: pending
+- slug: fall-of-constantinople
+  title: Constantinople
+  year: "29 May 1453"
+  player: Constantine XI
+  lat: 41.01
+  lon: 28.98
+  brief: The Theodosian walls against the great bombard, ships hauled overland into the Golden Horn, and the last emperor's last hour.
+  type: battle
+  status: pending
+- slug: battle-of-grunwald
+  title: Grunwald
+  year: "15 July 1410"
+  player: Wladyslaw II Jagiello
+  lat: 53.48
+  lon: 20.13
+  brief: Poland and Lithuania against the Teutonic Order, the Lithuanian withdrawal that may have been a plan, and the two swords sent as an insult.
+  type: battle
+  status: pending
+- slug: battle-of-yarmouk
+  title: Yarmouk
+  year: "August 636"
+  player: Khalid ibn al-Walid
+  lat: 32.75
+  lon: 35.95
+  brief: Six days on the ravine's edge, the mobile guard plugging every break, and the day that decided the Levant for a millennium.
+  type: battle
+  status: pending
+- slug: battle-of-lepanto
+  title: Lepanto
+  year: "7 October 1571"
+  player: Don Juan of Austria
+  lat: 38.2
+  lon: 21.3
+  brief: The last great battle of oared ships, six galleasses anchored like fortresses, and a Spanish soldier named Cervantes losing the use of a hand.
+  type: battle
+  status: pending
+- slug: battle-of-bannockburn
+  title: Bannockburn
+  year: "23 June 1314"
+  player: Robert the Bruce
+  lat: 56.09
+  lon: -3.91
+  brief: The schiltrons advance for once, the carse and the burns pen the English host, and an axe splits a challenger's helm on day one.
+  type: battle
+  status: pending
+- slug: battle-of-talas
+  title: Talas
+  year: "751"
+  player: Gao Xianzhi
+  lat: 42.52
+  lon: 72.24
+  brief: Tang and Abbasid armies meet once in all of history, a Karluk defection decides it, and papermaking walks west with the prisoners.
+  type: battle
+  status: pending
+- slug: battle-of-fei-river
+  title: Fei River
+  year: "383"
+  player: Xie Xuan
+  lat: 32.6
+  lon: 116.7
+  brief: A requested step backward becomes a rout of a million, and the northern empire dissolves on a rumor of its own defeat.
+  type: battle
+  status: pending
+- slug: battle-of-actium
+  title: Actium
+  year: "2 September 31 BC"
+  player: Octavian
+  lat: 38.94
+  lon: 20.77
+  brief: Antony and Cleopatra's breakout, the purple sail turning south, and the sea battle that ended the Republic's last civil war.
+  type: battle
+  status: pending
+- slug: battle-of-baekgang
+  title: Baekgang
+  year: "663"
+  player: Yu In-gwe
+  lat: 35.98
+  lon: 126.75
+  brief: Tang and Silla fleets against Yamato Japan's armada at the Geum estuary, four battles in a day, and East Asia's order set for centuries.
+  type: battle
+  status: pending
