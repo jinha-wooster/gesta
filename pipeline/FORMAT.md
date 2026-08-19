@@ -5,6 +5,7 @@ Build the battle file incrementally: write the head and CSS first, then append t
 HTML body, then the script in 3 or 4 chunks via separate Write or Edit calls.
 After each chunk run: echo "PROGRESS: <section done>"
 Never write the whole file in one tool call.
+The file must end with </script></body></html> and nothing after it. After assembly, run: tail -3 <file> and confirm.
 
 ## What an entry is
 A single self-contained HTML file in site/, cloned structurally from
