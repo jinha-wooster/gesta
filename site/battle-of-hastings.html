@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hastings, 1066 · 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#141312; --ink-2:#1b1a18; --panel:#201e1b; --line:#38352f;
+    --parchment:#e5ddc8; --muted:#9c957f; --faint:#696355;
+    --bronze:#d9a441; --bronze-dim:#8f6f2e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{background:var(--ink)}
+  body{background:var(--ink);color:var(--parchment);font-family:'Source Serif 4',Georgia,serif;font-size:17px;line-height:1.65;min-height:100vh}
+  .wrap{max-width:1060px;margin:0 auto;padding:36px 18px 80px}
+  header{text-align:center;margin-bottom:26px}
+  .eyebrow{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  h1{font-family:'GFS Didot',serif;font-weight:400;font-size:clamp(38px,7vw,70px);letter-spacing:.06em;line-height:1}
+  .subtitle{color:var(--muted);font-style:italic;margin-top:12px;font-size:16px}
+  .meander{height:14px;margin:24px auto;max-width:520px;opacity:.55}
+  .phases{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+  .pill{font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:7px 13px;border:1px solid var(--line);border-radius:2px;color:var(--faint);transition:all .35s;white-space:nowrap}
+  .pill.active{color:var(--bronze);border-color:var(--bronze-dim);background:rgba(217,164,65,.06)}
+  .pill.done{color:var(--muted)}
+  .stage{position:relative;border:1px solid var(--line);background:#000;border-radius:3px;overflow:hidden}
+  #view{display:block;width:100%;height:560px;cursor:grab;touch-action:none}
+  #view.dragging{cursor:grabbing}
+  @media(max-width:700px){#view{height:420px}}
+  .counters{position:absolute;top:10px;left:12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;font-size:12px;letter-spacing:.08em;opacity:0;transition:opacity .6s}
+  .counters.show{opacity:1}
+  .counter{background:rgba(20,19,18,.74);padding:4px 10px;border-radius:2px;border:1px solid var(--line);width:max-content}
+  .counter b{font-weight:600}
+  .c-no b{color:#8fa0d8} .c-sa b{color:#c89060}
+  .daytag{position:absolute;bottom:10px;left:12px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(229,221,200,.7);background:rgba(20,19,18,.6);padding:5px 10px;border-radius:2px;pointer-events:none}
+  #formHud{display:none;position:absolute;bottom:92px;left:50%;transform:translateX(-50%);
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--bronze);
+    background:rgba(20,19,18,.85);border:1px solid var(--bronze-dim);padding:8px 16px;
+    border-radius:2px;pointer-events:none;white-space:nowrap;z-index:6}
+  .camctl{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:6px}
+  .cambtn{font-family:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;background:rgba(20,19,18,.74);border:1px solid var(--line);border-radius:2px;color:var(--muted);cursor:pointer;transition:all .2s}
+  .cambtn:hover{color:var(--bronze);border-color:var(--bronze-dim)}
+  .camhint{position:absolute;bottom:10px;right:12px;font-size:11px;letter-spacing:.06em;color:rgba(229,221,200,.55);background:rgba(20,19,18,.6);padding:4px 9px;border-radius:2px;pointer-events:none}
+  @media(max-width:700px){.camhint{display:none}}
+  .narration{border:1px solid var(--line);border-top:none;background:var(--panel);padding:26px 30px;border-radius:0 0 3px 3px;min-height:150px}
+  .narr-label{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--bronze);margin-bottom:10px}
+  .narration p{margin-bottom:12px}
+  .narration p:last-child{margin-bottom:0}
+  .narration em{color:var(--muted)}
+  .aside{font-size:14px;color:var(--muted);font-style:italic;border-left:2px solid var(--bronze-dim);padding-left:14px;margin-top:14px}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  @media(max-width:640px){.choices{grid-template-columns:1fr}}
+  .choice{border:1px solid var(--line);border-radius:3px;padding:20px;background:var(--ink-2);cursor:pointer;text-align:left;color:var(--parchment);font-family:inherit;font-size:16px;transition:border-color .25s,background .25s}
+  .choice:hover{border-color:var(--bronze-dim);background:#24221e80}
+  .choice h3{font-family:'GFS Didot',serif;font-weight:400;font-size:20px;letter-spacing:.04em;margin-bottom:8px;color:var(--bronze)}
+  .choice p{font-size:14.5px;color:var(--muted);line-height:1.55}
+  .controls{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn{font-family:inherit;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:13px 28px;background:transparent;color:var(--bronze);border:1px solid var(--bronze-dim);border-radius:2px;cursor:pointer;transition:all .25s}
+  .btn:hover{background:rgba(217,164,65,.1);border-color:var(--bronze)}
+  .btn.ghost{color:var(--muted);border-color:var(--line)}
+  .btn.ghost:hover{color:var(--parchment);background:rgba(255,255,255,.04)}
+  #dock{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:10px 14px 12px;
+      background:linear-gradient(transparent, rgba(12,12,10,.45) 18%, rgba(12,12,10,.9) 72%)}
+  #dock:not(:has(button)){display:none}
+  #dock .choices{max-width:880px;margin:0 auto;gap:10px}
+  #dock .choice{padding:12px 14px;background:rgba(24,22,18,.93)}
+  #dock .choice h3{font-size:17px;margin-bottom:5px}
+  #dock .choice p{font-size:13px;line-height:1.45}
+  #dock .controls{margin-top:0;padding-top:8px}
+  @media(max-width:640px){#dock .choice{padding:10px 12px}#dock .choice p{font-size:12px}}
+  #vn{display:none;position:absolute;left:0;right:0;bottom:0;padding:14px 16px 16px;
+      background:linear-gradient(transparent, rgba(12,12,10,.55) 18%, rgba(12,12,10,.92) 60%);z-index:5}
+  .vn-box{display:flex;gap:16px;max-width:860px;margin:0 auto;align-items:flex-end;cursor:pointer}
+  .vn-portrait{width:104px;height:128px;flex:0 0 auto;border:1px solid var(--bronze-dim);
+      border-radius:3px;background:#1c1814;overflow:hidden}
+  .vn-portrait svg{width:100%;height:100%;display:block}
+  .vn-main{flex:1;min-width:0}
+  .vn-name{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--bronze);margin-bottom:7px}
+  .vn-text{font-size:16.5px;line-height:1.6;color:var(--parchment);min-height:52px}
+  .vn-text em{color:var(--muted)}
+  .vn-next{font-size:11px;letter-spacing:.2em;color:var(--faint);margin-top:8px;text-transform:uppercase}
+  .vn-choices{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .vn-choice{font-family:inherit;font-size:14.5px;text-align:left;padding:11px 16px;background:rgba(24,22,18,.9);
+      border:1px solid var(--line);border-radius:2px;color:var(--parchment);cursor:pointer;transition:all .2s}
+  .vn-choice:hover{border-color:var(--bronze-dim);background:rgba(32,29,23,.95)}
+  #vntoast{position:absolute;right:16px;bottom:100%;margin-bottom:8px;font-size:11px;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--bronze);background:rgba(18,16,13,.85);border:1px solid var(--bronze-dim);
+      padding:6px 12px;border-radius:2px;opacity:0;transition:opacity .5s;pointer-events:none}
+  #vntoast.show{opacity:1}
+  .vn-narr .vn-text{font-style:italic;color:var(--muted)}
+  @media(max-width:640px){.vn-portrait{width:76px;height:96px}.vn-text{font-size:15px}}
+  footer{margin-top:44px;text-align:center;font-size:13px;color:var(--faint);line-height:1.7}
+  .fade-in{animation:fadeIn .6s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">14 October 1066 · Senlac Ridge · Sussex</div>
+    <h1>HASTINGS</h1>
+    <p class="subtitle">The shield wall on the ridge, the feigned flights, and one arrow that renamed a country</p>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true">
+      <defs><pattern id="key" width="26" height="14" patternUnits="userSpaceOnUse">
+        <path d="M0 12 H10 V2 H20 V8 H14 V6 H18 V4 H12 V10 H22 V0 H26" fill="none" stroke="#d9a441" stroke-width="1.4"/>
+      </pattern></defs>
+      <rect width="520" height="14" fill="url(#key)"/>
+    </svg>
+  </header>
+
+  <nav class="phases" aria-label="Battle phases">
+    <span class="pill" data-p="0">Prologue</span>
+    <span class="pill" data-p="1">The ridge</span>
+    <span class="pill" data-p="2">The assault</span>
+    <span class="pill" data-p="3">The feigned flight</span>
+    <span class="pill" data-p="4">The housecarls</span>
+    <span class="pill" data-p="5">Aftermath</span>
+  </nav>
+
+  <div class="stage">
+    <div id="view" role="img" aria-label="3D battlefield of Hastings on Senlac Ridge, Sussex"></div>
+    <div class="counters" id="counters">
+      <span class="counter c-no">Norman fallen&nbsp; <b id="noCt">0</b></span>
+      <span class="counter c-sa">Saxon fallen&nbsp; <b id="saCt">0</b></span>
+    </div>
+    <div class="daytag" id="daytag">Dawn · a misty October morning on the Weald</div>
+    <div id="formHud"></div>
+    <div class="camctl">
+      <button class="cambtn" data-cam="over">Overview</button>
+      <button class="cambtn" data-cam="ridge">The ridge</button>
+      <button class="cambtn" data-cam="left">Left flank</button>
+      <button class="cambtn" data-cam="right">Right flank</button>
+    </div>
+    <div class="camhint">drag · rotate&ensp;|&ensp;scroll · zoom&ensp;|&ensp;right-drag · pan</div>
+    <div id="dock"><div id="choiceArea"></div><div class="controls" id="controls"></div></div>
+    <div id="vn"><div id="vntoast"></div>
+      <div class="vn-box" id="vnbox">
+        <div class="vn-portrait" id="vnportrait"></div>
+        <div class="vn-main">
+          <div class="vn-name" id="vnname"></div>
+          <div class="vn-text" id="vntext"></div>
+          <div class="vn-choices" id="vnchoices"></div>
+          <div class="vn-next" id="vnnext">tap to continue &#9656;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="narration">
+    <div class="narr-label" id="narrLabel">Prologue</div>
+    <div id="narrBody"></div>
+  </div>
+
+  <footer>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true"><rect width="520" height="14" fill="url(#key)"/></svg>
+    Grounded in the Anglo-Saxon Chronicle, Orderic Vitalis, William of Poitiers, and the Bayeux Tapestry,
+    which records the day in stitches if not always in agreement. Harold brought perhaps 7,000 men to the
+    ridge; William perhaps 7,500 to 8,000 across all arms. One figure represents roughly 500 men.
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+
+/* ================= geography =================
+   Sim space 1000 x 620. Saxons hold Senlac ridge in the north (y~180).
+   Normans form up in the south (y~420). The ridge slopes gently toward them.
+   x=500 is the centre of the line. */
+const sx2w=x=>(x-500)*0.2, sy2w=y=>(y-310)*0.2;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const MEN_PER=500;
+const RIDGE_Y=200;
+
+const S={
+  phase:0, stage:'idle', st:0,
+  soldiers:[], arrows:[],
+  noDead:0, saDead:0,
+  archScreen:8, reform:false, flightSent:false,
+  fyrdBroke:false, wallThinned:false, orderCue:false, endCue:false, cavBack:false,
+};
+
+/* ================= three.js ================= */
+const view=document.getElementById('view');
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x8e9aa0);
+scene.fog=new THREE.Fog(0x8e9aa0,160,460);
+const camera=new THREE.PerspectiveCamera(52,1,0.5,900);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const SHADOWS=window.innerWidth>700;
+if(SHADOWS){renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;}
+view.appendChild(renderer.domElement);
+function resize(){const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+scene.add(new THREE.HemisphereLight(0xdce8f0,0x5a6040,1.0));
+const sun=new THREE.DirectionalLight(0xf8f0e0,0.8);
+sun.position.set(-20,90,60);
+if(SHADOWS){
+  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+  const sc=sun.shadow.camera;
+  sc.left=-130;sc.right=130;sc.top=130;sc.bottom=-130;sc.far=360;
+  sc.updateProjectionMatrix();sun.shadow.bias=-0.0008;
+}
+scene.add(sun);
+
+/* ---------- terrain: Sussex ridge ---------- */
+function terrainH(wx,wz){
+  const y=wz/0.2+310;
+  let h=0;
+  const ridgeFac=Math.exp(-Math.pow((y-RIDGE_Y)/55,2));
+  h+=ridgeFac*5.5;
+  h+=Math.sin(wx*0.04)*0.3+Math.cos(wz*0.05)*0.3+Math.sin((wx+wz)*0.018)*0.4;
+  return h;
+}
+{
+  const g=new THREE.PlaneGeometry(230,150,140,100);
+  g.rotateX(-Math.PI/2);
+  const pos=g.attributes.position,colors=[];
+  const cGrass=new THREE.Color(0x6a7a4a),cMud=new THREE.Color(0x7a6a4e),
+        cRidge=new THREE.Color(0x7a8a58),tmp=new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const wx=pos.getX(i),wz=pos.getZ(i);
+    const y=wz/0.2+310;
+    pos.setY(i,terrainH(wx,wz));
+    const ridgeFac=Math.exp(-Math.pow((y-RIDGE_Y)/55,2));
+    tmp.copy(cGrass).lerp(cRidge,ridgeFac*0.55);
+    tmp.lerp(cMud,0.12+0.12*Math.sin(wx*0.12)*Math.sin(wz*0.14));
+    tmp.offsetHSL(0,0,(Math.sin(wx*1.6)*Math.sin(wz*1.8))*0.025);
+    colors.push(tmp.r,tmp.g,tmp.b);
+  }
+  g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  g.computeVertexNormals();
+  const terrain=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}));
+  terrain.receiveShadow=SHADOWS;
+  scene.add(terrain);
+}
+/* trees on the flanks */
+{
+  const tm=new THREE.MeshLambertMaterial({color:0x4a5a34});
+  for(let i=0;i<40;i++){
+    const side=i%2===0?rnd(-110,-70):rnd(70,110);
+    const y=rnd(80,540);
+    const t=new THREE.Mesh(new THREE.ConeGeometry(rnd(1.2,2.2),rnd(4,7),6),tm);
+    const wx=sx2w(500+side),wz=sy2w(y);
+    t.position.set(wx,terrainH(wx,wz)+1,wz);
+    scene.add(t);
+  }
+}
+
+/* ---------- figures ---------- */
+function buildFigure(parts){
+  let vC=0,iC=0;
+  for(const p of parts){vC+=p.g.attributes.position.count;iC+=p.g.index.count;}
+  const P=new Float32Array(vC*3),N=new Float32Array(vC*3),C=new Float32Array(vC*3),I=new Uint16Array(iC);
+  const col=new THREE.Color();
+  let vO=0,iO=0;
+  for(const p of parts){
+    P.set(p.g.attributes.position.array,vO*3);
+    N.set(p.g.attributes.normal.array,vO*3);
+    col.set(p.c);
+    const n=p.g.attributes.position.count;
+    for(let i=0;i<n;i++){C[(vO+i)*3]=col.r;C[(vO+i)*3+1]=col.g;C[(vO+i)*3+2]=col.b;}
+    const idx=p.g.index.array;
+    for(let i=0;i<idx.length;i++)I[iO+i]=idx[i]+vO;
+    vO+=n;iO+=idx.length;
+  }
+  const out=new THREE.BufferGeometry();
+  out.setAttribute('position',new THREE.BufferAttribute(P,3));
+  out.setAttribute('normal',new THREE.BufferAttribute(N,3));
+  out.setAttribute('color',new THREE.BufferAttribute(C,3));
+  out.setIndex(new THREE.BufferAttribute(I,1));
+  return out;
+}
+function cyl(r1,r2,h,seg,x,y,z,rz){const g=new THREE.CylinderGeometry(r1,r2,h,seg);if(rz)g.rotateZ(rz);g.translate(x,y,z);return g;}
+function sph(r,x,y,z){const g=new THREE.SphereGeometry(r,6,5);g.translate(x,y,z);return g;}
+function box(w,h,d,x,y,z){const g=new THREE.BoxGeometry(w,h,d);g.translate(x,y,z);return g;}
+function cone(r,h,x,y,z){const g=new THREE.ConeGeometry(r,h,6);g.translate(x,y,z);return g;}
+
+/* Norman infantry: kite shield, spear, nasal helm */
+function buildNorman(o){
+  const skin=0xc2967a;
+  return buildFigure([
+    {g:cyl(.07,.085,.58,5, 0,.29,-.1),c:0x5a4a38},
+    {g:cyl(.07,.085,.58,5, 0,.29, .1),c:0x5a4a38},
+    {g:cyl(.16,.19,.46,6, 0,.84,0),c:o.coat},
+    {g:cyl(.16,.14,.28,6, 0,1.18,0),c:o.coat},
+    {g:cyl(.055,.06,.44,5, 0,1.08,-.22),c:skin},
+    {g:cyl(.055,.06,.44,5, 0,1.08, .22),c:skin},
+    {g:sph(.14,0,1.60,0),c:skin},
+    {g:sph(.155,0,1.67,0),c:0x7a8a7a},
+    {g:box(.04,.06,.04, 0,1.63,-0.06),c:0x6a7a6a},
+    {g:box(.055,.75,.42, .02,1.06,-.36),c:o.shield},
+    {g:cyl(.022,.022,1.7,4, .14,1.38,.24,-0.1),c:0x5c452c},
+  ]);
+}
+/* Norman archer */
+function buildArcher(o){
+  const skin=0xc2967a;
+  return buildFigure([
+    {g:cyl(.07,.085,.58,5, 0,.29,-.1),c:0x5a4a38},
+    {g:cyl(.07,.085,.58,5, 0,.29, .1),c:0x5a4a38},
+    {g:cyl(.15,.18,.46,6, 0,.84,0),c:o.coat},
+    {g:sph(.14,0,1.60,0),c:skin},
+    {g:sph(.15,0,1.67,0),c:0x3a2c1a},
+    {g:cyl(.012,.012,1.1,4, .2,1.35,.28,-.3),c:0x5c3820},
+    {g:cyl(.008,.008,.6,4, .04,1.44,.06,1.2),c:0x3a2c18},
+  ]);
+}
+/* Norman cavalry: horse, lance, kite shield */
+function buildRider(o){
+  const skin=0xc2967a;
+  const parts=[
+    {g:box(1.55,.58,.5, 0,1.0,0),c:o.horse},
+    {g:box(.42,.55,.34, .85,1.3,0),c:o.horse},
+    {g:box(.3,.24,.3, 1.1,1.52,0),c:o.horse},
+    {g:box(.14,.9,.32, -.55,.45,0),c:o.horse},
+    {g:box(.14,.9,.32, .55,.45,0),c:o.horse},
+    {g:cyl(.20,.25,.70,6, -.05,1.84,0),c:o.coat},
+    {g:sph(.16,-.05,2.38,0),c:skin},
+    {g:sph(.17,-.05,2.46,0),c:0x7a8a7a},
+    {g:cyl(.026,.026,2.5,4, .32,2.28,.28,-0.92),c:0x5c452c},
+    {g:box(.055,.80,.46, .02,1.9,-.38),c:o.shield},
+  ];
+  return buildFigure(parts);
+}
+/* Saxon housecarl: round shield, axe */
+function buildHousecarl(o){
+  const skin=0xc2967a;
+  return buildFigure([
+    {g:cyl(.07,.09,.60,5, 0,.30,-.1),c:0x5c4a3a},
+    {g:cyl(.07,.09,.60,5, 0,.30, .1),c:0x5c4a3a},
+    {g:cyl(.17,.20,.50,6, 0,.88,0),c:o.tunic},
+    {g:cyl(.055,.065,.48,5, 0,1.12,-.24),c:skin},
+    {g:cyl(.055,.065,.48,5, 0,1.12, .24),c:skin},
+    {g:sph(.15,0,1.64,0),c:skin},
+    {g:sph(.16,0,1.72,0),c:o.hair||0x2a1e10},
+    {g:cyl(.26,.26,.055,10, -.04,1.84,-.42,Math.PI/2),c:o.shield},
+    {g:cyl(.025,.018,.9,4, .18,1.42,.16,-.15),c:0x4a3828},
+    {g:box(.28,.16,.055, .5,1.72,.16),c:0x7a7070},
+  ]);
+}
+/* Saxon fyrd: lighter arms */
+function buildFyrd(o){
+  const skin=0xc2967a;
+  return buildFigure([
+    {g:cyl(.07,.085,.58,5, 0,.29,-.1),c:0x6a5a42},
+    {g:cyl(.07,.085,.58,5, 0,.29, .1),c:0x6a5a42},
+    {g:cyl(.16,.19,.48,6, 0,.86,0),c:o.tunic},
+    {g:sph(.14,0,1.60,0),c:skin},
+    {g:sph(.15,0,1.68,0),c:o.hair||0x3a2c1a},
+    {g:cyl(.022,.022,1.9,4, .14,1.36,.24,-0.12),c:0x5c452c},
+    {g:cyl(.20,.20,.05,8, -.04,1.80,-.38,Math.PI/2),c:o.shield},
+  ]);
+}
+
+const GEO={
+  ni:buildNorman({coat:0x3f5a9c,shield:0x46588a}),
+  na:buildArcher({coat:0x6a7050}),
+  nc:buildRider({horse:0x4a3a2c,coat:0x3f5a9c,shield:0x46588a}),
+  sh:buildHousecarl({tunic:0x7a3a28,shield:0x8c5030,hair:0x2a1e10}),
+  sf:buildFyrd({tunic:0x8a6a3a,shield:0x6a5032,hair:0x3a2a14}),
+};
+const MATS={};for(const k in GEO)MATS[k]=new THREE.MeshLambertMaterial({vertexColors:true});
+let MESH={};
+const M4=new THREE.Matrix4(),QT=new THREE.Quaternion(),V3=new THREE.Vector3(),SC=new THREE.Vector3(),EUL=new THREE.Euler();
+let perfNow=0;
+function soldier(x,y,side,grp,kind){
+  return {x,y,tx:x,ty:y,hx:x,hy:y,side,grp,kind,alive:true,flee:false,escaped:false,
+          jit:rnd(0,6.28),face:side==='n'?Math.PI/2:-Math.PI/2,moving:false,wps:null,pi:0,slot:0};
+}
+function buildInstances(){
+  for(const k in MESH)scene.remove(MESH[k]);
+  MESH={};
+  for(const k in GEO){
+    const list=S.soldiers.filter(s=>s.kind===k);
+    const m=new THREE.InstancedMesh(GEO[k],MATS[k],Math.max(list.length,1));
+    m.castShadow=SHADOWS;
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);
+    for(let i=0;i<m.count;i++)m.setMatrixAt(i,M4);
+    m.instanceMatrix.needsUpdate=true;
+    list.forEach((s,i)=>{s.idx=i;s.mesh=m;});
+    scene.add(m);MESH[k]=m;
+  }
+}
+function writeInstance(s){
+  const wx=sx2w(s.x),wz=sy2w(s.y);
+  if(s.escaped){SC.setScalar(0.0001);V3.set(wx,-80,wz);QT.set(0,0,0,1);}
+  else if(!s.alive){
+    V3.set(wx,terrainH(wx,wz)+0.22,wz);
+    EUL.set(Math.PI/2,s.jit,0);QT.setFromEuler(EUL);
+    SC.set(1,1,0.35);
+  }else{
+    const mounted=(s.kind==='nc');
+    const bob=s.moving?Math.abs(Math.sin(perfNow*(mounted?0.014:0.011)+s.jit))*(mounted?0.0:0.12):0;
+    V3.set(wx,terrainH(wx,wz)+bob,wz);
+    EUL.set(s.moving?0.08:0,s.face,s.moving?Math.sin(perfNow*0.012+s.jit)*0.04:0,'YXZ');QT.setFromEuler(EUL);
+    SC.setScalar(1);
+  }
+  M4.compose(V3,QT,SC);
+  s.mesh.setMatrixAt(s.idx,M4);
+}
+function flushInstances(){
+  for(const s of S.soldiers)writeInstance(s);
+  for(const k in MESH)MESH[k].instanceMatrix.needsUpdate=true;
+}
+function moveToward(s,speed,dt){
+  const dx=s.tx-s.x,dy=s.ty-s.y,d=Math.hypot(dx,dy);
+  if(d<1.5){s.moving=false;return true;}
+  s.moving=true;
+  s.x+=(dx/d)*speed*dt*60;s.y+=(dy/d)*speed*dt*60;
+  s.face=Math.atan2(-dy,dx);
+  return false;
+}
+function kill(s){
+  if(!s.alive)return;
+  s.alive=false;
+  if(s.side==='n')S.noDead++;else S.saDead++;
+  updateCounters();
+}
+function alive(side,grp){return S.soldiers.filter(s=>s.alive&&!s.escaped&&s.side===side&&(!grp||s.grp===grp));}
+function killRandom(list,n){
+  const pool=list.filter(s=>s.alive);
+  for(let i=0;i<n&&pool.length;i++){
+    const j=Math.floor(Math.random()*pool.length);
+    kill(pool[j]);pool.splice(j,1);
+  }
+}
+function updateCounters(){
+  document.getElementById('noCt').textContent='~'+(S.noDead*MEN_PER).toLocaleString();
+  document.getElementById('saCt').textContent='~'+(S.saDead*MEN_PER).toLocaleString();
+}
+function setDay(t){document.getElementById('daytag').textContent=t;}
+
+/* ---------- arrows ---------- */
+const ARROW_MAX=200;
+const arrowMesh=new THREE.InstancedMesh(new THREE.CylinderGeometry(0.035,0.035,1.2,4),
+  new THREE.MeshLambertMaterial({color:0x3a2e1e}),ARROW_MAX);
+arrowMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(arrowMesh);
+const UP=new THREE.Vector3(0,1,0),DIR=new THREE.Vector3();
+function volley(n,shooters,targets,hit){
+  if(!shooters.length||!targets.length)return;
+  for(let i=0;i<n;i++){
+    const from=shooters[Math.floor(Math.random()*shooters.length)];
+    const tgt=targets[Math.floor(Math.random()*targets.length)];
+    const fx=sx2w(from.x),fz=sy2w(from.y),tx=sx2w(tgt.x+rnd(-4,4)),tz=sy2w(tgt.y+rnd(-4,4));
+    S.arrows.push({fx,fy:terrainH(fx,fz)+2.0,fz,tx,ty:terrainH(tx,tz)+0.5,tz,
+      t:0,dur:rnd(0.5,0.85),arc:rnd(4,7),simx:tgt.x,simy:tgt.y,px:fx,py:2,pz:fz,vx:0,vy:1,vz:0,side:tgt.side,hit});
+  }
+}
+function updArrowFlight(dt){
+  for(let i=S.arrows.length-1;i>=0;i--){
+    const a=S.arrows[i];a.t+=dt;
+    const u=Math.min(a.t/a.dur,1);
+    const nx=a.fx+(a.tx-a.fx)*u,nz=a.fz+(a.tz-a.fz)*u;
+    const ny=a.fy+(a.ty-a.fy)*u+Math.sin(u*Math.PI)*a.arc;
+    a.vx=nx-a.px;a.vy=ny-a.py;a.vz=nz-a.pz;
+    a.px=nx;a.py=ny;a.pz=nz;
+    if(u>=1){
+      if(Math.random()<a.hit){
+        const near=S.soldiers.filter(s=>s.alive&&s.side===a.side&&Math.hypot(s.x-a.simx,s.y-a.simy)<9);
+        if(near.length)kill(near[0]);
+      }
+      S.arrows.splice(i,1);
+    }
+  }
+}
+function flushArrows(){
+  let i=0;
+  for(const a of S.arrows){
+    if(i>=ARROW_MAX)break;
+    V3.set(a.px,a.py,a.pz);
+    DIR.set(a.vx,a.vy,a.vz).normalize();
+    QT.setFromUnitVectors(UP,DIR);
+    SC.setScalar(1);M4.compose(V3,QT,SC);
+    arrowMesh.setMatrixAt(i++,M4);
+  }
+  for(;i<ARROW_MAX;i++){SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);arrowMesh.setMatrixAt(i,M4);}
+  arrowMesh.instanceMatrix.needsUpdate=true;
+}
+
+/* ================= camera ================= */
+const cam={yaw:Math.PI,pitch:0.95,dist:205,tx:0,ty:2,tz:0,auto:null};
+function applyCamera(dt){
+  if(cam.auto){
+    const a=cam.auto,k=1-Math.pow(0.001,dt);
+    cam.yaw+=(a.yaw-cam.yaw)*k;cam.pitch+=(a.pitch-cam.pitch)*k;cam.dist+=(a.dist-cam.dist)*k;
+    cam.tx+=(a.tx-cam.tx)*k;cam.ty+=(a.ty-cam.ty)*k;cam.tz+=(a.tz-cam.tz)*k;
+    if(Math.abs(a.dist-cam.dist)<0.5&&Math.abs(a.yaw-cam.yaw)<0.01)cam.auto=null;
+  }
+  cam.pitch=THREE.MathUtils.clamp(cam.pitch,0.14,1.42);
+  cam.dist=THREE.MathUtils.clamp(cam.dist,20,300);
+  const cp=Math.cos(cam.pitch);
+  camera.position.set(
+    cam.tx+Math.sin(cam.yaw)*cp*cam.dist,
+    cam.ty+Math.sin(cam.pitch)*cam.dist,
+    cam.tz+Math.cos(cam.yaw)*cp*cam.dist);
+  camera.lookAt(cam.tx,cam.ty,cam.tz);
+}
+const PRESETS={
+  over:{yaw:Math.PI,pitch:0.95,dist:205,tx:0,ty:2,tz:0},
+  ridge:{yaw:Math.PI,pitch:0.42,dist:80,tx:0,ty:1,tz:sy2w(RIDGE_Y+20)},
+  left:{yaw:Math.PI+0.6,pitch:0.55,dist:140,tx:sx2w(300),ty:1,tz:sy2w(280)},
+  right:{yaw:Math.PI-0.6,pitch:0.55,dist:140,tx:sx2w(700),ty:1,tz:sy2w(280)},
+};
+document.querySelectorAll('.cambtn').forEach(b=>b.onclick=()=>{cam.auto={...PRESETS[b.dataset.cam]};});
+function cine(name){cam.auto={...PRESETS[name]};}
+
+let drag=null,formDrag=null;
+view.addEventListener('pointerdown',e=>{
+  view.setPointerCapture(e.pointerId);
+  if(S.stage==='deploy'&&e.button===0&&!e.shiftKey){
+    const hit=castAt(e,[formPlane]);
+    if(hit.length){formDrag={x0:e.clientX,l0:S.archScreen};return;}
+  }
+  drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,btn:e.button,shift:e.shiftKey};
+  view.classList.add('dragging');cam.auto=null;
+});
+view.addEventListener('pointermove',e=>{
+  if(formDrag){
+    const l=THREE.MathUtils.clamp(formDrag.l0+(e.clientX-formDrag.x0)*0.1,0,16);
+    const q=Math.round(l);
+    if(q!==S.archScreen){S.archScreen=q;placeNormans();formHudText();}
+    return;
+  }
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  drag.x=e.clientX;drag.y=e.clientY;
+  if(drag.btn===2||drag.shift){
+    const cp=Math.cos(cam.yaw),sp=Math.sin(cam.yaw),k=cam.dist*0.0016;
+    cam.tx-=(dx*cp-dy*sp)*k;cam.tz-=(-dx*sp-dy*cp)*k;
+    cam.tx=THREE.MathUtils.clamp(cam.tx,-105,105);cam.tz=THREE.MathUtils.clamp(cam.tz,-66,66);
+  }else{cam.yaw-=dx*0.0055;cam.pitch+=dy*0.0045;}
+});
+const endDrag=()=>{drag=null;view.classList.remove('dragging');};
+view.addEventListener('pointerup',e=>{
+  if(formDrag){formDrag=null;return;}
+  if(drag&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<12)tryPick(e);
+  endDrag();
+});
+view.addEventListener('pointercancel',endDrag);
+view.addEventListener('wheel',e=>{e.preventDefault();cam.auto=null;cam.dist*=(1+Math.sign(e.deltaY)*0.09);},{passive:false});
+view.addEventListener('contextmenu',e=>e.preventDefault());
+let pinch=null;
+view.addEventListener('touchstart',e=>{if(e.touches.length===2)pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);});
+view.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&pinch){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    cam.dist*=pinch/d;pinch=d;cam.auto=null;
+  }
+},{passive:true});
+view.addEventListener('touchend',()=>pinch=null);
+
+/* ================= command layer ================= */
+const raycaster=new THREE.Raycaster();
+const ndc=new THREE.Vector2();
+function castAt(e,objects){
+  const r=renderer.domElement.getBoundingClientRect();
+  ndc.x=((e.clientX-r.left)/r.width)*2-1;
+  ndc.y=-((e.clientY-r.top)/r.height)*2+1;
+  raycaster.setFromCamera(ndc,camera);
+  return raycaster.intersectObjects(objects,false);
+}
+const formPlane=new THREE.Mesh(
+  new THREE.PlaneGeometry(110,36),
+  new THREE.MeshBasicMaterial({color:0xd9a441,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
+formPlane.rotation.x=-Math.PI/2;
+scene.add(formPlane);
+const formHud=document.getElementById('formHud');
+function formHudText(){
+  formHud.textContent=S.archScreen>=10
+    ?'Archers well forward · suppressing the ridge · drag to adjust'
+    :'Archers close in · infantry screening them · drag to adjust';
+}
+function ringMesh(color){
+  const m=new THREE.Mesh(new THREE.TorusGeometry(9,0.45,8,32),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.85}));
+  m.rotation.x=-Math.PI/2;m.visible=false;
+  const fill=new THREE.Mesh(new THREE.CircleGeometry(8.2,24),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.13,depthWrite:false,side:THREE.DoubleSide}));
+  fill.position.z=0.02;m.add(fill);
+  scene.add(m);return m;
+}
+const ringA=ringMesh(0xd9a441);
+const ringB=ringMesh(0xc45540);
+const RINGS=[ringA,ringB];
+let ringT=0,pickMode=null;
+function updCommandFx(dt){
+  ringT+=dt;
+  formPlane.material.opacity=(S.stage==='deploy')?0.07+Math.sin(ringT*3)*0.03:0;
+  if(S.stage==='deploy'){
+    formPlane.position.set(0,terrainH(0,sy2w(420))+0.6,sy2w(420));
+  }
+  for(const r of RINGS){
+    if(!r.visible)continue;
+    const k=1+Math.sin(ringT*3.4)*0.08;
+    r.scale.setScalar(k);r.material.opacity=0.55+Math.sin(ringT*3.4)*0.3;
+  }
+}
+function placeRing(r,sx,sy){
+  const wx=sx2w(sx),wz=sy2w(sy);
+  r.position.set(wx,terrainH(wx,wz)+0.7,wz);r.visible=true;
+}
+function hideRings(){for(const r of RINGS)r.visible=false;pickMode=null;}
+function pickRing(e){
+  const rect=renderer.domElement.getBoundingClientRect();
+  let best=null,bestD=1e9;
+  for(const r of RINGS){
+    if(!r.visible)continue;
+    V3.copy(r.position).project(camera);
+    if(V3.z>1)continue;
+    const px=(V3.x*0.5+0.5)*rect.width+rect.left;
+    const py=(-V3.y*0.5+0.5)*rect.height+rect.top;
+    const d=Math.hypot(e.clientX-px,e.clientY-py);
+    if(d<bestD){bestD=d;best=r;}
+  }
+  return bestD<Math.max(56,rect.width*0.08)?best:null;
+}
+function tryPick(e){
+  if(!pickMode)return;
+  const r=pickRing(e);
+  if(!r)return;
+  const choice=r===ringA?'a':'b';
+  hideRings();
+  if(pickMode==='flight'){if(choice==='a')startFeignedFlight();else startPressCF();}
+  else if(pickMode==='final'){if(choice==='a')startFinalPush();else startHoldCF();}
+}
+function centroid(list){
+  let mx=0,my=0;for(const s of list){mx+=s.x;my+=s.y;}
+  return list.length?[mx/list.length,my/list.length]:[500,310];
+}
+
+/* ---------- banners ---------- */
+const banners={};
+function makeBanner(color){
+  const g=new THREE.Group();
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,5.6,5),new THREE.MeshLambertMaterial({color:0x4a3b26}));
+  pole.position.y=2.8;
+  const flag=new THREE.Mesh(new THREE.PlaneGeometry(2.1,1.25),new THREE.MeshLambertMaterial({color,side:THREE.DoubleSide}));
+  flag.position.set(1.1,4.7,0);
+  g.add(pole,flag);g.userData.flag=flag;
+  scene.add(g);g.visible=false;
+  return g;
+}
+/* ================= dialogue layer ================= */
+const REL={};
+const FLAGSV={};
+function PT(o){
+ const hats={
+  crest:`<path d="M34 46 Q34 24 52 22 Q70 24 70 46 L64 42 Q52 34 40 42 Z" fill="${o.hatC}"/><rect x="47" y="5" width="10" height="20" rx="4" fill="${o.crestC||'#a03028'}"/>`,
+  band:`<path d="M36 44 Q52 30 68 44 Z" fill="${o.hairC||'#3a2c1a'}"/><rect x="34" y="43" width="36" height="6" rx="2" fill="${o.hatC}"/>`,
+  wrap:`<path d="M32 52 Q32 24 52 22 Q72 24 72 52 Q66 36 52 36 Q38 36 32 52 Z" fill="${o.hatC}"/><rect x="32" y="48" width="40" height="7" rx="3" fill="${o.hatC}"/>`,
+  none:`<path d="M34 48 Q34 28 52 26 Q70 28 70 48 Q64 38 52 39 Q40 38 34 48 Z" fill="${o.hairC||'#3a2c1a'}"/>`,
+ };
+ const beard=o.beard?`<path d="M40 84 Q52 96 64 84 L62 ${o.beard==='long'?102:94} Q52 ${o.beard==='long'?110:100} 42 ${o.beard==='long'?102:94} Z" fill="${o.beardC||o.hairC||'#3a2c1a'}"/>`:'';
+ const stache=o.stache?`<path d="M41 76 Q52 71 63 76" stroke="${o.beardC||o.hairC||'#3a2c1a'}" stroke-width="3" fill="none" stroke-linecap="round"/>`:'';
+ return `<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="${o.bg}"/>
+<ellipse cx="52" cy="122" rx="40" ry="26" fill="${o.robe}"/><path d="M14 122 Q52 86 90 122" fill="${o.robe2}"/>
+${o.extra||''}
+<ellipse cx="52" cy="64" rx="20" ry="23" fill="${o.skin||'#c9a075'}"/>
+${hats[o.hat||'none']||''}
+<path d="M40 58 L48 57 M56 57 L64 58" stroke="#2a2012" stroke-width="2.2" stroke-linecap="round"/>
+<circle cx="44" cy="63" r="1.9" fill="#20180e"/><circle cx="60" cy="63" r="1.9" fill="#20180e"/>
+${stache}${beard}
+<path d="M46 80 Q52 ${o.stern?79:84} 58 80" stroke="#8a5a3a" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>`;
+}
+const CAST={
+ wil:{name:'William · Duke of Normandy',svg:PT({bg:'#181a22',robe:'#3f5a9c',robe2:'#4c6ab0',hat:'crest',hatC:'#7a8a7a',crestC:'#3f5a9c',skin:'#b88a5e',beard:'short',beardC:'#2a1e10',stern:1})},
+ odo:{name:'Odo of Bayeux · bishop and general',svg:PT({bg:'#1a1820',robe:'#6a3a8a',robe2:'#7a4a9a',hat:'wrap',hatC:'#5a2a78',skin:'#c2967a',beard:'short',beardC:'#3a2a1a',stache:1})},
+ har:{name:'Harold Godwinson · King of England',svg:PT({bg:'#1e1818',robe:'#8c3028',robe2:'#a03830',hat:'crest',hatC:'#6a6a5a',crestC:'#c0a040',skin:'#c09070',beard:'short',beardC:'#3a2c1a',stern:1})},
+ nar:{name:'',svg:null},
+};
+const vnEl=document.getElementById('vn');
+const vnPortrait=document.getElementById('vnportrait');
+const vnName=document.getElementById('vnname');
+const vnText=document.getElementById('vntext');
+const vnChoices=document.getElementById('vnchoices');
+const vnNextEl=document.getElementById('vnnext');
+const vnToast=document.getElementById('vntoast');
+let vnQueue=[],vnDone=null,vnBusy=false;
+function playScene(steps,done){
+  vnQueue=steps.slice();vnDone=done;
+  choiceArea.innerHTML='';setControls([]);
+  vnEl.style.display='block';vnAdvance();
+}
+function vnAdvance(){
+  while(vnQueue.length&&vnQueue[0].if&&!vnQueue[0].if()){vnQueue.shift();}
+  if(!vnQueue.length){
+    vnEl.style.display='none';
+    const d=vnDone;vnDone=null;if(d)d();return;
+  }
+  renderVn(vnQueue.shift());
+}
+function renderVn(st){
+  const who=CAST[st.who]||CAST.nar;
+  vnPortrait.innerHTML=who.svg||'';
+  vnPortrait.style.display=who.svg?'block':'none';
+  vnName.textContent=who.name;
+  document.getElementById('vnbox').classList.toggle('vn-narr',st.who==='nar');
+  vnText.innerHTML=typeof st.text==='function'?st.text():st.text||'';
+  vnChoices.innerHTML='';
+  if(st.choices){
+    vnNextEl.style.display='none';vnBusy=true;
+    for(const c of st.choices){
+      const b=document.createElement('button');
+      b.className='vn-choice';b.textContent=c.label;
+      b.onclick=(ev)=>{
+        ev.stopPropagation();
+        if(c.d)for(const k in c.d){REL[k]=(REL[k]||0)+c.d[k];}
+        if(c.flag)FLAGSV[c.flag]=true;
+        if(c.toast)vToast(c.toast);
+        if(c.reply)vnQueue=c.reply.concat(vnQueue);
+        vnBusy=false;vnAdvance();
+      };
+      vnChoices.appendChild(b);
+    }
+  }else{vnNextEl.style.display='block';vnBusy=false;}
+}
+document.getElementById('vnbox').addEventListener('click',()=>{if(!vnBusy&&vnEl.style.display==='block')vnAdvance();});
+function vToast(t){
+  vnToast.textContent=t;vnToast.classList.add('show');
+  setTimeout(()=>vnToast.classList.remove('show'),1900);
+}
+
+/* ---- the scenes ---- */
+const SC_H_OPEN=[
+ {who:'nar',text:`It is the morning of 14 October 1066, and you have not slept. You came ashore at Pevensey three weeks ago with seven thousand men and two claims: that King Edward named you heir, and that Harold Godwinson swore on saints' bones to support that claim. Harold swore, then took the crown the moment Edward's body was cold. The bishops of Rome call what you are doing a holy war. You call it debt collection.`},
+ {who:'odo',text:`The ridge is real, brother. I rode the line at first light. A good position. Harold is no fool. His housecarls stand two, three deep at the crest. Shields locked, the Dane axe ready. He means to stand there and let you break yourself against him all day until your cavalry tires and his reinforcements arrive from the north.`,choices:[
+  {label:'"Then we do not let him rest. Every hour he stands costs him more than it costs us."',d:{odo:1},toast:'Bond · Odo',reply:[
+   {who:'odo',text:`Yes. And if his right breaks before noon, you have England by afternoon. I will ride with the cavalry. If they look at the bishop, they remember what God requires of them today.`}]},
+  {label:'"He fought Hardrada at Stamford Bridge twenty days ago. His men are tired. We are not."',reply:[
+   {who:'odo',text:`Tired men on a ridge are still men on a ridge, William. The archers first, then infantry to set the shield wall, then the cavalry. The order matters, or the cavalry dies in the mud without a gap to ride through.`}]},
+ ]},
+ {who:'har',text:`(And somewhere on the ridge above you, Harold Godwinson looks south at a Norman army and sees, the chroniclers will tell you, not invasion but a negotiation he has already closed. He has the crown. He has the high ground. He has the housecarls. He needs one good afternoon and you go home or drown.)`,choices:[
+  {label:`"He needs one good afternoon. See to it that he does not get one."`,d:{odo:1},toast:'Bond · Harold noted',reply:[
+   {who:'nar',text:`The trumpets begin. The Norman archers step forward into the October mist.`}]},
+  {label:`"He is a man who broke a sacred oath. Remind the army of that before we advance."`,reply:[
+   {who:'nar',text:`The priests carry the standard given by Alexander II. The men know what it means. The advance begins.`}]},
+ ]},
+];
+const SC_H_ARCH=[
+ {who:'nar',text:`The archers loose their first volleys uphill at a shield wall above them, and the arrows arc high, spent against locked shields, or fall short. The Saxon line jeers. Odo, riding the front on a destrier with a club in his hand, reins in beside you.`},
+ {who:'odo',text:`We are feeding them arrows. The angle is wrong and they have plenty of cover. If we advance the infantry first and press them into shields, the archers can shoot flat into the gaps. It is slower. It costs more in the front line. But it empties their quivers and ours find flesh.`},
+];
+function SC_H_AFTER(){
+ const steps=[];
+ steps.push({who:'nar',text:`The shield wall is broken. Harold is down, and with him the last Saxon king with a serious claim. England has a new rule, negotiated today in iron.`});
+ if((REL.odo||0)>=2){
+   steps.push({who:'odo',text:`Brother. Bishop. Duke. What do we call you now? I have written the archbishop. He will not refuse the crown to the man who is holding it. Canterbury by Christmas, William. I had a bet on it.`});
+ }else{
+   steps.push({who:'odo',text:`The day is yours. England's is a harder question, but you may ask it from a throne, which improves the asking considerably.`});
+ }
+ steps.push({who:'har',text:`(Harold is identified on the field by his personal bodyguards. The Normans do not mutilate his body, per William's order, though the chronicle's account of where he fell and how is contested to this day. What is not contested is that no Saxon king ever again held England. The Domesday Book, twenty years later, will record a country remade from the top down, every manor re-granted, every great title cleared and reissued in French.)`,});
+ return steps;
+}
+
+/* ================= armies ================= */
+function placeNormans(){
+  const screen=S.archScreen;
+  for(const s of S.soldiers){
+    if(s.side!=='n')continue;
+    const i=s.slot;
+    if(s.kind==='na'){
+      s.x=280+(i%12)*38;s.y=440-screen*4;
+    }else if(s.kind==='ni'){
+      s.x=260+(i%14)*36;s.y=455;
+    }else if(s.kind==='nc'){
+      if(s.grp==='ncL'){s.x=160+rnd(-12,12);s.y=440+Math.floor(i/4)*14;}
+      else{s.x=840+rnd(-12,12);s.y=440+Math.floor(i/4)*14;}
+    }
+    s.tx=s.x;s.ty=s.y;s.hx=s.x;s.hy=s.y;
+  }
+}
+function spawnAll(){
+  S.soldiers=[];
+  for(let i=0;i<12;i++){const s=soldier(0,0,'n','na','na');s.slot=i;S.soldiers.push(s);}
+  for(let i=0;i<14;i++){const s=soldier(0,0,'n','ni','ni');s.slot=i;S.soldiers.push(s);}
+  for(let i=0;i<6;i++){const s=soldier(0,0,'n','ncL','nc');s.slot=i;S.soldiers.push(s);}
+  for(let i=0;i<6;i++){const s=soldier(0,0,'n','ncR','nc');s.slot=i;S.soldiers.push(s);}
+  /* Saxons on the ridge */
+  for(let i=0;i<14;i++)S.soldiers.push(soldier(270+(i%14)*33,RIDGE_Y+Math.floor(i/14)*8,'s','sh','sh'));
+  for(let i=0;i<18;i++)S.soldiers.push(soldier(255+(i%14)*34,RIDGE_Y+24+Math.floor(i/14)*9,'s','sf','sf'));
+  buildInstances();
+  placeNormans();
+}
+
+/* ================= phase functions ================= */
+function enterPrologue(){
+  setPhase(0);setDay('Dawn · a misty October morning on the Weald');
+  S.noDead=0;S.saDead=0;updateCounters();
+  document.getElementById('counters').classList.remove('show');
+  S.arrows=[];S.archScreen=8;S.reform=false;S.flightSent=false;
+  S.fyrdBroke=false;S.wallThinned=false;S.orderCue=false;S.endCue=false;S.cavBack=false;
+  hideRings();formHud.style.display='none';formDrag=null;
+  S.stage='idle';
+  spawnAll();cine('over');
+  narrate('Prologue',
+   `<p>You are William, Duke of Normandy, forty-three years old, and the man on the ridge
+    above you is wearing a crown you believe belongs to you by promise and by oath. Harold Godwinson
+    fought his way south from Stamford Bridge in twenty days and arrived on Senlac ridge last night.
+    He chose well: a narrow front that negates your numerical advantage, a marsh on the left flank, a
+    stream on the right, and the ridge itself, which means your cavalry charges uphill into a wall of
+    interlocked shields and the long two-handed axe the Danes brought to England.</p>
+    <p>You have brought perhaps 7,500 men across the Channel: archers, infantry, and heavy cavalry. You
+    have the Pope's banner. You have a legal argument in Latin. Today you find out if either is enough.</p>`);
+  setControls([{label:'Ride the line', fn:()=>playScene(SC_H_OPEN,()=>{
+    setPhase(1);enterDeployment();
+  })}]);
+}
+function enterDeployment(){
+  S.stage='deploy';
+  document.getElementById('counters').classList.add('show');
+  cine('over');
+  formHud.style.display='block';formHudText();
+  playScene(SC_H_ARCH,()=>{
+    narrate('The ridge',
+     `<p>The Norman order of battle: archers in a screen ahead of the infantry, infantry in the centre,
+      heavy cavalry on both flanks. The idea is sequence: archers suppress the shield wall, infantry
+      engage it and open gaps, cavalry ride through those gaps and roll up the flanks. If any step fails,
+      the next one stalls.</p>
+      <p>Harold has answered with simplicity. The housecarls, his professional soldiers, hold the crest.
+      The fyrd, the levied men, fill in behind. The shield wall is the weapon: if it holds all day, your
+      cavalry runs out of daylight and you run out of options.</p>
+      <p><em>Drag left or right on the glowing ground to push the archers forward or pull them close.
+      Forward means more suppression; close means better angle when the infantry engages.</em></p>`);
+    setControls([{label:'Sound the advance', fn:confirmDeployment}]);
+  });
+}
+function confirmDeployment(){
+  formHud.style.display='none';
+  setPhase(2);startAssault();
+}
+function startAssault(){
+  S.stage='assault';S.st=0;
+  setDay('Morning · the advance uphill');
+  cine('ridge');
+  narrate('The assault',
+   `<p>The archers loose, infantry steps up, and the shield wall takes it. The housecarls absorb the
+    arrows on the shields and lean into the Norman infantry with axe and spear. The slope is doing its
+    work: every Norman step uphill costs energy, every Saxon blow lands with gravity behind it. Three
+    hours into the battle, the ridge has not moved.</p>`);
+  for(const s of alive('n','na')){s.tx=s.x;s.ty=RIDGE_Y+50+rnd(-5,5);}
+  for(const s of alive('n','ni')){s.tx=s.x;s.ty=RIDGE_Y+30+rnd(-5,5);}
+  setControls([]);
+}
+function updAssault(dt){
+  for(const s of [...alive('n','na'),...alive('n','ni')])moveToward(s,0.45,dt);
+  if(Math.random()<dt*1.8)volley(6,alive('n','na'),alive('s','sh'),0.12);
+  if(Math.random()<dt*1.4)volley(4,alive('s','sh'),[...alive('n','ni'),...alive('n','na')],0.10);
+  if(Math.random()<dt*0.6)killRandom(alive('n','ni'),1);
+  if(Math.random()<dt*0.4)killRandom(alive('s','sh'),1);
+  if(S.st>8&&!S.orderCue){
+    S.orderCue=true;
+    narrate('The assault · the impasse',
+     `<p>The infantry is stalled. The shield wall has not broken. Your cavalry waits on the flanks with
+      nothing to charge into. You need a gap or a crisis that pulls those Saxons off the ridge.</p>
+      <p><em>Tap the gold ring: feign a retreat, draw the fyrd off the ridge in pursuit, then wheel the
+      cavalry into them. Tap the red ring: send the cavalry in now, directly up the slope, and force a
+      gap through weight of horses.</em></p>`);
+    const [cx,cy]=centroid(alive('s','sh'));
+    placeRing(ringA,cx-30,cy+60);
+    placeRing(ringB,cx+30,cy+40);
+    pickMode='flight';
+    setControls([]);
+  }
+}
+function startFeignedFlight(){
+  S.stage='flight';S.st=0;S.flightSent=true;
+  setDay('Mid-morning · the feigned retreat');
+  cine('over');
+  narrate('The feigned flight',
+   `<p>The Norman infantry turns and runs. Not in rout, but in coordinated retreat, pulling back down the
+    slope, stumbling, apparently broken. On the ridge, the Saxon fyrd does what armies do when they see
+    the enemy flee: they come off the ridge after them, breaking the one thing that made them dangerous.</p>
+    <p>It is a hard manoeuvre to control. It requires infantry willing to run convincingly enough to lure
+    the Saxons, and cavalry steady enough not to join the panic. The chroniclers will debate for centuries
+    whether this was plan or accident. The Bayeux tapestry shows it, and the tapestry was made for men
+    who were there.</p>`);
+  for(const s of alive('n','ni')){s.tx=s.x+rnd(-8,8);s.ty=520;}
+  for(const s of alive('s','sf')){s.tx=s.x+rnd(-10,10);s.ty=RIDGE_Y+80;}
+  setControls([]);
+}
+function updFlight(dt){
+  for(const s of alive('n','ni'))moveToward(s,0.7,dt);
+  for(const s of alive('s','sf'))moveToward(s,0.55,dt);
+  if(!S.fyrdBroke&&S.st>3){
+    S.fyrdBroke=true;
+    for(const s of alive('n','ncL')){s.tx=280+rnd(-20,20);s.ty=RIDGE_Y+90;}
+    for(const s of alive('n','ncR')){s.tx=720+rnd(-20,20);s.ty=RIDGE_Y+90;}
+    narrate('The feigned flight · the wheel',
+     `<p>The cavalry pivots. The Norman horse swings in from both flanks onto the pursuing fyrd, who are
+      now below the ridge, strung out in pursuit, with no shield wall around them and no high ground
+      under them. The pursuit becomes a slaughter.</p>`);
+    setControls([]);
+  }
+  for(const s of [...alive('n','ncL'),...alive('n','ncR')])moveToward(s,0.9,dt);
+  if(S.fyrdBroke){
+    const cav=[...alive('n','ncL'),...alive('n','ncR')];
+    for(const c of cav){
+      if(Math.random()<dt*1.8)killRandom(alive('s','sf').filter(t=>Math.hypot(t.x-c.x,t.y-c.y)<16),1);
+    }
+    if(Math.random()<dt*0.5)killRandom(alive('n','ni'),1);
+  }
+  const fyrdLeft=alive('s','sf').length;
+  if(fyrdLeft<6&&!S.wallThinned){
+    S.wallThinned=true;
+    startHousecarls();
+  }
+}
+function startPressCF(){
+  S.stage='cfpress';S.st=0;
+  narrate('The feigned flight · what if',
+   `<p>You send the cavalry straight up the slope into the intact shield wall, and the answer arrives
+    in the form of the Dane axe, which removes horse heads at shoulder height with a single stroke.
+    Horses that reach the wall rear and wheel; horses that do not reach it die in the press. The shield
+    wall is not a defensive formation that collapses under pressure. It is a machine that converts
+    pressure into corpses, and you are the raw material. The slope guarantees the result.</p>
+    <p>The feigned flight was not a trick. It was a translation: Harold had made his shield wall into a
+    wall by putting it on a ridge. The only answer to a wall is a door. The feigned flight was the door.</p>`);
+  for(const s of alive('n','ncL')){s.tx=s.x;s.ty=RIDGE_Y+20;}
+  for(const s of alive('n','ncR')){s.tx=s.x;s.ty=RIDGE_Y+20;}
+  setControls([]);
+}
+function updCfPress(dt){
+  for(const s of [...alive('n','ncL'),...alive('n','ncR')])moveToward(s,0.9,dt);
+  if(Math.random()<dt*2.5)killRandom([...alive('n','ncL'),...alive('n','ncR')],1);
+  if(Math.random()<dt*0.4)killRandom(alive('s','sh'),1);
+  if(S.st>6){
+    S.stage='cffrozen';
+    narrate('The feigned flight · what if',
+     `<p>Cavalry without infantry support, attacking uphill against a formed shield wall: the arithmetic
+      works in one direction only. You have proved the ridge. You have not taken it. Rewind, and find the
+      door instead of the wall.</p>`);
+    setControls([{label:'Rewind · feign the retreat', fn:()=>{
+      S.stage='assault';S.orderCue=false;S.st=9;
+      for(const s of alive('n','ncL')){s.x=160;s.y=440;s.tx=s.x;s.ty=s.y;}
+      for(const s of alive('n','ncR')){s.x=840;s.y=440;s.tx=s.x;s.ty=s.y;}
+    }}]);
+  }
+}
+function startHousecarls(){
+  setPhase(3);S.stage='housecl';S.st=0;
+  setDay('Afternoon · the housecarls stand alone');
+  cine('ridge');
+  narrate('The housecarls',
+   `<p>The fyrd is gone from the flanks. The housecarls remain at the crest: Harold's professionals,
+    the men who marched south from Stamford Bridge in twenty days and still stand. The shield wall is
+    narrower now, and the Norman archers, who have been shooting uphill all morning into shields, are
+    ordered to change their angle: shoot high, let the arrows fall steeply into the faces of men whose
+    shields point outward not up.</p>
+    <p>Somewhere in this rain of arrows Harold Godwinson is hit. The sources argue about how. The
+    tapestry shows a figure clutching an arrow in his eye beside a falling man. William of Poitiers
+    says four knights then cut him down. The man dies; the detail is lost.</p>`);
+  for(const s of alive('n','na')){s.tx=s.x;s.ty=RIDGE_Y+65;}
+  for(const s of alive('n','ni')){s.tx=s.x;s.ty=RIDGE_Y+40;}
+  placeRing(ringA,500,RIDGE_Y+5);
+  placeRing(ringB,500,RIDGE_Y+55);
+  pickMode='final';
+  setControls([]);
+}
+function updHousecarls(dt){
+  for(const s of [...alive('n','na'),...alive('n','ni')])moveToward(s,0.4,dt);
+  if(Math.random()<dt*1.6)volley(8,alive('n','na'),alive('s','sh'),0.18);
+  if(Math.random()<dt*0.6)killRandom(alive('n','ni'),1);
+  if(Math.random()<dt*0.7)killRandom(alive('s','sh'),1);
+}
+function startFinalPush(){
+  S.stage='final';S.st=0;
+  setDay('Late afternoon · the last housecarls');
+  narrate('The housecarls · the final push',
+   `<p>Harold is dead. You send every man up the ridge. The housecarls fight around his body. The
+    Anglo-Saxon Chronicle will write that they were "fighting to the last man," which is not quite right
+    as a census, but it is right as a description of what they intended. They are not retreating. They
+    are staying where Harold sent them until there is no one left to stay.</p>`);
+  for(const s of alive('n','ncL')){s.tx=320+rnd(-20,20);s.ty=RIDGE_Y+10;}
+  for(const s of alive('n','ncR')){s.tx=680+rnd(-20,20);s.ty=RIDGE_Y+10;}
+  setControls([]);
+}
+function updFinal(dt){
+  for(const s of [...alive('n','ncL'),...alive('n','ncR'),...alive('n','ni')])moveToward(s,0.55,dt);
+  if(Math.random()<dt*1.8)volley(6,alive('n','na'),alive('s','sh'),0.22);
+  if(Math.random()<dt*2.0)killRandom(alive('s','sh'),1);
+  if(Math.random()<dt*0.35)killRandom(alive('n','ni'),1);
+  if(alive('s','sh').length<4&&!S.endCue){
+    S.endCue=true;
+    playScene(SC_H_AFTER(),aftermath);
+  }
+}
+function startHoldCF(){
+  S.stage='cfhold';S.st=0;
+  narrate('The housecarls · what if',
+   `<p>You hold back, waiting for the shield wall to dissolve on its own. But the housecarls do not
+    dissolve. They stand at the crest and take the arrows and the infantry attacks, and the October
+    light is going. The housecarls do not need to win. They need to outlast the light, and they are
+    doing it. The lesson Harold built into his position is one you are being taught by not acting on it:
+    the housecarl's job is not to beat you. It is to hold you until the sun decides.</p>`);
+  setControls([{label:'Rewind · commit all forces', fn:()=>{S.stage='housecl';S.st=0;startFinalPush();}}]);
+}
+function aftermath(){
+  setPhase(5);setDay('Evening · Senlac ridge is Norman ground');
+  S.stage='done';cine('over');
+  narrate('Aftermath',
+   `<p>The battle lasted nine hours, which is long for a medieval engagement. Norman casualties were
+    significant and poorly recorded. Saxon casualties included almost the entire housecarl class of
+    England, perhaps 4,000 professional soldiers who did not survive the afternoon. Harold's brothers
+    Gyrth and Leofwine died on the ridge as well.</p>
+    <p>William was crowned at Westminster on Christmas Day 1066. Over the following years the English
+    nobility was replaced almost wholesale: within twenty years of Hastings, almost no Anglo-Saxon
+    landowner held land under his own name. The language shifted, the church shifted, the architecture
+    shifted. The Domesday Book of 1086 is written in the Latin of conquerors counting a country they
+    own but do not speak.</p>
+    <p>The long-arc irony is that William's claim rested on Edward's promise and Harold's oath, neither
+    of which left a written record that both parties agreed on, and the battle that settled the argument
+    was decided not by right but by the inability of tired men to hold a ridge against a feigned retreat.
+    England speaks French for three centuries because a pursuing army ran downhill at the wrong moment.</p>
+    <p class="aside">The catalogue does not look away from what commands cost, or who pays them.
+    William ordered the building of a church on the site of the battle: Battle Abbey, its high altar placed
+    where Harold fell. The abbey was dissolved by Henry VIII in 1538. The ridge remains.</p>`);
+  setControls([{label:'Fight the ridge again', fn:enterPrologue, ghost:true}]);
+}
+
+/* ================= narration and UI ================= */
+const narrLabel=document.getElementById('narrLabel');
+const narrBody=document.getElementById('narrBody');
+const choiceArea=document.getElementById('choiceArea');
+const controls=document.getElementById('controls');
+function narrate(label,html){
+  narrLabel.textContent=label;narrBody.innerHTML=html;
+  narrBody.classList.remove('fade-in');void narrBody.offsetWidth;narrBody.classList.add('fade-in');
+  choiceArea.innerHTML='';
+}
+function setControls(btns){
+  controls.innerHTML='';
+  for(const b of btns){
+    const el=document.createElement('button');
+    el.className='btn'+(b.ghost?' ghost':'');el.textContent=b.label;el.onclick=b.fn;
+    controls.appendChild(el);
+  }
+}
+function setChoices(items){
+  choiceArea.innerHTML='';
+  const grid=document.createElement('div');grid.className='choices fade-in';
+  for(const it of items){
+    const c=document.createElement('button');c.className='choice';
+    c.innerHTML=`<h3>${it.title}</h3><p>${it.body}</p>`;
+    c.onclick=it.fn;grid.appendChild(c);
+  }
+  choiceArea.appendChild(grid);controls.innerHTML='';
+}
+function setPhase(p){
+  S.phase=p;
+  document.querySelectorAll('.pill').forEach(el=>{
+    const n=+el.dataset.p;
+    el.classList.toggle('active',n===p);el.classList.toggle('done',n<p);
+  });
+}
+
+/* ================= main loop ================= */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05);
+  last=now;perfNow=now;S.st+=dt;
+  switch(S.stage){
+    case 'assault':updAssault(dt);break;
+    case 'flight':updFlight(dt);break;
+    case 'cfpress':updCfPress(dt);break;
+    case 'housecl':updHousecarls(dt);break;
+    case 'final':updFinal(dt);break;
+    case 'done':
+      for(const s of S.soldiers){if(s.alive&&s.side==='s'&&!s.escaped){s.tx=s.x+rnd(-1,1)*dt*20;}}
+      break;
+  }
+  updArrowFlight(dt);
+  updCommandFx(dt);
+  applyCamera(dt);
+  flushInstances();
+  flushArrows();
+  updateBanners();
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+
+/* ================= boot ================= */
+resize();
+enterPrologue();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
+
+banners.sa=makeBanner(0x8c3028);
+function updateBanners(){
+  const sel={no:s=>s.side==='n'&&s.kind!=='nc', sa:s=>s.side==='s'};
+  for(const k in banners){
+    const list=S.soldiers.filter(s=>s.alive&&!s.escaped&&sel[k](s));
+    const b=banners[k];
+    if(list.length<5){b.visible=false;continue;}
+    let mx=0,my=0;for(const s of list){mx+=s.x;my+=s.y;}
+    mx/=list.length;my/=list.length;
+    const wx=sx2w(mx),wz=sy2w(my);
+    b.position.set(wx,terrainH(wx,wz),wz);
+    b.userData.flag.rotation.y=Math.sin(perfNow*0.002)*0.35;
+    b.visible=true;
+  }
+}
