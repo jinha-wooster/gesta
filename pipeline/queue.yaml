@@ -27,7 +27,8 @@
   lon: 43.44
   brief: The oblique advance, the gap that opens in Darius's line, and the charge into it. The hammer of the ancient world at full swing.
   type: battle
-  status: pending
+  status: built
+  built: 2026-08-19
 - slug: battle-of-sekigahara
   title: Sekigahara
   year: "21 October 1600"
