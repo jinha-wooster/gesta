@@ -24,6 +24,7 @@ jobs:
           git config user.email "pipeline@users.noreply.github.com"
       - uses: anthropics/claude-code-action@v1
         with:
+          show_full_output: true
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
             You are the GESTA content pipeline. Produce today's catalogue entry.
