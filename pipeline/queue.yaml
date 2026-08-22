@@ -47,7 +47,8 @@
   lon: 13.06
   brief: Aeaea, the moly herb, a year lost to comfort, and the voyage to the edge of the world to ask a dead prophet the way home.
   type: saga
-  status: pending
+  status: built
+  built: 2026-08-22
 - slug: battle-of-salamis
   title: Salamis
   year: "480 BC"

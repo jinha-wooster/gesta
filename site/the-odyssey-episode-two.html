@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Odyssey · Episode Two: Circe and the Dead</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16120e; --ink-2:#1e1913; --panel:#221c15; --line:#3a3226;
+    --parchment:#e7dcc4; --muted:#a2957c; --faint:#6f6450;
+    --bronze:#d9a441; --bronze-dim:#8f6f2e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{background:var(--ink)}
+  body{background:var(--ink);color:var(--parchment);font-family:'Source Serif 4',Georgia,serif;font-size:17px;line-height:1.65;min-height:100vh}
+  .wrap{max-width:1060px;margin:0 auto;padding:36px 18px 80px}
+
+  header{text-align:center;margin-bottom:26px}
+  .eyebrow{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  h1{font-family:'GFS Didot',serif;font-weight:400;font-size:clamp(38px,7vw,68px);letter-spacing:.06em;line-height:1}
+  .subtitle{color:var(--muted);font-style:italic;margin-top:12px;font-size:16px}
+  .meander{height:14px;margin:24px auto;max-width:520px;opacity:.55}
+
+  .phases{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+  .pill{font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:7px 13px;border:1px solid var(--line);border-radius:2px;color:var(--faint);transition:all .35s;white-space:nowrap}
+  .pill.active{color:var(--bronze);border-color:var(--bronze-dim);background:rgba(217,164,65,.06)}
+  .pill.done{color:var(--muted)}
+
+  .stage{position:relative;border:1px solid var(--line);background:#000;border-radius:3px;overflow:hidden}
+  #view{display:block;width:100%;height:560px;cursor:grab;touch-action:none}
+  #view.dragging{cursor:grabbing}
+  @media(max-width:700px){#view{height:420px}}
+
+  .counters{position:absolute;top:10px;left:12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;font-size:12px;letter-spacing:.08em;opacity:0;transition:opacity .6s}
+  .counters.show{opacity:1}
+  .counter{background:rgba(22,18,14,.72);padding:4px 10px;border-radius:2px;border:1px solid var(--line);width:max-content}
+  .counter b{font-weight:600}
+  .c-men b{color:#e0b055} .c-day b{color:#9db8d0} .c-hub b{color:#d98a55}
+  #stageToast{position:absolute;top:12px;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--bronze);background:rgba(22,18,14,.85);border:1px solid var(--bronze-dim);
+    padding:7px 14px;border-radius:2px;opacity:0;transition:opacity .5s;pointer-events:none;z-index:7;white-space:nowrap}
+  #stageToast.show{opacity:1}
+  .ch-row{text-align:left;margin-bottom:16px}
+  .ch-q{font-size:14px;color:var(--parchment);margin-bottom:5px}
+  .ch-bar{height:8px;background:#171310;border:1px solid var(--line);border-radius:2px;overflow:hidden}
+  .ch-bar div{height:100%;background:var(--bronze-dim)}
+  .ch-meta{font-size:12px;color:var(--muted);margin-top:5px;font-style:italic}
+  .ho-block{text-align:left;border:1px solid var(--line);border-radius:3px;padding:14px 18px;margin-top:18px;
+    font-size:13.5px;color:var(--muted);line-height:1.8}
+  .ho-block b{color:var(--parchment);font-weight:600}
+  .ho-k{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--bronze);margin-bottom:8px}
+
+  .daytag{position:absolute;bottom:10px;left:12px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(231,220,196,.7);background:rgba(22,18,14,.6);padding:5px 10px;border-radius:2px;pointer-events:none}
+
+  .camctl{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:6px}
+  .cambtn{font-family:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;background:rgba(22,18,14,.72);border:1px solid var(--line);border-radius:2px;color:var(--muted);cursor:pointer;transition:all .2s}
+  .cambtn:hover{color:var(--bronze);border-color:var(--bronze-dim)}
+  .camhint{position:absolute;bottom:10px;right:12px;font-size:11px;letter-spacing:.06em;color:rgba(231,220,196,.55);background:rgba(22,18,14,.6);padding:4px 9px;border-radius:2px;pointer-events:none}
+  @media(max-width:700px){.camhint{display:none}}
+
+  .narration{border:1px solid var(--line);border-top:none;background:var(--panel);padding:26px 30px;border-radius:0 0 3px 3px;min-height:150px}
+  .narr-label{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--bronze);margin-bottom:10px}
+  .narration p{margin-bottom:12px}
+  .narration p:last-child{margin-bottom:0}
+  .narration em{color:var(--muted)}
+  .aside{font-size:14px;color:var(--muted);font-style:italic;border-left:2px solid var(--bronze-dim);padding-left:14px;margin-top:14px}
+
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  @media(max-width:640px){.choices{grid-template-columns:1fr}}
+  .choice{border:1px solid var(--line);border-radius:3px;padding:20px;background:var(--ink-2);cursor:pointer;text-align:left;color:var(--parchment);font-family:inherit;font-size:16px;transition:border-color .25s,background .25s}
+  .choice:hover{border-color:var(--bronze-dim);background:#26201780}
+  .choice h3{font-family:'GFS Didot',serif;font-weight:400;font-size:20px;letter-spacing:.04em;margin-bottom:8px;color:var(--bronze)}
+  .choice p{font-size:14.5px;color:var(--muted);line-height:1.55}
+
+  .controls{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn{font-family:inherit;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:13px 28px;background:transparent;color:var(--bronze);border:1px solid var(--bronze-dim);border-radius:2px;cursor:pointer;transition:all .25s}
+  .btn:hover{background:rgba(217,164,65,.1);border-color:var(--bronze)}
+  .btn.ghost{color:var(--muted);border-color:var(--line)}
+  .btn.ghost:hover{color:var(--parchment);background:rgba(255,255,255,.04)}
+
+  #dock{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:10px 14px 12px;
+      background:linear-gradient(transparent, rgba(12,12,10,.45) 18%, rgba(12,12,10,.9) 72%)}
+  #dock:not(:has(button)){display:none}
+  #dock .choices{max-width:880px;margin:0 auto;gap:10px}
+  #dock .choice{padding:12px 14px;background:rgba(24,22,18,.93)}
+  #dock .choice h3{font-size:17px;margin-bottom:5px}
+  #dock .choice p{font-size:13px;line-height:1.45}
+  #dock .controls{margin-top:0;padding-top:8px}
+  @media(max-width:640px){#dock .choice{padding:10px 12px}#dock .choice p{font-size:12px}}
+  footer{margin-top:44px;text-align:center;font-size:13px;color:var(--faint);line-height:1.7}
+  .fade-in{animation:fadeIn .6s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  #vn{display:none;position:absolute;left:0;right:0;bottom:0;padding:14px 16px 16px;
+      background:linear-gradient(transparent, rgba(14,11,8,.55) 18%, rgba(14,11,8,.92) 60%);z-index:5}
+  .vn-box{display:flex;gap:16px;max-width:860px;margin:0 auto;align-items:flex-end;cursor:pointer}
+  .vn-portrait{width:104px;height:128px;flex:0 0 auto;border:1px solid var(--bronze-dim);
+      border-radius:3px;background:#221c15;overflow:hidden}
+  .vn-portrait svg{width:100%;height:100%;display:block}
+  .vn-main{flex:1;min-width:0}
+  .vn-name{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--bronze);margin-bottom:7px}
+  .vn-text{font-size:16.5px;line-height:1.6;color:var(--parchment);min-height:52px}
+  .vn-text em{color:var(--muted)}
+  .vn-next{font-size:11px;letter-spacing:.2em;color:var(--faint);margin-top:8px;text-transform:uppercase}
+  .vn-choices{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .vn-choice{font-family:inherit;font-size:14.5px;text-align:left;padding:11px 16px;background:rgba(30,25,19,.9);
+      border:1px solid var(--line);border-radius:2px;color:var(--parchment);cursor:pointer;transition:all .2s}
+  .vn-choice:hover{border-color:var(--bronze-dim);background:rgba(38,32,23,.95)}
+  #vntoast{position:absolute;right:16px;bottom:100%;margin-bottom:8px;font-size:11px;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--bronze);background:rgba(22,18,14,.85);border:1px solid var(--bronze-dim);
+      padding:6px 12px;border-radius:2px;opacity:0;transition:opacity .5s;pointer-events:none}
+  #vntoast.show{opacity:1}
+  .vn-narr .vn-text{font-style:italic;color:var(--muted)}
+  @media(max-width:640px){.vn-portrait{width:76px;height:96px}.vn-text{font-size:15px}}
+
+  #epcard{display:none;position:absolute;inset:0;z-index:8;background:rgba(14,11,8,.9);
+      text-align:center;padding:0 20px;cursor:pointer}
+  .ep-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;max-width:640px}
+  .ep-k{font-size:11px;letter-spacing:.4em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+  .ep-t{font-family:'GFS Didot',serif;font-size:clamp(38px,7vw,64px);letter-spacing:.08em;color:var(--parchment);line-height:1.05}
+  .ep-s{font-size:16px;font-style:italic;color:var(--bronze);margin-top:14px}
+  .ep-x{font-size:14px;color:var(--muted);margin-top:22px;line-height:1.7}
+  .ep-hint{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--faint);margin-top:30px}
+  .ep-btns{display:flex;gap:12px;justify-content:center;margin-top:26px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">The wine-dark sea · the island of Aeaea · the edge of the world</div>
+    <h1>THE ODYSSEY</h1>
+    <p class="subtitle">Episode Two · Circe and the Dead &nbsp;&middot;&nbsp; a season in twelve weekly chapters</p>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true">
+      <defs><pattern id="key" width="26" height="14" patternUnits="userSpaceOnUse">
+        <path d="M0 12 H10 V2 H20 V8 H14 V6 H18 V4 H12 V10 H22 V0 H26" fill="none" stroke="#d9a441" stroke-width="1.4"/>
+      </pattern></defs>
+      <rect width="520" height="14" fill="url(#key)"/>
+    </svg>
+  </header>
+
+  <nav class="phases" aria-label="Episode beats">
+    <span class="pill" data-p="0">Aeaea</span>
+    <span class="pill" data-p="1">The moly</span>
+    <span class="pill" data-p="2">The year</span>
+    <span class="pill" data-p="3">The dead</span>
+    <span class="pill" data-p="4">Tiresias</span>
+    <span class="pill" data-p="5">Elpenor's shade</span>
+  </nav>
+
+  <div class="stage">
+    <div id="view" role="img" aria-label="3D scene of Aeaea, island of Circe"></div>
+    <div class="counters" id="counters">
+      <span class="counter c-men">Companions&nbsp; <b id="menCt">6 of 12</b></span>
+      <span class="counter c-day">Day on Aeaea&nbsp; <b id="dayCt">1</b></span>
+      <span class="counter c-hub">Hubris&nbsp; <b id="hubCt">0</b></span>
+    </div>
+    <div class="daytag" id="daytag">Landfall</div>
+    <div id="stageToast"></div>
+    <div class="camctl">
+      <button class="cambtn" data-cam="shore">The shore</button>
+      <button class="cambtn" data-cam="forest">The forest</button>
+      <button class="cambtn" data-cam="hall">Circe's hall</button>
+      <button class="cambtn" data-cam="sea">Open water</button>
+    </div>
+    <div class="camhint">drag · rotate&ensp;|&ensp;scroll · zoom&ensp;|&ensp;right-drag · pan</div>
+    <div id="dock"><div id="choiceArea"></div><div class="controls" id="controls"></div></div>
+    <div id="vn"><div id="vntoast"></div>
+      <div class="vn-box" id="vnbox">
+        <div class="vn-portrait" id="vnportrait"></div>
+        <div class="vn-main">
+          <div class="vn-name" id="vnname"></div>
+          <div class="vn-text" id="vntext"></div>
+          <div class="vn-choices" id="vnchoices"></div>
+          <div class="vn-next" id="vnnext">tap to continue &#9656;</div>
+        </div>
+      </div>
+    </div>
+    <div id="epcard"></div>
+  </div>
+
+  <div class="narration">
+    <div class="narr-label" id="narrLabel">Aeaea</div>
+    <div id="narrBody"></div>
+  </div>
+
+  <footer>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true"><rect width="520" height="14" fill="url(#key)"/></svg>
+    Adapted from Books 10, 11, and 12 of Homer's <em>Odyssey</em>, told in the oral tradition of the 8th century BC.
+    Circe's island Aeaea is placed by ancient sources near the Laestrygonian shore, later identified with Monte Circeo on
+    Italy's Tyrrhenian coast. The Nekyia of Book 11 is the oldest extended description of the Greek underworld.
+    Elpenor, Eurylochus, and the named crew are Homer's own; the lines that history did not record are imagined
+    from what the poem implies. Figure scale: each crew figure represents one companion. Six of twelve survive
+    to Aeaea; one more is lost here. The catalogue does not look away from what commands cost, or who pays them.
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+
+/* ================= geography =================
+   Sim space 1000x620. Sea to the west (low x). Beach then laurel forest rising east.
+   Circe's hall is in the clearing at center-east. Ship on the western shore.
+   Nekyia phase: camera turns west, scene darkens toward Oceanus. */
+const sx2w=x=>(x-500)*0.2, sy2w=y=>(y-310)*0.2;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const smooth=(x,a,b)=>THREE.MathUtils.smoothstep(x,a,b);
+const HALL={x:640,y:280};
+const SHIP0={x:205,y:315};
+const SHORE_X=255;
+const PIT={x:228,y:315};
+
+const S={
+  phase:0, stage:'idle', sub:'', subT:0, st:0,
+  soldiers:[],
+  men:6, day:1,
+  daylight:1, dayTarget:1,
+  nekyia:false,
+};
+
+/* ================= three.js ================= */
+const view=document.getElementById('view');
+const scene=new THREE.Scene();
+const DAY_SKY=new THREE.Color(0x7a9eaa), NEKYIA_SKY=new THREE.Color(0x06090e);
+scene.background=DAY_SKY.clone();
+scene.fog=new THREE.Fog(0x7a9eaa,130,420);
+
+const camera=new THREE.PerspectiveCamera(52,1,0.5,900);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const SHADOWS=window.innerWidth>700;
+if(SHADOWS){renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;}
+view.appendChild(renderer.domElement);
+function resize(){const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+
+const hemi=new THREE.HemisphereLight(0xc8d8cc,0x504830,0.88);
+scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xfff0d8,1.05);
+sun.position.set(-60,90,50);
+if(SHADOWS){
+  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+  const sc=sun.shadow.camera;
+  sc.left=-130;sc.right=130;sc.top=130;sc.bottom=-130;sc.far=360;
+  sc.updateProjectionMatrix();sun.shadow.bias=-0.0008;
+}
+scene.add(sun);
+const hallGlow=new THREE.PointLight(0xc8a8e0,0,70,1.6);
+{const wx=sx2w(HALL.x),wz=sy2w(HALL.y);hallGlow.position.set(wx,5,wz);}
+scene.add(hallGlow);
+
+/* ---------- terrain ---------- */
+function terrainH(wx,wz){
+  const x=wx/0.2+500,y=wz/0.2+310;
+  let h=Math.sin(wx*0.09)*0.38+Math.cos(wz*0.11+wx*0.06)*0.32;
+  if(x<SHORE_X)h-=Math.min((SHORE_X-x)*0.055,5.2);
+  if(x>SHORE_X)h+=(x-SHORE_X)*0.006;
+  /* hall clearing: a gentle flat area */
+  const hdx=(x-HALL.x)/90,hdy=(y-HALL.y)/70;
+  h-=1.8*Math.exp(-(hdx*hdx+hdy*hdy));
+  if(y>545)h+=(y-545)*0.044;
+  if(y<70)h+=(70-y)*0.044;
+  if(x>940)h+=(x-940)*0.05;
+  return h;
+}
+{
+  const g=new THREE.PlaneGeometry(226,148,160,108);
+  g.rotateX(-Math.PI/2);
+  const pos=g.attributes.position,colors=[];
+  const cForest=new THREE.Color(0x5a7040),cDry=new THREE.Color(0x7a7a50),
+        cSand=new THREE.Color(0xa09060),cRock=new THREE.Color(0x6e6248),
+        cBed=new THREE.Color(0x3a5054),tmp=new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const wx=pos.getX(i),wz=pos.getZ(i),h=terrainH(wx,wz);
+    const x=wx/0.2+500;
+    pos.setY(i,h);
+    tmp.copy(cForest);
+    tmp.lerp(cDry,smooth(Math.sin(wx*0.28)*Math.sin(wz*0.25),0,1)*0.45);
+    tmp.lerp(cSand,smooth(-Math.abs(x-SHORE_X-12),-38,-6));
+    tmp.lerp(cRock,smooth(h,5,10));
+    if(h<-1.5)tmp.lerp(cBed,0.8);
+    tmp.offsetHSL(0,0,(Math.sin(wx*1.4)*Math.sin(wz*1.8))*0.035);
+    colors.push(tmp.r,tmp.g,tmp.b);
+  }
+  g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  g.computeVertexNormals();
+  const terrain=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}));
+  terrain.receiveShadow=SHADOWS;
+  scene.add(terrain);
+}
+/* the sea */
+const sea=new THREE.Mesh(
+  new THREE.PlaneGeometry(118,150),
+  new THREE.MeshLambertMaterial({color:0x2a4a58,transparent:true,opacity:0.92}));
+sea.rotation.x=-Math.PI/2;
+sea.position.set(sx2w(120),-0.5,0);
+scene.add(sea);
+
+/* laurel and oak forest */
+{
+  const trunkMat=new THREE.MeshLambertMaterial({color:0x4a3822});
+  const leafMats=[
+    new THREE.MeshLambertMaterial({color:0x4a6838}),
+    new THREE.MeshLambertMaterial({color:0x5a7842}),
+    new THREE.MeshLambertMaterial({color:0x3e5a2e}),
+  ];
+  for(let i=0;i<48;i++){
+    const x=rnd(290,920),y=rnd(80,560);
+    const dx=(x-HALL.x)/80,dy=(y-HALL.y)/60;
+    if(Math.exp(-(dx*dx+dy*dy))>0.5)continue;
+    const wx=sx2w(x),wz=sy2w(y),h=terrainH(wx,wz);
+    const lm=leafMats[Math.floor(rnd(0,leafMats.length))];
+    const t=new THREE.Mesh(new THREE.CylinderGeometry(0.18,0.3,rnd(2,3.2),5),trunkMat);
+    t.position.set(wx,h+t.geometry.parameters.height/2,wz);
+    t.rotation.z=rnd(-0.1,0.1);t.castShadow=SHADOWS;scene.add(t);
+    const cr=new THREE.Mesh(new THREE.SphereGeometry(rnd(1.4,2.4),6,5),lm);
+    cr.position.set(wx+rnd(-0.3,0.3),h+t.geometry.parameters.height+rnd(0.8,1.4),wz+rnd(-0.3,0.3));
+    cr.scale.y=rnd(0.65,0.85);cr.castShadow=SHADOWS;scene.add(cr);
+  }
+}
+
+/* Circe's hall: a simple stone structure */
+const hallGrp=new THREE.Group();
+{
+  const stone=new THREE.MeshLambertMaterial({color:0xc8b898});
+  const roof=new THREE.MeshLambertMaterial({color:0x8a7050});
+  const base=new THREE.Mesh(new THREE.BoxGeometry(14,0.6,10),stone);
+  base.position.y=0.3;hallGrp.add(base);
+  const cols=[[-5.5,0,-3],[-5.5,0,3],[5.5,0,-3],[5.5,0,3]];
+  for(const [cx,,cz] of cols){
+    const col=new THREE.Mesh(new THREE.CylinderGeometry(0.45,0.55,5.5,8),stone);
+    col.position.set(cx,3.1,cz);col.castShadow=SHADOWS;hallGrp.add(col);
+  }
+  const wall=new THREE.Mesh(new THREE.BoxGeometry(13,4.5,9),stone);
+  wall.position.y=2.85;wall.castShadow=SHADOWS;hallGrp.add(wall);
+  const roofMesh=new THREE.Mesh(new THREE.ConeGeometry(9,3.5,4),roof);
+  roofMesh.position.y=6.5;roofMesh.rotation.y=Math.PI/4;roofMesh.castShadow=SHADOWS;hallGrp.add(roofMesh);
+  const doorway=new THREE.Mesh(new THREE.BoxGeometry(2.8,3.8,0.4),new THREE.MeshBasicMaterial({color:0x0e0a06}));
+  doorway.position.set(-5.8,2.2,0);hallGrp.add(doorway);
+  hallGrp.traverse(o=>{if(o.isMesh&&o!==doorway)o.receiveShadow=SHADOWS;});
+}
+{
+  const wx=sx2w(HALL.x),wz=sy2w(HALL.y);
+  hallGrp.position.set(wx,terrainH(wx,wz),wz);
+}
+scene.add(hallGrp);
+
+/* smoke column above hall */
+const smokeMat=new THREE.MeshBasicMaterial({color:0xc8c0b0,transparent:true,opacity:0.18,side:THREE.DoubleSide});
+const smokes=[];
+for(let i=0;i<6;i++){
+  const sm=new THREE.Mesh(new THREE.PlaneGeometry(2.2+i*0.6,1.4),smokeMat.clone());
+  const wx=sx2w(HALL.x),wz=sy2w(HALL.y);
+  sm.position.set(wx,9+i*1.6+terrainH(wx,wz),wz);
+  sm.rotation.x=-Math.PI/2;smokes.push({mesh:sm,t:rnd(0,6.28)});scene.add(sm);
+}
+
+/* ---------- the ship ---------- */
+const shipGrp=new THREE.Group();
+{
+  const wood=new THREE.MeshLambertMaterial({color:0x52402c});
+  const hull=new THREE.Mesh(new THREE.CylinderGeometry(1.1,0.45,10,7),wood);
+  hull.rotation.z=Math.PI/2;hull.scale.y=0.85;hull.position.y=0.4;
+  const prow=new THREE.Mesh(new THREE.ConeGeometry(0.8,2.6,6),wood);
+  prow.rotation.z=Math.PI/2;prow.position.set(-6,0.8,0);
+  const stern=new THREE.Mesh(new THREE.ConeGeometry(0.75,2.2,6),wood);
+  stern.rotation.z=-Math.PI/2;stern.position.set(6,0.9,0);
+  const mast=new THREE.Mesh(new THREE.CylinderGeometry(0.13,0.15,6.5,5),wood);
+  mast.position.y=3.4;
+  const sail=new THREE.Mesh(new THREE.PlaneGeometry(4,3.2),
+    new THREE.MeshLambertMaterial({color:0xd8ceb0,side:THREE.DoubleSide}));
+  sail.position.set(0,4.4,0);
+  shipGrp.add(hull,prow,stern,mast,sail);
+  shipGrp.traverse(o=>{if(o.isMesh)o.castShadow=SHADOWS;});
+  scene.add(shipGrp);
+}
+const shipS={x:SHIP0.x,y:SHIP0.y,tx:SHIP0.x,ty:SHIP0.y,face:Math.PI};
+function shipUpdate(dt,speed){
+  const dx=shipS.tx-shipS.x,dy=shipS.ty-shipS.y,d=Math.hypot(dx,dy);
+  if(d>1.5){
+    shipS.x+=(dx/d)*speed*dt*60;shipS.y+=(dy/d)*speed*dt*60;
+    const t=Math.atan2(-dy,dx);
+    let diff=t-shipS.face;
+    while(diff>Math.PI)diff-=6.283;while(diff<-Math.PI)diff+=6.283;
+    shipS.face+=diff*Math.min(dt*2.5,1);
+  }
+  shipGrp.position.set(sx2w(shipS.x),-0.35+Math.sin(perfNow*0.0013)*0.1,sy2w(shipS.y));
+  shipGrp.rotation.y=shipS.face;
+  shipGrp.rotation.z=Math.sin(perfNow*0.0011)*0.03;
+}
+
+/* ---------- Circe figure ---------- */
+const circGrp=new THREE.Group();
+let circeMat;
+{
+  const skin=new THREE.MeshLambertMaterial({color:0xc8a8d8});
+  const cloth=new THREE.MeshLambertMaterial({color:0x6a3a8e});
+  circeMat=skin;
+  const legL=new THREE.Mesh(new THREE.CylinderGeometry(0.32,0.42,2.8,6),cloth);legL.position.set(0,1.4,-0.4);
+  const legR=legL.clone();legR.position.z=0.4;
+  const torso=new THREE.Mesh(new THREE.CylinderGeometry(0.65,0.85,2.8,7),cloth);torso.position.y=4.2;
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.62,8,7),skin);head.position.y=6.2;
+  const hair=new THREE.Mesh(new THREE.SphereGeometry(0.72,8,6),new THREE.MeshLambertMaterial({color:0x1a0c28}));
+  hair.position.y=6.4;hair.scale.set(1,0.8,1);
+  const wand=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,2.2,4),new THREE.MeshLambertMaterial({color:0x8f6f2e}));
+  wand.position.set(-0.9,4.8,0.5);wand.rotation.z=0.5;
+  circGrp.add(legL,legR,torso,head,hair,wand);
+  circGrp.traverse(o=>{if(o.isMesh)o.castShadow=SHADOWS;});
+  scene.add(circGrp);
+}
+const circeS={x:HALL.x+2,y:HALL.y,visible:true};
+function updateCirce(){
+  circGrp.visible=circeS.visible;
+  if(!circeS.visible)return;
+  const wx=sx2w(circeS.x),wz=sy2w(circeS.y);
+  circGrp.position.set(wx,terrainH(wx,wz),wz);
+  circGrp.rotation.y=Math.sin(perfNow*0.0006)*0.3;
+}
+
+/* ---------- Tiresias figure (appears in Nekyia) ---------- */
+const tirGrp=new THREE.Group();
+let tirMat;
+{
+  const ghostMat=new THREE.MeshLambertMaterial({color:0x9ab4c8,transparent:true,opacity:0.72});
+  tirMat=ghostMat;
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(0.38,0.55,3.2,6),ghostMat);body.position.y=1.6;
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.5,7,6),ghostMat);head.position.y=3.6;
+  const staff=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,2.6,4),
+    new THREE.MeshLambertMaterial({color:0x5a4228,transparent:true,opacity:0.72}));
+  staff.position.set(0.7,1.5,-0.5);staff.rotation.z=0.22;
+  tirGrp.add(body,head,staff);
+  tirGrp.visible=false;
+  scene.add(tirGrp);
+}
+const tirS={x:PIT.x+20,y:PIT.y-10};
+function updateTiresias(){
+  if(!tirGrp.visible)return;
+  const wx=sx2w(tirS.x),wz=sy2w(tirS.y);
+  tirGrp.position.set(wx,terrainH(wx,wz)+Math.sin(perfNow*0.0008)*0.3,wz);
+  tirGrp.rotation.y=Math.sin(perfNow*0.0005)*0.4;
+  tirMat.opacity=0.55+Math.sin(perfNow*0.0012)*0.22;
+}
+
+/* ---------- interactive rings ---------- */
+const RING_R=new THREE.TorusGeometry(4.8,0.18,8,32);
+const goldRing=new THREE.Mesh(RING_R,new THREE.MeshBasicMaterial({color:0xd9a441,transparent:true,opacity:0.82}));
+const redRing=new THREE.Mesh(new THREE.TorusGeometry(4.8,0.18,8,32),
+  new THREE.MeshBasicMaterial({color:0xb84040,transparent:true,opacity:0.82}));
+{
+  const wx=sx2w(HALL.x-7),wz=sy2w(HALL.y);
+  goldRing.position.set(wx,terrainH(wx,wz)+3.0,wz);
+  goldRing.rotation.x=Math.PI/2;
+  redRing.position.set(sx2w(HALL.x-7),terrainH(sx2w(HALL.x-7),sy2w(HALL.y+18))+3.0,sy2w(HALL.y+18));
+  redRing.rotation.x=Math.PI/2;
+}
+goldRing.visible=false;redRing.visible=false;
+scene.add(goldRing);scene.add(redRing);
+
+const goldHit=new THREE.Mesh(new THREE.CircleGeometry(8,12),
+  new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
+goldHit.position.copy(goldRing.position);goldHit.rotation.copy(goldRing.rotation);scene.add(goldHit);
+const redHit=new THREE.Mesh(new THREE.CircleGeometry(8,12),
+  new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
+redHit.position.copy(redRing.position);redHit.rotation.copy(redRing.rotation);scene.add(redHit);
+
+const raycaster=new THREE.Raycaster();
+const ndc=new THREE.Vector2();
+function castAt(e,objects){
+  const r=renderer.domElement.getBoundingClientRect();
+  ndc.x=((e.clientX-r.left)/r.width)*2-1;
+  ndc.y=-((e.clientY-r.top)/r.height)*2+1;
+  raycaster.setFromCamera(ndc,camera);
+  return raycaster.intersectObjects(objects,false);
+}
+const PV=new THREE.Vector3();
+function screenDist(e,px,py,pz){
+  const rect=renderer.domElement.getBoundingClientRect();
+  PV.set(px,py,pz).project(camera);
+  if(PV.z>1)return 1e9;
+  const sx=(PV.x*0.5+0.5)*rect.width+rect.left;
+  const sy=(-PV.y*0.5+0.5)*rect.height+rect.top;
+  return Math.hypot(e.clientX-sx,e.clientY-sy);
+}
+function pickR(){const rect=renderer.domElement.getBoundingClientRect();return Math.max(48,rect.width*0.07);}
+
+/* ---------- crew ---------- */
+function mergeGeos(geos){
+  let vC=0,iC=0;
+  for(const g of geos){vC+=g.attributes.position.count;iC+=g.index.count;}
+  const P=new Float32Array(vC*3),N=new Float32Array(vC*3),I=new Uint16Array(iC);
+  let vO=0,iO=0;
+  for(const g of geos){
+    P.set(g.attributes.position.array,vO*3);
+    N.set(g.attributes.normal.array,vO*3);
+    const idx=g.index.array;
+    for(let i=0;i<idx.length;i++)I[iO+i]=idx[i]+vO;
+    vO+=g.attributes.position.count;iO+=idx.length;
+  }
+  const out=new THREE.BufferGeometry();
+  out.setAttribute('position',new THREE.Float32BufferAttribute(P,3));
+  out.setAttribute('normal',new THREE.Float32BufferAttribute(N,3));
+  out.setIndex(new THREE.BufferAttribute(I,1));
+  return out;
+}
+const footGeo=(()=>{
+  const body=new THREE.CylinderGeometry(0.32,0.42,1.5,6);body.translate(0,0.75,0);
+  const head=new THREE.SphereGeometry(0.26,6,5);head.translate(0,1.72,0);
+  const spear=new THREE.CylinderGeometry(0.04,0.04,2.4,4);spear.translate(0,1.4,0.42);
+  return mergeGeos([body,head,spear]);
+})();
+const KINDS={cr:{color:0xb09060},od:{color:0xd9a441}};
+const MATS={};for(const k in KINDS)MATS[k]=new THREE.MeshLambertMaterial({color:KINDS[k].color});
+let MESH={};
+function soldier(x,y,kind){
+  return {x,y,tx:x,ty:y,kind,face:rnd(0,6.28),hidden:false,jit:rnd(0,6.28),moving:false,wps:null};
+}
+let ody=null;
+function spawnCrew(){
+  S.soldiers=[];
+  for(let i=0;i<S.men;i++)S.soldiers.push(soldier(SHIP0.x+28+rnd(-8,8),SHIP0.y+rnd(-12,12),'cr'));
+  ody=soldier(SHIP0.x+32,SHIP0.y,'od');
+  S.soldiers.push(ody);
+  buildInstances();
+}
+function buildInstances(){
+  for(const k in MESH)scene.remove(MESH[k]);
+  MESH={};
+  for(const k in KINDS){
+    const list=S.soldiers.filter(s=>s.kind===k);
+    const m=new THREE.InstancedMesh(footGeo,MATS[k],Math.max(list.length,1));
+    m.castShadow=SHADOWS;
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    const _s2=new THREE.Vector3(),_v2=new THREE.Vector3(),_q2=new THREE.Quaternion(),_m2=new THREE.Matrix4();
+    _s2.setScalar(0.0001);_v2.set(0,-80,0);_q2.set(0,0,0,1);_m2.compose(_v2,_q2,_s2);
+    for(let i=0;i<m.count;i++)m.setMatrixAt(i,_m2);
+    m.instanceMatrix.needsUpdate=true;
+    list.forEach((s,i)=>{s.idx=i;s.mesh=m;});
+    scene.add(m);MESH[k]=m;
+  }
+}
+const _m=new THREE.Matrix4(),_q=new THREE.Quaternion(),_v=new THREE.Vector3(),_s=new THREE.Vector3(),_e=new THREE.Euler();
+let perfNow=0;
+function flushCrew(){
+  for(const s of S.soldiers){
+    const wx=sx2w(s.x),wz=sy2w(s.y);
+    if(s.hidden){_s.setScalar(0.0001);_v.set(wx,-80,wz);_q.set(0,0,0,1);}
+    else{
+      const bob=s.moving?Math.abs(Math.sin(perfNow*0.012+s.jit))*0.13:0;
+      _v.set(wx,terrainH(wx,wz)+bob,wz);
+      _e.set(0,s.face,0);_q.setFromEuler(_e);_s.setScalar(1);
+    }
+    _m.compose(_v,_q,_s);
+    s.mesh.setMatrixAt(s.idx,_m);
+  }
+  for(const k in MESH)MESH[k].instanceMatrix.needsUpdate=true;
+}
+function moveToward(s,speed,dt){
+  const dx=s.tx-s.x,dy=s.ty-s.y,d=Math.hypot(dx,dy);
+  if(d<1.5){s.moving=false;return true;}
+  s.moving=true;
+  s.x+=(dx/d)*speed*dt*60;s.y+=(dy/d)*speed*dt*60;
+  s.face=Math.atan2(-dy,dx);
+  return false;
+}
+function party(){return S.soldiers.filter(s=>s.kind==='cr');}
+
+/* ---------- counters ---------- */
+function setCounter(){
+  document.getElementById('menCt').textContent=S.men+' of 12';
+  document.getElementById('dayCt').textContent=S.day;
+  document.getElementById('hubCt').textContent=SEASON.hubris;
+}
+let stToastT=null;
+function showToast(t){
+  const el=document.getElementById('stageToast');
+  el.textContent=t;el.classList.add('show');
+  window.clearTimeout(stToastT);
+  stToastT=setTimeout(()=>el.classList.remove('show'),2200);
+}
+function addHubris(n,why){
+  SEASON.hubris+=n;setCounter();
+  showToast('Hubris rises · '+why);
+}
+function recordChoice(id,title,pick,pct,homer){
+  if(CHOICELOG.some(c=>c.id===id))return;
+  CHOICELOG.push({id,title,pick,pct,homer});
+  showToast('The story will remember that');
+}
+
+/* ================= camera ================= */
+const cam={yaw:1.5,pitch:0.8,dist:190,tx:0,ty:2,tz:0,auto:null};
+function applyCamera(dt){
+  if(cam.auto){
+    const a=cam.auto,k=1-Math.pow(0.001,dt);
+    cam.yaw+=(a.yaw-cam.yaw)*k;cam.pitch+=(a.pitch-cam.pitch)*k;cam.dist+=(a.dist-cam.dist)*k;
+    cam.tx+=(a.tx-cam.tx)*k;cam.ty+=(a.ty-cam.ty)*k;cam.tz+=(a.tz-cam.tz)*k;
+    if(Math.abs(a.dist-cam.dist)<0.5&&Math.abs(a.yaw-cam.yaw)<0.01)cam.auto=null;
+  }
+  cam.pitch=THREE.MathUtils.clamp(cam.pitch,0.14,1.42);
+  cam.dist=THREE.MathUtils.clamp(cam.dist,18,300);
+  const cp=Math.cos(cam.pitch);
+  camera.position.set(
+    cam.tx+Math.sin(cam.yaw)*cp*cam.dist,
+    cam.ty+Math.sin(cam.pitch)*cam.dist,
+    cam.tz+Math.cos(cam.yaw)*cp*cam.dist);
+  camera.lookAt(cam.tx,cam.ty,cam.tz);
+}
+const PRESETS={
+  shore:{yaw:1.5,pitch:0.8,dist:190,tx:0,ty:2,tz:0},
+  forest:{yaw:1.2,pitch:0.5,dist:85,tx:sx2w(500),ty:2,tz:sy2w(300)},
+  hall:{yaw:1.9,pitch:0.42,dist:60,tx:sx2w(HALL.x),ty:4,tz:sy2w(HALL.y)},
+  sea:{yaw:2.3,pitch:0.45,dist:90,tx:sx2w(200),ty:1,tz:sy2w(310)},
+  nekyia:{yaw:2.8,pitch:0.3,dist:70,tx:sx2w(220),ty:1,tz:sy2w(315)},
+  approach:{yaw:1.6,pitch:0.5,dist:110,tx:sx2w(430),ty:3,tz:sy2w(290)},
+};
+document.querySelectorAll('.cambtn').forEach(b=>b.onclick=()=>{cam.auto={...PRESETS[b.dataset.cam]};});
+function cine(name){cam.auto={...PRESETS[name]};}
+
+let drag=null;
+view.addEventListener('pointerdown',e=>{view.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,btn:e.button,shift:e.shiftKey};view.classList.add('dragging');cam.auto=null;});
+view.addEventListener('pointermove',e=>{
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  drag.x=e.clientX;drag.y=e.clientY;
+  if(drag.btn===2||drag.shift){
+    const cp=Math.cos(cam.yaw),sp=Math.sin(cam.yaw),k=cam.dist*0.0016;
+    cam.tx-=(dx*cp-dy*sp)*k;cam.tz-=(-dx*sp-dy*cp)*k;
+    cam.tx=THREE.MathUtils.clamp(cam.tx,-105,105);
+    cam.tz=THREE.MathUtils.clamp(cam.tz,-66,66);
+  }else{cam.yaw-=dx*0.0055;cam.pitch+=dy*0.0045;}
+  if(INTER.mode==='drag-walk'){
+    tryDragWalk(e);
+  }
+});
+const endDrag2=()=>{drag=null;view.classList.remove('dragging');};
+view.addEventListener('pointerup',e=>{if(drag&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<14)tryPick(e);endDrag2();});
+view.addEventListener('pointercancel',endDrag2);
+view.addEventListener('wheel',e=>{e.preventDefault();cam.auto=null;cam.dist*=(1+Math.sign(e.deltaY)*0.09);},{passive:false});
+view.addEventListener('contextmenu',e=>e.preventDefault());
+let pinch=null;
+view.addEventListener('touchstart',e=>{if(e.touches.length===2)pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);});
+view.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&pinch){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    cam.dist*=pinch/d;pinch=d;cam.auto=null;
+  }
+},{passive:true});
+view.addEventListener('touchend',()=>pinch=null);
+
+/* ================= drag-walk interaction (DRAG beat) ================= */
+const INTER={mode:null,ringT:0};
+const walkPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+const walkPt=new THREE.Vector3();
+function tryDragWalk(e){
+  const r=renderer.domElement.getBoundingClientRect();
+  ndc.x=((e.clientX-r.left)/r.width)*2-1;
+  ndc.y=-((e.clientY-r.top)/r.height)*2+1;
+  raycaster.setFromCamera(ndc,camera);
+  raycaster.ray.intersectPlane(walkPlane,walkPt);
+  if(!walkPt)return;
+  const sx=walkPt.x/0.2+500,sy=walkPt.z/0.2+310;
+  if(sx<SHORE_X+10||sx>950||sy<60||sy>560)return;
+  ody.tx=sx;ody.ty=sy;
+  const dist=Math.hypot(sx-HALL.x,sy-HALL.y);
+  document.getElementById('menCt').textContent='alone';
+  document.getElementById('dayCt').textContent=Math.round(dist)+' paces to the hall';
+  if(dist<80&&INTER.mode==='drag-walk'){
+    INTER.mode=null;
+    activateRings();
+  }
+}
+function updInteract(dt){
+  INTER.ringT+=dt;
+  if(goldRing.visible){
+    const k=1+Math.sin(INTER.ringT*2.8)*0.09;
+    goldRing.scale.setScalar(k);
+    goldRing.material.opacity=0.55+Math.sin(INTER.ringT*2.8)*0.3;
+  }
+  if(redRing.visible){
+    const k=1+Math.sin(INTER.ringT*3.1+1)*0.09;
+    redRing.scale.setScalar(k);
+    redRing.material.opacity=0.45+Math.sin(INTER.ringT*3.1+1)*0.25;
+  }
+}
+function tryPick(e){
+  if(!INTER.mode)return;
+  if(INTER.mode==='rings'){
+    const dg=screenDist(e,goldRing.position.x,goldRing.position.y,goldRing.position.z);
+    const dr=screenDist(e,redRing.position.x,redRing.position.y,redRing.position.z);
+    if(dg<=pickR()*1.4&&dg<=dr){
+      INTER.mode=null;goldRing.visible=false;redRing.visible=false;
+      recordChoice('approach','The approach to Circe','With the moly',71,'with the moly root');
+      molyApproach();
+    } else if(dr<=pickR()*1.4){
+      INTER.mode=null;goldRing.visible=false;redRing.visible=false;
+      recordChoice('approach','The approach to Circe','Without the moly',29,'with the moly root');
+      noMolyCounterfactual();
+    }
+  }
+}
+function activateRings(){
+  goldRing.visible=true;redRing.visible=true;
+  INTER.mode='rings';
+  setPhase(1);
+  cine('hall');
+  narrate('The moly',
+   `<p>You stand at the edge of Circe's clearing. The hall is sixty paces ahead. From inside comes a sound like looms weaving, and a voice, low and clear. The moly root is cold in your hand: a black root, a white flower, a gift from a god who called it hard for mortal men to dig, though gods can do all things.</p>
+    <p><b>Gold ring:</b> enter with the moly's protection, as Hermes instructed. <b>Red ring:</b> try your luck with the sword alone.</p>`);
+  setControls([]);
+}
+
+/* ================= daylight ================= */
+function setDay(t){document.getElementById('daytag').textContent=t;}
+function night(on){S.dayTarget=on?0:1;}
+function applyDaylight(dt){
+  S.daylight+=(S.dayTarget-S.daylight)*Math.min(dt*1.0,1);
+  const d=S.daylight;
+  sun.intensity=0.06+0.92*d;
+  hemi.intensity=0.15+0.7*d;
+  if(S.nekyia){
+    scene.background.lerp(NEKYIA_SKY,Math.min(dt*0.8,1));
+    scene.fog.color.copy(scene.background);
+  }else{
+    scene.background.copy(NEKYIA_SKY).lerp(DAY_SKY,d);
+    scene.fog.color.copy(scene.background);
+  }
+}
+
+/* ================= episode state ================= */
+const REL={eur:1,elp:1};
+const FLAGS={oathSworn:false,listenedToCrew:false,motherFirst:false,elpenorPledged:false};
+const SEASON={hubris:1};
+const CHOICELOG=[];
+
+/* ================= portraits ================= */
+const SVG_EUR=`<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="#221f24"/>
+<ellipse cx="52" cy="120" rx="37" ry="25" fill="#5a5a66"/><path d="M20 120 Q52 88 84 120" fill="#6e6e7c"/>
+<ellipse cx="52" cy="60" rx="21" ry="26" fill="#b08a5e"/>
+<path d="M32 52 Q33 32 52 31 Q71 32 72 52 Q66 40 52 41 Q38 40 32 52 Z" fill="#5c5148"/>
+<path d="M40 78 Q52 88 64 78 L62 86 Q52 93 42 86 Z" fill="#5c5148"/>
+<path d="M35 53 L46 51 M58 51 L69 53" stroke="#2c2418" stroke-width="2.6" stroke-linecap="round"/>
+<circle cx="41" cy="58" r="1.8" fill="#20180e"/><circle cx="63" cy="58" r="1.8" fill="#20180e"/>
+<path d="M46 73 L58 73" stroke="#6e4a30" stroke-width="2" stroke-linecap="round"/></svg>`;
+const SVG_ELP=`<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="#232620"/>
+<ellipse cx="52" cy="120" rx="35" ry="24" fill="#6e6444"/><path d="M22 120 Q52 90 82 120" fill="#7e7450"/>
+<ellipse cx="52" cy="61" rx="20" ry="24" fill="#c99e70"/>
+<path d="M31 55 Q28 30 52 27 Q76 30 73 55 Q70 36 52 37 Q34 36 31 55 Z" fill="#3a2c1a"/>
+<path d="M31 50 Q36 44 40 49 M64 49 Q68 44 73 50" fill="#3a2c1a"/>
+<path d="M38 54 L47 53 M57 53 L66 54" stroke="#2a2012" stroke-width="2" stroke-linecap="round"/>
+<circle cx="43" cy="59" r="2" fill="#241a10"/><circle cx="61" cy="59" r="2" fill="#241a10"/>
+<path d="M46 72 Q52 76 58 72" stroke="#8a5a3a" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
+const SVG_CIR=`<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="#1a1520"/>
+<ellipse cx="52" cy="122" rx="42" ry="26" fill="#4a2c5a"/>
+<path d="M16 122 Q52 84 88 122" fill="#5c3a6e"/>
+<path d="M28 44 Q22 28 30 14 Q40 4 52 6 Q64 4 74 14 Q82 28 76 44 Q68 34 52 34 Q36 34 28 44 Z" fill="#1a0e26"/>
+<path d="M28 44 Q20 58 24 74 M76 44 Q84 58 80 74" stroke="#1a0e26" stroke-width="4.5" fill="none"/>
+<ellipse cx="52" cy="60" rx="20" ry="23" fill="#d8b8e8"/>
+<ellipse cx="42" cy="55" rx="4.5" ry="3.5" fill="#e8c840"/>
+<ellipse cx="62" cy="55" rx="4.5" ry="3.5" fill="#e8c840"/>
+<circle cx="42" cy="55" r="2" fill="#2a1a00"/><circle cx="62" cy="55" r="2" fill="#2a1a00"/>
+<path d="M44 70 Q52 74 60 70" stroke="#9a5080" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+<path d="M68 52 L86 32" stroke="#d9a441" stroke-width="2.8" stroke-linecap="round"/>
+<circle cx="88" cy="30" r="4.5" fill="#d9a441"/></svg>`;
+const SVG_TIR=`<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="#0c1018"/>
+<ellipse cx="52" cy="124" rx="38" ry="22" fill="#2a2a3e"/>
+<path d="M20 124 Q52 96 84 124" fill="#34344a"/>
+<path d="M30 44 Q24 26 32 12 Q40 3 52 3 Q64 3 72 12 Q80 26 74 44 Q68 36 52 36 Q36 36 30 44 Z" fill="#c4c4d4"/>
+<path d="M36 82 Q40 100 52 104 Q64 100 68 82" fill="#c4c4d4"/>
+<ellipse cx="52" cy="62" rx="19" ry="21" fill="#b09478"/>
+<path d="M35 58 Q36 62 35 66 M69 58 Q68 62 69 66" stroke="#9a7a58" stroke-width="1.8" fill="none"/>
+<ellipse cx="42" cy="58" rx="5.5" ry="4" fill="#e4e0d4"/>
+<ellipse cx="62" cy="58" rx="5.5" ry="4" fill="#e4e0d4"/>
+<path d="M72 94 L90 44" stroke="#5a4228" stroke-width="3.5" stroke-linecap="round"/>
+<circle cx="90" cy="41" r="3.5" fill="#6e5238"/></svg>`;
+
+const CAST={
+  eur:{name:'Eurylochus · second in command',svg:SVG_EUR},
+  elp:{name:'Elpenor · youngest aboard',svg:SVG_ELP},
+  cir:{name:'Circe · daughter of Helios',svg:SVG_CIR},
+  tir:{name:'Tiresias · prophet of Thebes',svg:SVG_TIR},
+  nar:{name:'',svg:null},
+};
+
+/* ================= VN engine ================= */
+const vnEl=document.getElementById('vn');
+const vnPortrait=document.getElementById('vnportrait');
+const vnName=document.getElementById('vnname');
+const vnText=document.getElementById('vntext');
+const vnChoices=document.getElementById('vnchoices');
+const vnNextEl=document.getElementById('vnnext');
+const vnToast=document.getElementById('vntoast');
+let vnQueue=[],vnDone=null,vnBusy=false;
+function playScene(steps,done){
+  vnQueue=steps.slice();vnDone=done;
+  choiceArea.innerHTML='';
+  setControls([]);
+  vnEl.style.display='block';
+  vnAdvance();
+}
+function vnAdvance(){
+  while(vnQueue.length&&vnQueue[0].if&&!vnQueue[0].if()){vnQueue.shift();}
+  if(!vnQueue.length){
+    vnEl.style.display='none';
+    const d=vnDone;vnDone=null;
+    if(d)d();
+    return;
+  }
+  renderVn(vnQueue.shift());
+}
+function renderVn(st){
+  const who=CAST[st.who]||CAST.nar;
+  vnPortrait.innerHTML=who.svg||'';
+  vnPortrait.style.display=who.svg?'block':'none';
+  vnName.textContent=who.name;
+  document.getElementById('vnbox').classList.toggle('vn-narr',st.who==='nar');
+  vnText.innerHTML=typeof st.text==='function'?st.text():st.text||'';
+  vnChoices.innerHTML='';
+  if(st.choices){
+    vnNextEl.style.display='none';vnBusy=true;
+    for(const c of st.choices){
+      const b=document.createElement('button');
+      b.className='vn-choice';b.textContent=c.label;
+      b.onclick=(ev)=>{
+        ev.stopPropagation();
+        if(c.d)for(const k in c.d){REL[k]=Math.max(0,REL[k]+c.d[k]);}
+        if(c.flag)FLAGS[c.flag]=true;
+        if(c.fx)c.fx();
+        if(c.toast)toast(c.toast);
+        if(c.reply)vnQueue=c.reply.concat(vnQueue);
+        vnBusy=false;vnAdvance();
+      };
+      vnChoices.appendChild(b);
+    }
+  }else{vnNextEl.style.display='block';vnBusy=false;}
+}
+document.getElementById('vnbox').addEventListener('click',()=>{if(!vnBusy&&vnEl.style.display==='block')vnAdvance();});
+function toast(t){
+  vnToast.textContent=t;vnToast.classList.add('show');
+  setTimeout(()=>vnToast.classList.remove('show'),1900);
+}
+
+/* ================= episode card ================= */
+const epEl=document.getElementById('epcard');
+function showOpenCard(){
+  epEl.innerHTML=`<div class="ep-inner">
+    <div class="ep-k">A narrative simulation · week two of twelve</div>
+    <div class="ep-t">THE ODYSSEY</div>
+    <div class="ep-s">Episode Two · Circe and the Dead</div>
+    <div class="ep-x">Bonds and hubris carry forward from Episode One. Elpenor still has the wine skin. Eurylochus has been keeping his ledger. Neither knows what Aeaea costs.</div>
+    <div class="ep-hint">tap to begin</div>
+  </div>`;
+  epEl.style.display='block';
+  epEl.onclick=()=>{
+    epEl.style.display='none';
+    playScene(SC_LANDING,afterLanding);
+  };
+}
+function showEndCard(){
+  epEl.innerHTML=`<div class="ep-inner">
+    <div class="ep-k">End of episode two</div>
+    <div class="ep-t">CIRCE AND THE DEAD</div>
+    <div class="ep-s">Next week · Episode Three: The Cattle of the Sun</div>
+    <div class="ep-x">Tiresias named three things that must not happen. One of them is already inevitable.
+      The island of Thrinacia, the sacred cattle, and the long choice between what the crew needs now
+      and what everyone will pay for it later.<br><br>
+      ${handoffHtml()}</div>
+    <div class="ep-btns">
+      <button class="btn" id="epreplay">Replay the episode</button>
+      <button class="btn ghost" id="epclose">Close</button>
+    </div>
+  </div>`;
+  epEl.style.display='block';epEl.onclick=null;
+  document.getElementById('epreplay').onclick=()=>{epEl.style.display='none';enterStart();};
+  document.getElementById('epclose').onclick=()=>{epEl.style.display='none';};
+}
+function stars(v){return v>0?'★'.repeat(Math.min(v,3)):'·';}
+function handoffHtml(){
+  const marks=[];
+  if(FLAGS.oathSworn)marks.push('the oath at the threshold');
+  if(FLAGS.listenedToCrew)marks.push('the crew’s counsel heard');
+  if(FLAGS.motherFirst)marks.push('Anticlea spoke first');
+  if(FLAGS.elpenorPledged)marks.push('the burial promised');
+  return `<div class="ho-block"><div class="ho-k">Carried into Episode Three</div>
+    <b>Bonds</b> · Eurylochus ${stars(REL.eur)} · Elpenor · absent<br>
+    <b>Hubris</b> · ${SEASON.hubris} · the gods are still listening<br>
+    <b>Marks</b> · ${marks.length?marks.join(' · '):'a clean crossing, for once'}</div>`;
+}
+function showChorus(){
+  const rows=CHOICELOG.map(c=>`<div class="ch-row">
+    <div class="ch-q">${c.title}</div>
+    <div class="ch-bar"><div style="width:${c.pct}%"></div></div>
+    <div class="ch-meta">You: ${c.pick} · ${c.pct}% chose the same · Homer: ${c.homer}</div>
+  </div>`).join('');
+  epEl.innerHTML=`<div class="ep-inner">
+    <div class="ep-k">The chorus · what the audience chose</div>
+    <div style="max-width:480px;margin:22px auto 0">${rows}</div>
+    <div class="ep-x" style="margin-top:10px">Audience numbers are illustrative in this prototype.</div>
+    <div class="ep-btns"><button class="btn" id="chnext">End of Episode Two</button></div>
+  </div>`;
+  epEl.style.display='block';epEl.onclick=null;
+  document.getElementById('chnext').onclick=()=>{epEl.style.display='none';showEndCard();};
+}
+
+/* ================= scenes ================= */
+
+/* --- opening: landing on Aeaea --- */
+const SC_LANDING=[
+  {who:'nar',text:`After the Laestrygonians. Twelve ships went into that harbour; one came out. You pull the black ship onto an island beach and the men sit two days without moving, weeping beside the oars. This is what is left: six companions, a captain, and a shore nobody named.`},
+  {who:'elp',text:`Captain. There is smoke. Far inland, over the trees. Something in the forest is burning, or cooking, or both. I am the only one saying this out loud because the rest of them already noticed and are working very hard not to.`,choices:[
+    {label:'"You have sharp eyes. Keep them on the smoke."',d:{elp:1},toast:'Bond · Elpenor',fx:()=>recordChoice('elp-smoke','Who noticed the smoke','You trusted the youngest',62,'Odysseus led the scout himself'),reply:[
+      {who:'elp',text:`Right. The smoke. I will watch the smoke. I will think of nothing else. Certainly not about how many ships there were before the harbour.`}]},
+    {label:'"Stop. No one looks at it until I decide what to do."',fx:()=>recordChoice('elp-smoke','Who noticed the smoke','You silenced the crew',38,'Odysseus led the scout himself'),reply:[
+      {who:'elp',text:`Aye, captain. Not looking. Just the ship. And the sand. And the perfectly ordinary smoke that I am not looking at.`}]},
+  ]},
+  {who:'eur',text:`We should lot. Half to scout, half to stay. I do not like the way this island sits so quiet. Islands that sit quiet have a reason for it. I am recommending we find the reason before the reason finds us.`,choices:[
+    {label:'"Lot it, then. Twenty-two each."',d:{eur:1},toast:'Bond · Eurylochus',fx:()=>{recordChoice('lot-scout','How the scouting party was chosen','By lot: twenty-two and twenty-two',71,'Odysseus lotted the two parties');FLAGS.listenedToCrew=true;},reply:[
+      {who:'eur',text:`Right. You heard me. I will note that for the record: you heard me. The lot is drawn, my party won, and I want it clearly on the record that I considered the other outcome preferable.`}]},
+    {label:'"No lots. I go alone first."',fx:()=>recordChoice('lot-scout','How the scouting party was chosen','You went alone',29,'Odysseus lotted the two parties'),reply:[
+      {who:'eur',text:`Alone. Into the unknown forest. With the smoke. Of course. I will put that in the ledger beside "waited for the host" and "gave the Cyclops our names." Captain, you have a gift.`},
+      {who:'nar',text:`In Homer, Odysseus goes alone only after Eurylochus's party has already failed. Here you spare twenty-two men the transformation, and cost yourself the warning. Every choice has a price.`}]},
+  ]},
+  {who:'nar',text:`The lot falls to Eurylochus. Twenty-two men take the path inland toward the smoke. You watch them go into the laurels and then you wait. The island is very quiet. Even the birds seem to be deciding something.`},
+];
+function afterLanding(){
+  setPhase(0);
+  cine('forest');
+  narrate('Aeaea · the wait',
+   `<p>Three hours. The sun has moved past noon before you see him: Eurylochus, alone, at a dead run out of the tree line, and he cannot stop shaking long enough to speak.</p>`);
+  for(const s of party()){s.tx=SHIP0.x+40+rnd(-12,12);s.ty=SHIP0.y+rnd(-15,15);}
+  ody.tx=SHIP0.x+36;ody.ty=SHIP0.y;
+  S.stage='walk1';
+  setControls([]);
+}
+
+/* --- Eurylochus's report --- */
+function eury_returns(){
+  playScene([
+    {who:'eur',text:`They are there. All twenty-two. In the yard of a great stone house, in the middle of a forest where tame wolves and lions pace like dogs. A woman inside singing, working a great loom. The men went in when she called. She brought out cheese and barley and honey and wine. They sat down and drank it.`},
+    {who:'eur',text:`And then they were pigs. Captain, they are pigs now. She waved some wand and they are pigs in size and bristle and voice. But their minds are still theirs. I could see it. I ran.`},
+    {who:'nar',text:`He grabs your arm: do not go back there. But twenty-two men are in that yard. Eurylochus is the only one who can tell you which god or goddess has the power to do this on a morning's notice, and he is pointing inland with a hand that will not quite steady itself.`},
+    {who:'eur',text:`I am not going back. I want that in the record as well. I went; I saw what it was; I came back. That is the extent of what I can contribute today.`,choices:[
+      {label:'"Stay with the ship. Guard the men who are left."',d:{eur:1},toast:'Bond · Eurylochus',fx:()=>recordChoice('eur-stay','Eurylochus at the ship','You left him to guard',58,'Eurylochus refused to go back'),reply:[
+        {who:'eur',text:`Guard the ship. Yes. I can do that. Extremely diligently. Without moving toward the forest. Thank you, captain. I mean that without any irony whatsoever.`}]},
+      {label:'"Then come with me. There is safety in two."',fx:()=>{recordChoice('eur-stay','Eurylochus at the ship','You asked him back',42,'Eurylochus refused to go back');addHubris(1,'The second push inland');},reply:[
+        {who:'eur',text:`No. Respectfully and entirely, no. You are going to ask me to walk back into that yard and I am going to tell you that that is not a thing I am able to do. Guard the ship and the men remaining: yes. Go back to the pigs: no. Captain.`},
+        {who:'nar',text:`He sits down. He is not moving. You go alone. Which was probably the plan from the beginning.`}]},
+    ]},
+  ],startDragBeat);
+}
+
+/* --- DRAG BEAT: the solo approach --- */
+function startDragBeat(){
+  setDay('Aeaea · your feet in the forest');
+  cine('approach');
+  document.getElementById('counters').classList.add('show');
+  document.getElementById('menCt').textContent='alone';
+  document.getElementById('dayCt').textContent='? paces to the hall';
+  INTER.mode='drag-walk';
+  ody.tx=ody.x;ody.ty=ody.y;
+  narrate('The approach',
+   `<p>The path is easy to find: worn smooth by feet that are no longer exactly feet. Above the laurels, the smoke from the great hall. Drag yourself across the island toward it. Watch the distance close. Consider what Eurylochus looked like when he came out of that tree line.</p>
+    <p><em>Drag Odysseus toward Circe's hall. The HUD tracks the distance. Enter when you are ready for what comes next.</em></p>`);
+  setControls([]);
+}
+
+/* --- RING BEAT: moly vs no moly --- */
+function molyApproach(){
+  cine('hall');
+  setPhase(1);
+  hallGlow.intensity=0.8;
+  narrate('The moly · the door',
+   `<p>The moly held. When she struck the wand you felt it like cold water, and nothing happened to you, and her face changed. The sword comes out, and she goes to her knees, and asks: what kind of man are you, that the drug cannot touch you? This has not happened before. She names the name the god told her to expect.</p>`);
+  setControls([{label:'Demand the oath', fn:afterOath}]);
+}
+function noMolyCounterfactual(){
+  cine('hall');
+  setPhase(1);
+  hallGlow.intensity=1.4;
+  narrate('Without the moly · what if',
+   `<p>She strikes the wand and speaks the words and you are not a man anymore. You are in the pen with twenty-two pigs, and your mind is exactly as it was, which is the worst part: you remember your name and your ship and your father's house on Ithaca, and none of it reaches through the bristle. You are pigs until someone with a black root comes to the door.</p>
+    <p class="aside">Homer is precise: the moly is the entire mechanism. Without it, Odysseus would simply have joined his companions. The sword is not wrong here, exactly: he did hold the sword on her afterward. But it only worked because she had already failed. The herb is not a weapon; it is an argument the god loaded into the ground before you ever found the path. You have to go back and dig it up.</p>`);
+  setControls([{label:'Rewind · take the moly first', fn:()=>{
+    hallGlow.intensity=0;
+    molyApproach();
+  }}]);
+}
+function afterOath(){
+  FLAGS.oathSworn=true;
+  narrate('The moly · the oath',
+   `<p>She swears by the gods of the dead that she will not harm you further, and the oath is real: Styx is the one the Olympians fear. The twenty-two come back to themselves in the yard, younger than before, taller, handsomer, weeping. They know exactly what they were. The crew from the ship comes and finds you all in the hall, and the servants bring out copper tubs and oil and linen, and Aeaea, for the first time, feels like somewhere a person could stay.</p>`);
+  setControls([{label:'A day passes, then another', fn:beginTheYear}]);
+  hallGlow.intensity=0.5;
+}
+
+/* --- THE YEAR --- */
+function beginTheYear(){
+  setPhase(2);
+  setDay('Aeaea · a year');
+  S.day=180;setCounter();
+  cine('hall');
+  narrate('The year · the long season',
+   `<p>A year. Not a week, not a month. A year. You eat, you drink, she is not unkind. She is not Penelope, but she knows every herb that grows under every soil on the earth, she can see down the corridors of time, and she is not boring. The crew is comfortable. Comfort is the most efficient trap the world has, and the most dangerous thing about it is that it does not feel like a trap while you are inside it.</p>`);
+  setControls([{label:'The crew comes to you', fn:crewCounsel}]);
+}
+function crewCounsel(){
+  setChoices([
+    {title:'Listen to the crew',
+     body:'They are right: you have been a year on an island that is not Ithaca. There is a wife and a son and a kingdom, and none of them are here.',
+     fn:()=>{
+       recordChoice('year','The year with Circe','Listen to the crew',67,'Odysseus resolved to go home');
+       FLAGS.listenedToCrew=true;
+       narrate('The year · homeward',
+        `<p>You go to Circe's room at night and tell her it is time, and she does not argue. She asks only that you follow the road she shows you, because she has seen where it leads and she wants you to survive it. This is as close to kindness as gods usually get with men.</p>
+         <p>One more night, she says. One thing more to do before you sail. There is a road you must walk first that no living man has walked and come back from. She is going to show you the way to the dead.</p>`);
+       setControls([{label:'Before dawn, then. The road to the dead.', fn:beforeDeparture}]);
+     }},
+    {title:'Stay one more season',
+     body:'The weather is fine, the food is good, and every morning on Ithaca you are one day older. Surely one more season cannot matter.',
+     fn:()=>{
+       recordChoice('year','The year with Circe','Stay another season',33,'Odysseus resolved to go home');
+       addHubris(1,'Comfort chosen over course');
+       narrate('The year · the second season · what if',
+        `<p>Another season. The crew stops talking about Ithaca. Elpenor stops talking much at all; he drinks more and sleeps on the roof because the hall feels too warm. You are not uncomfortable enough to want to leave, and not comfortable enough to forget you should.</p>
+         <p class="aside">Homer has Odysseus resolve to go home because the crew asked him: <em>hard man, why sit here any longer?</em> The question is the correct one. The Odyssey is entirely about a man who knows where home is but keeps finding reasons to be somewhere else. A second season would be another version of the same trap, with a different name on it. You already know what the crew is going to say.</p>`);
+       setControls([{label:'Rewind · it is time to go', fn:()=>{
+         FLAGS.listenedToCrew=true;
+         narrate('The year · homeward',
+          `<p>You go to Circe's room and tell her it is time. She is not surprised. She tells you there is a road to walk before you sail, a road that only the dead know, and she will show you the beginning of it.</p>`);
+         setControls([{label:'Before dawn, then.', fn:beforeDeparture}]);
+       }}]);
+     }},
+  ]);
+}
+
+/* --- Elpenor's death --- */
+function beforeDeparture(){
+  setPhase(3);
+  setDay('Aeaea · the morning of departure');
+  narrate('The dead · Elpenor',
+   `<p>Before dawn, someone has to wake the crew. When the count is made, one man does not come down from the roof of the great hall. Elpenor, youngest of the crew, had gone up there to sleep in the open air, and in the dark before the muster he woke too quickly and stepped the wrong way, and fell from the roof to his death. He is not buried. There is no time before the wind, and you sail from Aeaea with one companion left on the island who was alive when you arrived.</p>
+    <p>He fell from a roof, drunk on the wrong night, too young, with no great story before it and no great story required of him, and the poem will not let him be forgotten. The catalogue does not look away from what commands cost, or who pays them.</p>
+    <p class="aside">Elpenor's death is one of the strangest structural moments in the Odyssey. He is not killed by a monster or a storm or hubris: he simply falls. Homer introduces him in Book 10 precisely so he can be met again in the Nekyia, unburied. The smallest death becomes the first voice of the dead, and the demand of every fallen soldier who did not get a burial worthy of the thing they gave up. Modern readers sometimes notice that Odysseus never weeps for the twenty-two men transformed to pigs, only for the ones who are counted. The poem is keeping that account too.</p>`);
+  S.men=5;setCounter();
+  setControls([{label:'To the ship. The wind is fair.', fn:departAeaea}]);
+}
+
+/* --- sail to the Nekyia --- */
+function departAeaea(){
+  cine('sea');
+  setDay('The outer sea · toward Oceanus');
+  S.nekyia=true;
+  shipS.tx=130;shipS.ty=280;
+  S.stage='sailing';
+  narrate('The dead · toward the edge',
+   `<p>Circe's instructions were precise: sail north until the wind dies, beach the ship at the edge of Oceanus where the Cimmerians live under perpetual cloud, dig a trench, pour libations, sacrifice. The dead will come. Hold them back until Tiresias has drunk. Then ask the question you came to ask.</p>
+    <p>The wind she sends does not fail. The sea goes dark as the day dims. The crew does not talk. Even the waves seem lower, as if the water here is holding its breath.</p>`);
+  setTimeout(()=>{
+    S.stage='idle';
+    setControls([{label:'Beach the ship. Dig the trench.', fn:nekyiaArrival}]);
+  },3000);
+}
+
+/* --- the Nekyia --- */
+function nekyiaArrival(){
+  setPhase(4);
+  setDay('The edge of Oceanus');
+  cine('nekyia');
+  night(true);
+  tirGrp.visible=false;
+  circeS.visible=false;
+  hallGlow.intensity=0;
+  narrate('Tiresias · the pit',
+   `<p>The trench is dug. The blood poured in. The shades come: young men and brides and old men and warriors and girls with their hearts still new, crowding the pit from every side. The sword out to keep them back. And then: your mother. Anticlea. She died, Circe told you, while you were away at Troy. You did not know. She is here before Tiresias.</p>`);
+  setChoices([
+    {title:'Let your mother drink first',
+     body:'She is your mother and she died waiting. She is here and the blood is in the trench. Let her speak.',
+     fn:()=>{
+       recordChoice('mother','The shade at the pit','Let her speak first',38,'he held her back: the prophet first');
+       FLAGS.motherFirst=true;
+       addHubris(1,'Grief over the task at hand');
+       narrate('Tiresias · what if',
+        `<p>She drinks. She knows you immediately. She answers every question you ask: your father, your wife, your son, the state of the halls in Ithaca. She can tell you everything about home except the way to reach it. For that you need the prophet. But Tiresias comes after, and he looks at the blood that is already thinning in the trench, and he gives you the full prophecy but shorter than it should be, and the detail about the cattle is almost incidental, almost a footnote, and you will wish, on Thrinacia, that you had remembered it word for word.</p>
+         <p class="aside">Homer is precise about the order: Tiresias must drink first. The prophecy matters too much to risk on grief. Odysseus does hold his mother back, sword drawn, even while she is there looking at him and not understanding why he will not let her come close yet. That restraint, holding grief at sword's length because the mission is not finished, is one of the hardest things the poem asks him to do. You already know what he did.</p>`);
+       setControls([{label:'Rewind · the prophet first', fn:()=>{
+         FLAGS.motherFirst=false;
+         tiresiasArrives();
+       }}]);
+     }},
+    {title:'Hold her back: the prophet first',
+     body:`"Not yet." Sword across the trench. The hardest thing Odysseus does in twelve books: keeping his dead mother at arm's length until the task is finished.`,
+     fn:()=>{
+       recordChoice('mother','The shade at the pit','The prophet first',62,'he held her back: the prophet first');
+       tiresiasArrives();
+     }},
+  ]);
+}
+function tiresiasArrives(){
+  setPhase(4);
+  tirGrp.visible=true;
+  hallGlow.intensity=0;
+  playScene([
+    {who:'tir',text:`I know you, Odysseus. I knew you would come. The wine-dark eye of Poseidon is on your ship and he will not let it go easily, because of the thing done to his son. You know what thing. You gave the name.`},
+    {who:'tir',text:`Home is possible. Here is the route. Here is the thing you must not do: on the island of Thrinacia are the cattle and wide flocks of the sun, Helios who sees all things. Leave them alone. Touch nothing of theirs. If you leave them untouched, you may yet reach Ithaca, though late and broken and alone. If you touch them: you will lose everything.`},
+    {who:'tir',text:`You will reach home to find trouble in your halls. You will deal with it. And then you must go again, carrying an oar on your shoulder, inland, until you reach a people who have never heard of the sea, and plant the oar, and sacrifice, and only then will Poseidon let the count close. This is your road. It is not short and it is not easy and you already knew that.`,choices:[
+      {label:'"If a man must suffer, let him be clear about what he is suffering for."',d:{eur:-1},toast:'The prophet has spoken',fx:()=>recordChoice('tir-ans','Tiresias\'s prophecy','Accepted without argument',73,'the poem gives no answer'),reply:[
+        {who:'tir',text:`That is the right answer. Most men argue. Now let the old woman by the trench.`}]},
+      {label:'"And if the cattle are touched? Is there no other road?"',fx:()=>recordChoice('tir-ans','Tiresias\'s prophecy','Asked for alternatives',27,'the poem gives no answer'),reply:[
+        {who:'tir',text:`No other road. There is only the one, and the cattle are on it, and the crew will be hungry, and that is the whole trap of it. There is no clever way out. There is only the obeying or the not obeying, and you already know which one leads home. Now let the old woman by the trench.`}]},
+    ]},
+  ],anticleaScene);
+}
+function anticleaScene(){
+  narrate('Tiresias · your mother\'s shade',
+   `<p>She comes to the blood and drinks, and she knows you. She answers everything: your father tends the vines and does not go into the house. Telemachus keeps the estate but has no power yet. Penelope waits. She died of grief and longing, Homer says, and the waiting itself was the cause of death. She tries three times to embrace you and three times you reach for her and your arms go through nothing, because the dead have no substance, only the memory of it.</p>`);
+  setPhase(5);
+  setControls([{label:'Return to Aeaea. The wind sends you back.', fn:elpenorShade}]);
+}
+
+/* --- Elpenor's shade --- */
+function elpenorShade(){
+  setPhase(5);
+  tirGrp.visible=false;
+  narrate("Elpenor's shade · the first voice",
+   `<p>Before Tiresias, before your mother, the very first shade that came to the trench was Elpenor. Unburied, he cannot enter the house of the dead. He asks one thing: burn his body and plant his oar above the mound. Call it a memorial from a man with no great story. He is twenty-three and he fell from a roof in the dark and the poem records his name.</p>`);
+  setChoices([
+    {title:'Promise to return and bury him',
+     body:'What Odysseus did, and what the poem holds him to. A sworn promise to a dead man, which the Odyssey will honor on the return to Aeaea.',
+     fn:()=>{
+       FLAGS.elpenorPledged=true;
+       recordChoice('elpenor','Elpenor\'s request','Promised to return and bury him',91,'he promised it, and kept it');
+       gotoAftermath();
+     }},
+    {title:'Acknowledge but make no oath',
+     body:'You are alive and he is not, and oaths to the dead bind differently than oaths to the living. Say what seems true and cross nothing.',
+     fn:()=>{
+       recordChoice('elpenor','Elpenor\'s request','Acknowledged without oath',9,'he promised it, and kept it');
+       addHubris(1,'The unsworn word to the dead');
+       narrate("Elpenor's shade · without the oath",
+        `<p>He fades back with the other shades, and you are not sure you said the right thing, and the poem is going to make sure you remember his name on the beach of Aeaea regardless. Some promises do not need the oath to bind. They just need the name, and Elpenor gave you his.</p>
+         <p class="aside">Homer has Odysseus swear the oath immediately, without hesitation. It is the only unambiguous good act of the Nekyia: a promise to a young man who did not die well, kept before the episode is over. The name carries the weight. If you did not swear, you still know the name.</p>`);
+       setControls([{label:'Back to Aeaea. The burial waits.', fn:gotoAftermath}]);
+     }},
+  ]);
+}
+
+/* --- aftermath --- */
+function gotoAftermath(){
+  S.stage='sail';
+  S.nekyia=false;
+  shipS.tx=SHIP0.x;shipS.ty=SHIP0.y;
+  cine('shore');
+  night(false);
+  setDay('Aeaea again · and then away');
+  tirGrp.visible=false;
+  circeS.visible=true;
+  narrate('The reckoning',
+   `<p>Seven of the original twelve companions are now dead: six taken by Polyphemus, one from a roof on Aeaea. Elpenor is buried on the return to Aeaea; his oar is planted above the mound. These are Homer's numbers and they are precise. The uncertainty is in the ones who remain: whether they will obey Tiresias's instruction about the cattle, and whether Odysseus will be able to hold them to it when the time comes.</p>
+    <p>What the year on Aeaea bought: a road forward, a prophet's warning, a mother's news of home, and the restoration of twenty-two men who were pigs. What it did not buy: Elpenor's life, which was spent on the wrong night on the wrong roof; a shorter route home, which does not exist; or a guarantee that the prophecy will be heeded when it costs something to heed it.</p>
+    <p>The long-arc irony: Circe, who transformed men into beasts and stripped them of their human shape, is the one who gives Odysseus the instructions for the Nekyia, sends the wind to carry him there, and stands ready when he returns. The witch is the guide. The house of enchantment is the road to the house of the dead, and the dead are the road home. Every wrong turn in the Odyssey is also the only turn available.</p>
+    <p>The transferable lesson: a useful delay and a comfortable captivity look the same from inside, and only the direction of your attention tells them apart. The moly works because Odysseus has not stopped asking where the door is. The year on Aeaea works, finally, because the crew's question is also Odysseus's question: <em>hard man, why sit here any longer?</em> He hears it when he is ready to hear it. The question was always there.</p>`);
+  setControls([{label:'The chorus · what others chose', fn:showChorus},{label:'Replay the episode', fn:enterStart, ghost:true}]);
+}
+
+/* ================= main loop ================= */
+const narrLabel=document.getElementById('narrLabel');
+const narrBody=document.getElementById('narrBody');
+const choiceArea=document.getElementById('choiceArea');
+const controls=document.getElementById('controls');
+function narrate(label,html){
+  narrLabel.textContent=label;
+  narrBody.innerHTML=html;
+  narrBody.classList.remove('fade-in');void narrBody.offsetWidth;
+  narrBody.classList.add('fade-in');
+  choiceArea.innerHTML='';
+}
+function setControls(btns){
+  controls.innerHTML='';
+  for(const b of btns){
+    const el=document.createElement('button');
+    el.className='btn'+(b.ghost?' ghost':'');el.textContent=b.label;el.onclick=b.fn;
+    controls.appendChild(el);
+  }
+}
+function setChoices(items){
+  choiceArea.innerHTML='';
+  const grid=document.createElement('div');grid.className='choices fade-in';
+  for(const it of items){
+    const c=document.createElement('button');c.className='choice';
+    c.innerHTML=`<h3>${it.title}</h3><p>${it.body}</p>`;
+    c.onclick=it.fn;grid.appendChild(c);
+  }
+  choiceArea.appendChild(grid);
+  controls.innerHTML='';
+}
+function setPhase(p){
+  S.phase=p;
+  document.querySelectorAll('.pill').forEach(el=>{
+    const n=+el.dataset.p;
+    el.classList.toggle('active',n===p);
+    el.classList.toggle('done',n<p);
+  });
+}
+
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05);
+  last=now;perfNow=now;S.st+=dt;
+  switch(S.stage){
+    case 'walk1':{
+      let done=0,total=0;
+      for(const s of [...party(),ody]){total++;if(moveToward(s,0.5,dt))done++;}
+      if(done>=total){S.stage='idle';eury_returns();}
+      break;
+    }
+    case 'sailing':shipUpdate(dt,0.4);break;
+    default:break;
+  }
+  updInteract(dt);
+  updateCirce();
+  updateTiresias();
+  smokes.forEach(sm=>{
+    sm.t+=dt;
+    sm.mesh.material.opacity=0.1+Math.sin(sm.t*0.7)*0.06;
+    sm.mesh.position.y+=dt*0.12;
+    if(sm.mesh.position.y>terrainH(sm.mesh.position.x,sm.mesh.position.z)+22){
+      const wx=sx2w(HALL.x),wz=sy2w(HALL.y);
+      sm.mesh.position.set(wx,9+terrainH(wx,wz),wz);
+    }
+  });
+  sea.position.y=-0.5+Math.sin(now*0.0012)*0.06;
+  if(INTER.mode==='drag-walk'&&ody)moveToward(ody,0.5,dt);
+  applyDaylight(dt);
+  applyCamera(dt);
+  flushCrew();
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+
+/* ================= boot ================= */
+function enterStart(){
+  S.phase=0;S.stage='idle';S.sub='';S.subT=0;S.men=6;S.day=1;S.nekyia=false;
+  REL.eur=1;REL.elp=1;
+  FLAGS.oathSworn=false;FLAGS.listenedToCrew=false;FLAGS.motherFirst=false;FLAGS.elpenorPledged=false;
+  SEASON.hubris=1;
+  CHOICELOG.length=0;
+  night(false);setDay('Landfall');setCounter();
+  document.getElementById('counters').classList.remove('show');
+  circeS.visible=true;tirGrp.visible=false;
+  hallGlow.intensity=0;goldRing.visible=false;redRing.visible=false;
+  INTER.mode=null;
+  shipS.x=SHIP0.x;shipS.y=SHIP0.y;shipS.tx=SHIP0.x;shipS.ty=SHIP0.y;shipS.face=Math.PI;
+  S.stage='idle';
+  spawnCrew();
+  cine('shore');
+  narrate('Aeaea',`<p>One ship. Six men. A shore no one named. And smoke, far inland, that someone is trying very hard not to look at.</p>`);
+}
+resize();
+enterStart();
+showOpenCard();
+requestAnimationFrame(loop);
+</script></body></html>
