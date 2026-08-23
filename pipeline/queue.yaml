@@ -57,7 +57,8 @@
   lon: 23.55
   brief: The message that lured the Persian fleet into the narrows, and the strait that did to ships what Thermopylae's wall did to men.
   type: battle
-  status: pending
+  status: built
+  built: 2026-08-23
 - slug: battle-of-ain-jalut
   title: Ain Jalut
   year: "3 September 1260"
