@@ -67,7 +67,8 @@
   lon: 35.35
   brief: The Mamluks turn the Mongols' own feigned retreat against them at Goliath's Spring. The day the tide of the Horde met its mirror.
   type: battle
-  status: pending
+  status: built
+  built: 2026-08-24
 - slug: battle-of-hansando
   title: Hansando
   year: "14 August 1592"
