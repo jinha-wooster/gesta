@@ -77,7 +77,8 @@
   lon: 128.5
   brief: The crane wing opens. Yi Sun-sin's masterpiece of formation warfare, and the second GESTA entry for the admiral of the Roaring Channel.
   type: battle
-  status: pending
+  status: built
+  built: 2026-08-25
 - slug: battle-of-tours
   title: Tours
   year: "October 732"
