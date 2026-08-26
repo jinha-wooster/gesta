@@ -87,7 +87,8 @@
   lon: 0.61
   brief: The Frankish square on the wooded hill between Tours and Poitiers, and the rumor about the baggage camp that ended a charge.
   type: battle
-  status: pending
+  status: built
+  built: 2026-08-26
 - slug: red-cliffs-episode-two
   title: Red Cliffs, Episode Two
   year: "The Huarong Road"
