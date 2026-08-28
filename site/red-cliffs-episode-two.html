@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Red Cliffs · Episode Two: The Huarong Road</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16120e; --ink-2:#1e1913; --panel:#221c15; --line:#3a3226;
+    --parchment:#e7dcc4; --muted:#a2957c; --faint:#6f6450;
+    --bronze:#d9a441; --bronze-dim:#8f6f2e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{background:var(--ink)}
+  body{background:var(--ink);color:var(--parchment);font-family:'Source Serif 4',Georgia,serif;font-size:17px;line-height:1.65;min-height:100vh}
+  .wrap{max-width:1060px;margin:0 auto;padding:36px 18px 80px}
+
+  header{text-align:center;margin-bottom:26px}
+  .eyebrow{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  h1{font-family:'GFS Didot',serif;font-weight:400;font-size:clamp(38px,7vw,68px);letter-spacing:.06em;line-height:1}
+  .subtitle{color:var(--muted);font-style:italic;margin-top:12px;font-size:16px}
+  .meander{height:14px;margin:24px auto;max-width:520px;opacity:.55}
+
+  .phases{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+  .pill{font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:7px 13px;border:1px solid var(--line);border-radius:2px;color:var(--faint);transition:all .35s;white-space:nowrap}
+  .pill.active{color:var(--bronze);border-color:var(--bronze-dim);background:rgba(217,164,65,.06)}
+  .pill.done{color:var(--muted)}
+
+  .stage{position:relative;border:1px solid var(--line);background:#000;border-radius:3px;overflow:hidden}
+  #view{display:block;width:100%;height:560px;cursor:grab;touch-action:none}
+  #view.dragging{cursor:grabbing}
+  @media(max-width:700px){#view{height:420px}}
+
+  .counters{position:absolute;top:10px;left:12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;font-size:12px;letter-spacing:.08em;opacity:0;transition:opacity .6s}
+  .counters.show{opacity:1}
+  .counter{background:rgba(22,18,14,.72);padding:4px 10px;border-radius:2px;border:1px solid var(--line);width:max-content}
+  .counter b{font-weight:600}
+  .c-men b{color:#e0b055} .c-day b{color:#9db8d0} .c-hub b{color:#d98a55}
+  #stageToast{position:absolute;top:12px;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--bronze);background:rgba(22,18,14,.85);border:1px solid var(--bronze-dim);
+    padding:7px 14px;border-radius:2px;opacity:0;transition:opacity .5s;pointer-events:none;z-index:7;white-space:nowrap}
+  #stageToast.show{opacity:1}
+  .ch-row{text-align:left;margin-bottom:16px}
+  .ch-q{font-size:14px;color:var(--parchment);margin-bottom:5px}
+  .ch-bar{height:8px;background:#171310;border:1px solid var(--line);border-radius:2px;overflow:hidden}
+  .ch-bar div{height:100%;background:var(--bronze-dim)}
+  .ch-meta{font-size:12px;color:var(--muted);margin-top:5px;font-style:italic}
+  .ho-block{text-align:left;border:1px solid var(--line);border-radius:3px;padding:14px 18px;margin-top:18px;
+    font-size:13.5px;color:var(--muted);line-height:1.8}
+  .ho-block b{color:var(--parchment);font-weight:600}
+  .ho-k{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--bronze);margin-bottom:8px}
+
+  .daytag{position:absolute;bottom:10px;left:12px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(231,220,196,.7);background:rgba(22,18,14,.6);padding:5px 10px;border-radius:2px;pointer-events:none}
+
+  .camctl{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:6px}
+  .cambtn{font-family:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;background:rgba(22,18,14,.72);border:1px solid var(--line);border-radius:2px;color:var(--muted);cursor:pointer;transition:all .2s}
+  .cambtn:hover{color:var(--bronze);border-color:var(--bronze-dim)}
+  .camhint{position:absolute;bottom:10px;right:12px;font-size:11px;letter-spacing:.06em;color:rgba(231,220,196,.55);background:rgba(22,18,14,.6);padding:4px 9px;border-radius:2px;pointer-events:none}
+  @media(max-width:700px){.camhint{display:none}}
+
+  .narration{border:1px solid var(--line);border-top:none;background:var(--panel);padding:26px 30px;border-radius:0 0 3px 3px;min-height:150px}
+  .narr-label{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--bronze);margin-bottom:10px}
+  .narration p{margin-bottom:12px}
+  .narration p:last-child{margin-bottom:0}
+  .narration em{color:var(--muted)}
+  .aside{font-size:14px;color:var(--muted);font-style:italic;border-left:2px solid var(--bronze-dim);padding-left:14px;margin-top:14px}
+
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  @media(max-width:640px){.choices{grid-template-columns:1fr}}
+  .choice{border:1px solid var(--line);border-radius:3px;padding:20px;background:var(--ink-2);cursor:pointer;text-align:left;color:var(--parchment);font-family:inherit;font-size:16px;transition:border-color .25s,background .25s}
+  .choice:hover{border-color:var(--bronze-dim);background:#26201780}
+  .choice h3{font-family:'GFS Didot',serif;font-weight:400;font-size:20px;letter-spacing:.04em;margin-bottom:8px;color:var(--bronze)}
+  .choice p{font-size:14.5px;color:var(--muted);line-height:1.55}
+
+  .controls{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn{font-family:inherit;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:13px 28px;background:transparent;color:var(--bronze);border:1px solid var(--bronze-dim);border-radius:2px;cursor:pointer;transition:all .25s}
+  .btn:hover{background:rgba(217,164,65,.1);border-color:var(--bronze)}
+  .btn.ghost{color:var(--muted);border-color:var(--line)}
+  .btn.ghost:hover{color:var(--parchment);background:rgba(255,255,255,.04)}
+
+  #dock{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:10px 14px 12px;
+      background:linear-gradient(transparent, rgba(12,12,10,.45) 18%, rgba(12,12,10,.9) 72%)}
+  #dock:not(:has(button)){display:none}
+  #dock .choices{max-width:880px;margin:0 auto;gap:10px}
+  #dock .choice{padding:12px 14px;background:rgba(24,22,18,.93)}
+  #dock .choice h3{font-size:17px;margin-bottom:5px}
+  #dock .choice p{font-size:13px;line-height:1.45}
+  #dock .controls{margin-top:0;padding-top:8px}
+  @media(max-width:640px){#dock .choice{padding:10px 12px}#dock .choice p{font-size:12px}}
+  footer{margin-top:44px;text-align:center;font-size:13px;color:var(--faint);line-height:1.7}
+  .fade-in{animation:fadeIn .6s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  #vn{display:none;position:absolute;left:0;right:0;bottom:0;padding:14px 16px 16px;
+      background:linear-gradient(transparent, rgba(14,11,8,.55) 18%, rgba(14,11,8,.92) 60%);z-index:5}
+  .vn-box{display:flex;gap:16px;max-width:860px;margin:0 auto;align-items:flex-end;cursor:pointer}
+  .vn-portrait{width:104px;height:128px;flex:0 0 auto;border:1px solid var(--bronze-dim);
+      border-radius:3px;background:#221c15;overflow:hidden}
+  .vn-portrait svg{width:100%;height:100%;display:block}
+  .vn-main{flex:1;min-width:0}
+  .vn-name{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--bronze);margin-bottom:7px}
+  .vn-text{font-size:16.5px;line-height:1.6;color:var(--parchment);min-height:52px}
+  .vn-text em{color:var(--muted)}
+  .vn-next{font-size:11px;letter-spacing:.2em;color:var(--faint);margin-top:8px;text-transform:uppercase}
+  .vn-choices{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .vn-choice{font-family:inherit;font-size:14.5px;text-align:left;padding:11px 16px;background:rgba(30,25,19,.9);
+      border:1px solid var(--line);border-radius:2px;color:var(--parchment);cursor:pointer;transition:all .2s}
+  .vn-choice:hover{border-color:var(--bronze-dim);background:rgba(38,32,23,.95)}
+  #vntoast{position:absolute;right:16px;bottom:100%;margin-bottom:8px;font-size:11px;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--bronze);background:rgba(22,18,14,.85);border:1px solid var(--bronze-dim);
+      padding:6px 12px;border-radius:2px;opacity:0;transition:opacity .5s;pointer-events:none}
+  #vntoast.show{opacity:1}
+  .vn-narr .vn-text{font-style:italic;color:var(--muted)}
+  @media(max-width:640px){.vn-portrait{width:76px;height:96px}.vn-text{font-size:15px}}
+
+  #epcard{display:none;position:absolute;inset:0;z-index:8;background:rgba(14,11,8,.9);
+      text-align:center;padding:0 20px;cursor:pointer}
+  .ep-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;max-width:640px}
+  .ep-k{font-size:11px;letter-spacing:.4em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+  .ep-t{font-family:'GFS Didot',serif;font-size:clamp(38px,7vw,64px);letter-spacing:.08em;color:var(--parchment);line-height:1.05}
+  .ep-s{font-size:16px;font-style:italic;color:var(--bronze);margin-top:14px}
+  .ep-x{font-size:14px;color:var(--muted);margin-top:22px;line-height:1.7}
+  .ep-hint{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--faint);margin-top:30px}
+  .ep-btns{display:flex;gap:12px;justify-content:center;margin-top:26px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">The Yangtze · winter 208 CE · somewhere in the marshes of Wulin</div>
+    <h1>RED CLIFFS</h1>
+    <p class="subtitle">Episode Two · The Huarong Road &nbsp;&middot;&nbsp; three laughs and one debt</p>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true">
+      <defs><pattern id="key" width="26" height="14" patternUnits="userSpaceOnUse">
+        <path d="M0 12 H10 V2 H20 V8 H14 V6 H18 V4 H12 V10 H22 V0 H26" fill="none" stroke="#d9a441" stroke-width="1.4"/>
+      </pattern></defs>
+      <rect width="520" height="14" fill="url(#key)"/>
+    </svg>
+  </header>
+
+  <nav class="phases" aria-label="Episode beats">
+    <span class="pill" data-p="0">The flight</span>
+    <span class="pill" data-p="1">First laugh</span>
+    <span class="pill" data-p="2">Second laugh</span>
+    <span class="pill" data-p="3">Huarong</span>
+    <span class="pill" data-p="4">The debt</span>
+    <span class="pill" data-p="5">The reckoning</span>
+  </nav>
+
+  <div class="stage">
+    <div id="view" role="img" aria-label="3D scene of the Huarong Road escape route, winter 208 CE"></div>
+    <div class="counters" id="counters">
+      <span class="counter c-men">Survivors&nbsp; <b id="menCt">?</b></span>
+      <span class="counter c-day">Miles to safety&nbsp; <b id="dayCt">far</b></span>
+      <span class="counter c-hub">Laughs&nbsp; <b id="hubCt">0 of 3</b></span>
+    </div>
+    <div class="daytag" id="daytag">Red Cliffs burning</div>
+    <div id="stageToast"></div>
+    <div class="camctl">
+      <button class="cambtn" data-cam="west">The marshes</button>
+      <button class="cambtn" data-cam="road">The road</button>
+      <button class="cambtn" data-cam="pass">Huarong pass</button>
+      <button class="cambtn" data-cam="wide">Wide view</button>
+    </div>
+    <div class="camhint">drag · rotate&ensp;|&ensp;scroll · zoom&ensp;|&ensp;right-drag · pan</div>
+    <div id="dock"><div id="choiceArea"></div><div class="controls" id="controls"></div></div>
+    <div id="vn"><div id="vntoast"></div>
+      <div class="vn-box" id="vnbox">
+        <div class="vn-portrait" id="vnportrait"></div>
+        <div class="vn-main">
+          <div class="vn-name" id="vnname"></div>
+          <div class="vn-text" id="vntext"></div>
+          <div class="vn-choices" id="vnchoices"></div>
+          <div class="vn-next" id="vnnext">tap to continue &#9656;</div>
+        </div>
+      </div>
+    </div>
+    <div id="epcard"></div>
+  </div>
+
+  <div class="narration">
+    <div class="narr-label" id="narrLabel">The flight</div>
+    <div id="narrBody"></div>
+  </div>
+
+  <footer>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true"><rect width="520" height="14" fill="url(#key)"/></svg>
+    Adapted from chapters 49-50 of Luo Guanzhong's <em>Romance of the Three Kingdoms</em> (c. 14th century),
+    which dramatizes the historical escape of Cao Cao after the defeat at Red Cliffs in winter 208 CE.
+    The three laughs, the ambushes, and Guan Yu's act of mercy at Huarong are the novel's invention;
+    the defeat, the escape route through Wulin, and the survival of Cao Cao are historical.
+    Cheng Yu, Zhang Liao, and Guan Yu are historical figures; the lines given to them here are imagined
+    from what the sources and the novel imply. Figure scale: each soldier figure represents approximately
+    500 men. The catalogue does not look away from what commands cost, or who pays them.
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+
+/* ================= geography =================
+   Sim space 1000x620.
+   Road runs west-east along y~310. Marsh south, hills north.
+   CAMP (west) x=150. Three ambush points. Huarong pass x=860. */
+const sx2w=x=>(x-500)*0.2, sy2w=y=>(y-310)*0.2;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const smooth=(x,a,b)=>THREE.MathUtils.smoothstep(x,a,b);
+const CAMP={x:150,y:310};
+const FORD={x:340,y:310};
+const WOODS={x:530,y:310};
+const PASS={x:730,y:310};
+const HUARONG={x:860,y:310};
+const ROAD_Y=310;
+
+const S={
+  phase:0, stage:'idle', sub:'', subT:0, st:0,
+  soldiers:[],
+  men:300, laughs:0,
+  daylight:1, dayTarget:1,
+};
+
+/* ================= three.js ================= */
+const view=document.getElementById('view');
+const scene=new THREE.Scene();
+const WINTER_SKY=new THREE.Color(0x8a9aaa), DUSK_SKY=new THREE.Color(0x4a3828);
+scene.background=WINTER_SKY.clone();
+scene.fog=new THREE.Fog(0x8a9aaa,150,440);
+
+const camera=new THREE.PerspectiveCamera(52,1,0.5,900);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const SHADOWS=window.innerWidth>700;
+if(SHADOWS){renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;}
+view.appendChild(renderer.domElement);
+function resize(){const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+
+const hemi=new THREE.HemisphereLight(0xb8c8d0,0x4a4030,0.9);
+scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xfff0d8,0.85);
+sun.position.set(70,80,-40);
+if(SHADOWS){
+  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+  const sc=sun.shadow.camera;
+  sc.left=-140;sc.right=140;sc.top=140;sc.bottom=-140;sc.far=380;
+  sc.updateProjectionMatrix();sun.shadow.bias=-0.0008;
+}
+scene.add(sun);
+const fireGlow=new THREE.PointLight(0xff6820,0,90,1.5);
+{const wx=sx2w(90),wz=sy2w(ROAD_Y+10);fireGlow.position.set(wx,6,wz);}
+scene.add(fireGlow);
+const passGlow=new THREE.PointLight(0x9ab8d0,0,60,1.4);
+{const wx=sx2w(HUARONG.x),wz=sy2w(HUARONG.y);passGlow.position.set(wx,8,wz);}
+scene.add(passGlow);
+
+/* ---------- terrain ---------- */
+function terrainH(wx,wz){
+  const x=wx/0.2+500,y=wz/0.2+310;
+  let h=Math.sin(wx*0.09)*0.3+Math.cos(wz*0.11+wx*0.05)*0.28;
+  const roadDist=Math.abs(y-ROAD_Y);
+  h-=Math.max(0,1.6-roadDist*0.04);
+  if(y>420)h-=Math.min((y-420)*0.05,4.8);
+  if(y<200)h+=(200-y)*0.04;
+  const px=(x-HUARONG.x)/80;
+  if(x>680){
+    const wallN=(y-ROAD_Y)/55;if(wallN<0)h+=8.5*Math.exp(-(px*px+wallN*wallN*2));
+    const wallS=(ROAD_Y-y)/55;if(wallS<0)h+=8.5*Math.exp(-(px*px+wallS*wallS*2));
+  }
+  if(x>750)h+=(x-750)*0.018;
+  if(x<90)h+=(90-x)*0.03;
+  return h;
+}
+{
+  const g=new THREE.PlaneGeometry(228,148,164,108);
+  g.rotateX(-Math.PI/2);
+  const pos=g.attributes.position,colors=[];
+  const cWinter=new THREE.Color(0x6a7055),cMud=new THREE.Color(0x7a6848),
+        cRock=new THREE.Color(0x6a6050),cMarsh=new THREE.Color(0x3a5240),
+        cSnow=new THREE.Color(0xd0d4cc),tmp=new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const wx=pos.getX(i),wz=pos.getZ(i),h=terrainH(wx,wz);
+    const yy=wz/0.2+310;
+    pos.setY(i,h);
+    tmp.copy(cWinter);
+    tmp.lerp(cMud,smooth(Math.sin(wx*0.28)*Math.sin(wz*0.24),0,1)*0.45);
+    if(yy>400)tmp.lerp(cMarsh,smooth(yy,400,470)*0.75);
+    tmp.lerp(cRock,smooth(h,5,12));
+    tmp.lerp(cSnow,smooth(h,10,16)*0.55);
+    tmp.offsetHSL(0,0,(Math.sin(wx*1.5)*Math.sin(wz*1.9))*0.03);
+    colors.push(tmp.r,tmp.g,tmp.b);
+  }
+  g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  g.computeVertexNormals();
+  const terrain=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}));
+  terrain.receiveShadow=SHADOWS;
+  scene.add(terrain);
+}
+const marsh=new THREE.Mesh(
+  new THREE.PlaneGeometry(228,56),
+  new THREE.MeshLambertMaterial({color:0x2a4038,transparent:true,opacity:0.88}));
+marsh.rotation.x=-Math.PI/2;
+marsh.position.set(0,-0.6,sy2w(476));
+scene.add(marsh);
+
+/* bare winter trees */
+{
+  const trunkMat=new THREE.MeshLambertMaterial({color:0x4a3820});
+  const leafMats=[
+    new THREE.MeshLambertMaterial({color:0x384020}),
+    new THREE.MeshLambertMaterial({color:0x2e3818}),
+  ];
+  const burnMat=new THREE.MeshLambertMaterial({color:0x1e1810});
+  for(let i=0;i<55;i++){
+    const tx=rnd(80,950),ty=rnd(60,560);
+    const burned=(tx<280&&Math.random()<0.6);
+    const th=rnd(2,4);
+    const wx=sx2w(tx),wz=sy2w(ty),bh=terrainH(wx,wz);
+    if(bh<-2)continue;
+    const t=new THREE.Mesh(new THREE.CylinderGeometry(0.14,0.24,th,5),burned?burnMat:trunkMat);
+    t.position.set(wx,bh+th/2,wz);t.castShadow=SHADOWS;scene.add(t);
+    if(!burned){
+      const lm=leafMats[Math.floor(rnd(0,leafMats.length))];
+      const cr=new THREE.Mesh(new THREE.SphereGeometry(rnd(1.2,2.0),5,4),lm);
+      cr.position.set(wx+rnd(-0.3,0.3),bh+th+rnd(0.6,1.2),wz+rnd(-0.3,0.3));
+      cr.scale.y=0.65;cr.castShadow=SHADOWS;scene.add(cr);
+    }
+  }
+}
+
+/* Huarong pass gate posts */
+{
+  const stone=new THREE.MeshLambertMaterial({color:0x7a7060});
+  const postH=7;
+  for(const side of[-1,1]){
+    const wz=sy2w(ROAD_Y+side*38);
+    const wx=sx2w(HUARONG.x);
+    const post=new THREE.Mesh(new THREE.CylinderGeometry(0.7,0.9,postH,6),stone);
+    post.position.set(wx,terrainH(wx,wz)+postH/2,wz);
+    post.castShadow=SHADOWS;scene.add(post);
+    const cap=new THREE.Mesh(new THREE.ConeGeometry(1.1,1.2,6),new THREE.MeshLambertMaterial({color:0x5a3820}));
+    cap.position.set(wx,terrainH(wx,wz)+postH+0.6,wz);
+    cap.castShadow=SHADOWS;scene.add(cap);
+  }
+  const beam=new THREE.Mesh(new THREE.BoxGeometry(0.6,0.6,8.5),stone);
+  const bwx=sx2w(HUARONG.x),bwz=sy2w(ROAD_Y);
+  beam.position.set(bwx,terrainH(bwx,bwz)+7.2,bwz);
+  scene.add(beam);
+}
+
+/* smoke from western fire */
+const smokeMat=new THREE.MeshBasicMaterial({color:0x4a4038,transparent:true,opacity:0.22,side:THREE.DoubleSide});
+const smokes=[];
+for(let i=0;i<5;i++){
+  const sm=new THREE.Mesh(new THREE.PlaneGeometry(2.8+i*0.8,1.6),smokeMat.clone());
+  const wx=sx2w(90+i*12),wz=sy2w(ROAD_Y+rnd(-20,20));
+  sm.position.set(wx,10+i*2,wz);
+  sm.rotation.x=-Math.PI/2;smokes.push({mesh:sm,t:rnd(0,6.28)});scene.add(sm);
+}
+
+/* ---------- crew / soldiers ---------- */
+function mergeGeos(geos){
+  let vC=0,iC=0;
+  for(const g of geos){vC+=g.attributes.position.count;iC+=g.index.count;}
+  const P=new Float32Array(vC*3),N=new Float32Array(vC*3),I=new Uint16Array(iC);
+  let vO=0,iO=0;
+  for(const g of geos){
+    P.set(g.attributes.position.array,vO*3);
+    N.set(g.attributes.normal.array,vO*3);
+    const idx=g.index.array;
+    for(let i=0;i<idx.length;i++)I[iO+i]=idx[i]+vO;
+    vO+=g.attributes.position.count;iO+=idx.length;
+  }
+  const out=new THREE.BufferGeometry();
+  out.setAttribute('position',new THREE.Float32BufferAttribute(P,3));
+  out.setAttribute('normal',new THREE.Float32BufferAttribute(N,3));
+  out.setIndex(new THREE.BufferAttribute(I,1));
+  return out;
+}
+const footGeo=(()=>{
+  const body=new THREE.CylinderGeometry(0.32,0.42,1.5,6);body.translate(0,0.75,0);
+  const head=new THREE.SphereGeometry(0.26,6,5);head.translate(0,1.72,0);
+  const spear=new THREE.CylinderGeometry(0.04,0.04,2.4,4);spear.translate(0,1.4,0.42);
+  return mergeGeos([body,head,spear]);
+})();
+const KINDS={cr:{color:0x9a7840},cao:{color:0xd9a441}};
+const MATS={};for(const k in KINDS)MATS[k]=new THREE.MeshLambertMaterial({color:KINDS[k].color});
+let MESH={};
+function soldier(x,y,kind){
+  return {x,y,tx:x,ty:y,kind,face:rnd(0,6.28),hidden:false,jit:rnd(0,6.28),moving:false,wps:null};
+}
+let caoPawn=null;
+function spawnCrew(){
+  S.soldiers=[];
+  for(let i=0;i<18;i++)S.soldiers.push(soldier(CAMP.x+rnd(-14,14),CAMP.y+rnd(-18,18),'cr'));
+  caoPawn=soldier(CAMP.x+20,CAMP.y,'cao');
+  S.soldiers.push(caoPawn);
+  buildInstances();
+}
+function buildInstances(){
+  for(const k in MESH)scene.remove(MESH[k]);
+  MESH={};
+  for(const k in KINDS){
+    const list=S.soldiers.filter(ss=>ss.kind===k);
+    const m=new THREE.InstancedMesh(footGeo,MATS[k],Math.max(list.length,1));
+    m.castShadow=SHADOWS;
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    const _s2=new THREE.Vector3(),_v2=new THREE.Vector3(),_q2=new THREE.Quaternion(),_m2=new THREE.Matrix4();
+    _s2.setScalar(0.0001);_v2.set(0,-80,0);_q2.set(0,0,0,1);_m2.compose(_v2,_q2,_s2);
+    for(let i=0;i<m.count;i++)m.setMatrixAt(i,_m2);
+    m.instanceMatrix.needsUpdate=true;
+    list.forEach((ss,i)=>{ss.idx=i;ss.mesh=m;});
+    scene.add(m);MESH[k]=m;
+  }
+}
+const _m=new THREE.Matrix4(),_q=new THREE.Quaternion(),_v=new THREE.Vector3(),_s=new THREE.Vector3(),_e=new THREE.Euler();
+let perfNow=0;
+function flushCrew(){
+  for(const ss of S.soldiers){
+    const wx=sx2w(ss.x),wz=sy2w(ss.y);
+    if(ss.hidden){_s.setScalar(0.0001);_v.set(wx,-80,wz);_q.set(0,0,0,1);}
+    else{
+      const bob=ss.moving?Math.abs(Math.sin(perfNow*0.012+ss.jit))*0.13:0;
+      _v.set(wx,terrainH(wx,wz)+bob,wz);
+      _e.set(0,ss.face,0);_q.setFromEuler(_e);_s.setScalar(1);
+    }
+    _m.compose(_v,_q,_s);
+    ss.mesh.setMatrixAt(ss.idx,_m);
+  }
+  for(const k in MESH)MESH[k].instanceMatrix.needsUpdate=true;
+}
+function moveToward(ss,speed,dt){
+  const dx=ss.tx-ss.x,dy=ss.ty-ss.y,d=Math.hypot(dx,dy);
+  if(d<1.5){ss.moving=false;return true;}
+  ss.moving=true;
+  ss.x+=(dx/d)*speed*dt*60;ss.y+=(dy/d)*speed*dt*60;
+  ss.face=Math.atan2(-dy,dx);
+  return false;
+}
+function troops(){return S.soldiers.filter(ss=>ss.kind==='cr');}
+
+/* ---------- Guan Yu figure ---------- */
+const guanGrp=new THREE.Group();
+{
+  const skin=new THREE.MeshLambertMaterial({color:0xc87878});
+  const cloth=new THREE.MeshLambertMaterial({color:0x2a5a28});
+  const armor=new THREE.MeshLambertMaterial({color:0x4a3820});
+  const legL=new THREE.Mesh(new THREE.CylinderGeometry(0.38,0.50,3.0,6),cloth);legL.position.set(0,1.5,-0.5);
+  const legR=legL.clone();legR.position.z=0.5;
+  const torso=new THREE.Mesh(new THREE.CylinderGeometry(0.72,0.92,3.0,7),cloth);torso.position.y=4.6;
+  const shoulderL=new THREE.Mesh(new THREE.SphereGeometry(0.55,6,5),armor);shoulderL.position.set(0,5.4,-1.1);
+  const shoulderR=shoulderL.clone();shoulderR.position.z=1.1;
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.66,8,7),skin);head.position.y=7.0;
+  const beard=new THREE.Mesh(new THREE.ConeGeometry(0.42,1.4,6),new THREE.MeshLambertMaterial({color:0x2a1a08}));
+  beard.position.set(-0.05,6.1,0);beard.rotation.z=Math.PI;
+  const halberd=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,5.0,4),armor);
+  halberd.position.set(-1.1,4.4,0.6);halberd.rotation.z=0.18;
+  const blade=new THREE.Mesh(new THREE.ConeGeometry(0.38,1.2,5),new THREE.MeshLambertMaterial({color:0xb0b8c0}));
+  blade.position.set(-1.46,7.0,0.6);blade.rotation.z=0.18;
+  guanGrp.add(legL,legR,torso,shoulderL,shoulderR,head,beard,halberd,blade);
+  guanGrp.traverse(o=>{if(o.isMesh)o.castShadow=SHADOWS;});
+  guanGrp.visible=false;
+  scene.add(guanGrp);
+}
+const guanS={x:HUARONG.x+8,y:HUARONG.y,visible:false};
+function updateGuan(){
+  guanGrp.visible=guanS.visible;
+  if(!guanS.visible)return;
+  const wx=sx2w(guanS.x),wz=sy2w(guanS.y);
+  guanGrp.position.set(wx,terrainH(wx,wz),wz);
+  guanGrp.rotation.y=Math.PI+Math.sin(perfNow*0.0005)*0.08;
+}
+
+/* ---------- interaction rings ---------- */
+const RING_G=new THREE.TorusGeometry(5.0,0.18,8,32);
+const goldRing=new THREE.Mesh(RING_G,new THREE.MeshBasicMaterial({color:0xd9a441,transparent:true,opacity:0.82}));
+const redRing=new THREE.Mesh(new THREE.TorusGeometry(5.0,0.18,8,32),
+  new THREE.MeshBasicMaterial({color:0xb84040,transparent:true,opacity:0.82}));
+{
+  const wx=sx2w(HUARONG.x-8),wz=sy2w(HUARONG.y-12);
+  goldRing.position.set(wx,terrainH(wx,wz)+3.2,wz);goldRing.rotation.x=Math.PI/2;
+  redRing.position.set(sx2w(HUARONG.x-8),terrainH(sx2w(HUARONG.x-8),sy2w(HUARONG.y+14))+3.2,sy2w(HUARONG.y+14));
+  redRing.rotation.x=Math.PI/2;
+}
+goldRing.visible=false;redRing.visible=false;
+scene.add(goldRing);scene.add(redRing);
+
+const raycaster=new THREE.Raycaster();
+const ndc=new THREE.Vector2();
+function castAt(e,objects){
+  const r=renderer.domElement.getBoundingClientRect();
+  ndc.x=((e.clientX-r.left)/r.width)*2-1;
+  ndc.y=-((e.clientY-r.top)/r.height)*2+1;
+  raycaster.setFromCamera(ndc,camera);
+  return raycaster.intersectObjects(objects,false);
+}
+const PV=new THREE.Vector3();
+function screenDist(e,px,py,pz){
+  const rect=renderer.domElement.getBoundingClientRect();
+  PV.set(px,py,pz).project(camera);
+  if(PV.z>1)return 1e9;
+  const sx=(PV.x*0.5+0.5)*rect.width+rect.left;
+  const sy=(-PV.y*0.5+0.5)*rect.height+rect.top;
+  return Math.hypot(e.clientX-sx,e.clientY-sy);
+}
+function pickR(){const rect=renderer.domElement.getBoundingClientRect();return Math.max(48,rect.width*0.07);}
+
+/* ---------- counters ---------- */
+function setCounter(){
+  document.getElementById('menCt').textContent=S.men+' (est.)';
+  const dist=Math.max(0,Math.round((HUARONG.x-caoPawn.x)/8));
+  document.getElementById('dayCt').textContent=dist>0?dist+' li':S.stage==='safe'?'safe':'arrived';
+  document.getElementById('hubCt').textContent=S.laughs+' of 3';
+}
+let stToastT=null;
+function showToast(t){
+  const el=document.getElementById('stageToast');
+  el.textContent=t;el.classList.add('show');
+  window.clearTimeout(stToastT);
+  stToastT=setTimeout(()=>el.classList.remove('show'),2200);
+}
+function addLaugh(){
+  S.laughs++;setCounter();
+  showToast('A laugh on the road · '+S.laughs+' of three');
+}
+function recordChoice(id,title,pick,pct,history){
+  if(CHOICELOG.some(c=>c.id===id))return;
+  CHOICELOG.push({id,title,pick,pct,history});
+  showToast('The story will remember that');
+}
+
+/* ================= camera ================= */
+const cam={yaw:1.5,pitch:0.8,dist:190,tx:0,ty:2,tz:0,auto:null};
+function applyCamera(dt){
+  if(cam.auto){
+    const a=cam.auto,k=1-Math.pow(0.001,dt);
+    cam.yaw+=(a.yaw-cam.yaw)*k;cam.pitch+=(a.pitch-cam.pitch)*k;cam.dist+=(a.dist-cam.dist)*k;
+    cam.tx+=(a.tx-cam.tx)*k;cam.ty+=(a.ty-cam.ty)*k;cam.tz+=(a.tz-cam.tz)*k;
+    if(Math.abs(a.dist-cam.dist)<0.5&&Math.abs(a.yaw-cam.yaw)<0.01)cam.auto=null;
+  }
+  cam.pitch=THREE.MathUtils.clamp(cam.pitch,0.14,1.42);
+  cam.dist=THREE.MathUtils.clamp(cam.dist,18,300);
+  const cp=Math.cos(cam.pitch);
+  camera.position.set(
+    cam.tx+Math.sin(cam.yaw)*cp*cam.dist,
+    cam.ty+Math.sin(cam.pitch)*cam.dist,
+    cam.tz+Math.cos(cam.yaw)*cp*cam.dist);
+  camera.lookAt(cam.tx,cam.ty,cam.tz);
+}
+const PRESETS={
+  west:{yaw:1.0,pitch:0.75,dist:180,tx:sx2w(200),ty:2,tz:sy2w(ROAD_Y)},
+  road:{yaw:1.4,pitch:0.5,dist:110,tx:sx2w(500),ty:3,tz:sy2w(ROAD_Y)},
+  pass:{yaw:1.8,pitch:0.44,dist:70,tx:sx2w(HUARONG.x-20),ty:5,tz:sy2w(ROAD_Y)},
+  wide:{yaw:1.5,pitch:0.78,dist:200,tx:0,ty:2,tz:0},
+};
+document.querySelectorAll('.cambtn').forEach(b=>{
+  const key=b.dataset.cam;
+  const map={west:'west',road:'road',pass:'pass',wide:'wide'};
+  b.onclick=()=>{cam.auto={...PRESETS[map[key]||'wide']};};
+});
+function cine(name){cam.auto={...PRESETS[name]};}
+
+let drag=null;
+view.addEventListener('pointerdown',e=>{view.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,btn:e.button,shift:e.shiftKey};view.classList.add('dragging');cam.auto=null;});
+view.addEventListener('pointermove',e=>{
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  drag.x=e.clientX;drag.y=e.clientY;
+  if(drag.btn===2||drag.shift){
+    const cp=Math.cos(cam.yaw),sp=Math.sin(cam.yaw),k=cam.dist*0.0016;
+    cam.tx-=(dx*cp-dy*sp)*k;cam.tz-=(-dx*sp-dy*cp)*k;
+    cam.tx=THREE.MathUtils.clamp(cam.tx,-105,105);
+    cam.tz=THREE.MathUtils.clamp(cam.tz,-66,66);
+  }else{cam.yaw-=dx*0.0055;cam.pitch+=dy*0.0045;}
+  if(INTER.mode==='drag-march')tryDragMarch(e);
+});
+const endDrag=()=>{drag=null;view.classList.remove('dragging');};
+view.addEventListener('pointerup',e=>{if(drag&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<14)tryPick(e);endDrag();});
+view.addEventListener('pointercancel',endDrag);
+view.addEventListener('wheel',e=>{e.preventDefault();cam.auto=null;cam.dist*=(1+Math.sign(e.deltaY)*0.09);},{passive:false});
+view.addEventListener('contextmenu',e=>e.preventDefault());
+let pinch=null;
+view.addEventListener('touchstart',e=>{if(e.touches.length===2)pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);});
+view.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&pinch){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    cam.dist*=pinch/d;pinch=d;cam.auto=null;
+  }
+},{passive:true});
+view.addEventListener('touchend',()=>{pinch=null;});
+
+/* ================= drag-march interaction (DRAG beat) ================= */
+const INTER={mode:null,ringT:0};
+const marchPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+const marchPt=new THREE.Vector3();
+function tryDragMarch(e){
+  const r=renderer.domElement.getBoundingClientRect();
+  ndc.x=((e.clientX-r.left)/r.width)*2-1;
+  ndc.y=-((e.clientY-r.top)/r.height)*2+1;
+  raycaster.setFromCamera(ndc,camera);
+  raycaster.ray.intersectPlane(marchPlane,marchPt);
+  if(!marchPt)return;
+  const mx=marchPt.x/0.2+500,my=marchPt.z/0.2+310;
+  if(mx<CAMP.x-10||mx>HUARONG.x||my<80||my>540)return;
+  caoPawn.tx=mx;caoPawn.ty=my;
+  for(const ss of troops()){ss.tx=mx+rnd(-18,18);ss.ty=my+rnd(-20,20);}
+  setCounter();
+  const distToPass=Math.hypot(mx-HUARONG.x,my-HUARONG.y);
+  if(distToPass<40&&INTER.mode==='drag-march'){
+    INTER.mode=null;
+    activateRings();
+  }
+}
+function updInteract(dt){
+  INTER.ringT+=dt;
+  if(goldRing.visible){
+    const k=1+Math.sin(INTER.ringT*2.8)*0.09;
+    goldRing.scale.setScalar(k);
+    goldRing.material.opacity=0.55+Math.sin(INTER.ringT*2.8)*0.3;
+  }
+  if(redRing.visible){
+    const k=1+Math.sin(INTER.ringT*3.1+1)*0.09;
+    redRing.scale.setScalar(k);
+    redRing.material.opacity=0.45+Math.sin(INTER.ringT*3.1+1)*0.25;
+  }
+}
+function tryPick(e){
+  if(!INTER.mode)return;
+  if(INTER.mode==='rings'){
+    const dg=screenDist(e,goldRing.position.x,goldRing.position.y,goldRing.position.z);
+    const dr=screenDist(e,redRing.position.x,redRing.position.y,redRing.position.z);
+    if(dg<=pickR()*1.4&&dg<=dr){
+      INTER.mode=null;goldRing.visible=false;redRing.visible=false;
+      recordChoice('huarong-choice','At Huarong Road','Appeal to the debt',74,'Guan Yu released him: historical outcome uncertain');
+      appealToGuan();
+    } else if(dr<=pickR()*1.4){
+      INTER.mode=null;goldRing.visible=false;redRing.visible=false;
+      recordChoice('huarong-choice','At Huarong Road','Order a breakthrough',26,'Guan Yu released him: historical outcome uncertain');
+      forceBreakthrough();
+    }
+  }
+}
+function activateRings(){
+  goldRing.visible=true;redRing.visible=true;
+  INTER.mode='rings';
+  setPhase(3);
+  cine('pass');
+  guanS.visible=true;
+  passGlow.intensity=0.6;
+  narrate('Huarong Road',
+   `<p>He is already there. Guan Yu, the Lord of War, blocking the road with his Green Dragon halberd and eighty mounted men. You have perhaps three hundred survivors, exhausted, unfed, marching through mud that has already swallowed horses and men whole. He does not advance. He waits.</p>
+    <p>There is a debt. Three years ago, at Bai Ma, he rode out and cut Yuan Shao's general in half before the first charge had fully formed, and you gave him gold and titles and a horse named Red Hare because it was the right thing to do for a man of that quality. He left you afterward, because his first loyalty was always to Liu Bei, but the debt was not cancelled. It was deferred.</p>
+    <p><b>Gold ring:</b> appeal directly to the debt, by name, in front of both armies. <b>Red ring:</b> order the escort to charge through.</p>`);
+  setControls([]);
+}
+
+/* ================= daylight ================= */
+function setDay(t){document.getElementById('daytag').textContent=t;}
+function applyDaylight(dt){
+  S.daylight+=(S.dayTarget-S.daylight)*Math.min(dt*0.8,1);
+  const d=S.daylight;
+  sun.intensity=0.06+0.78*d;
+  hemi.intensity=0.2+0.7*d;
+  scene.background.copy(DUSK_SKY).lerp(WINTER_SKY,d);
+  scene.fog.color.copy(scene.background);
+}
+
+/* ================= episode state ================= */
+const REL={zhang:1,cheng:0};
+const FLAGS={laughedThrice:false,debtNamed:false,advisorHeeded:false,thriceWarned:false};
+const CHOICELOG=[];
+
+/* ================= portraits ================= */
+const SVG_CHENG=`<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="#1a1812"/>
+<ellipse cx="52" cy="122" rx="36" ry="24" fill="#4a4030"/>
+<path d="M22 122 Q52 90 82 122" fill="#5c5040"/>
+<ellipse cx="52" cy="60" rx="20" ry="24" fill="#b89468"/>
+<path d="M32 52 Q30 30 52 28 Q74 30 72 52 Q66 38 52 39 Q38 38 32 52 Z" fill="#2a2018"/>
+<path d="M34 52 Q40 46 44 51 M60 51 Q64 46 70 52" stroke="#1e1810" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+<circle cx="41" cy="57" r="1.8" fill="#201808"/><circle cx="63" cy="57" r="1.8" fill="#201808"/>
+<path d="M40 72 Q52 78 64 72" stroke="#7a5038" stroke-width="2" fill="none" stroke-linecap="round"/>
+<path d="M36 76 Q52 92 68 76 L66 88 Q52 100 38 88 Z" fill="#2a2018"/>
+<path d="M28 58 L18 62 M76 58 L86 62" stroke="#c0a878" stroke-width="1.8" fill="none" opacity=".7"/>
+<path d="M40 28 Q52 14 64 28" stroke="#2a2018" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`;
+
+const SVG_ZHANG=`<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="#1c1e24"/>
+<ellipse cx="52" cy="122" rx="38" ry="24" fill="#3a3840"/>
+<path d="M20 122 Q52 86 84 122" fill="#4a4850"/>
+<ellipse cx="52" cy="59" rx="22" ry="25" fill="#b88c60"/>
+<path d="M30 50 Q28 28 52 25 Q76 28 74 50 Q68 36 52 37 Q36 36 30 50 Z" fill="#3a3228"/>
+<rect x="18" y="30" width="68" height="22" rx="4" fill="#3a3228"/>
+<path d="M36 54 L46 52 M58 52 L68 54" stroke="#241c14" stroke-width="2.6" stroke-linecap="round"/>
+<circle cx="41" cy="58" r="2" fill="#20180e"/><circle cx="63" cy="58" r="2" fill="#20180e"/>
+<path d="M36 80 Q52 90 68 80 L66 90 Q52 98 38 90 Z" fill="#3a3228"/>
+<path d="M46 71 L58 71" stroke="#8a5a38" stroke-width="2.2" stroke-linecap="round"/>
+<path d="M26 44 Q28 38 36 40" stroke="#5a4028" stroke-width="2" fill="none" stroke-linecap="round" opacity=".8"/></svg>`;
+
+const SVG_GUAN=`<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="#101814"/>
+<ellipse cx="52" cy="122" rx="40" ry="26" fill="#223820"/>
+<path d="M18 122 Q52 84 86 122" fill="#2e4a28"/>
+<ellipse cx="52" cy="58" rx="22" ry="25" fill="#b84848"/>
+<path d="M30 48 Q28 24 52 22 Q76 24 74 48 Q68 34 52 35 Q36 34 30 48 Z" fill="#1a1008"/>
+<path d="M26 44 Q28 22 38 22 Q44 16 52 18 Q60 16 66 22 Q76 22 78 44" fill="#1a1008"/>
+<path d="M36 52 L46 50 M58 50 L68 52" stroke="#3a2010" stroke-width="3" stroke-linecap="round"/>
+<circle cx="41" cy="57" r="2.2" fill="#200808"/><circle cx="63" cy="57" r="2.2" fill="#200808"/>
+<path d="M42 70 Q52 78 62 70" stroke="#7a2820" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+<path d="M34 78 Q52 96 70 78 L68 90 Q52 102 36 90 Z" fill="#1a1008"/>
+<path d="M40 30 Q30 44 28 60 M64 30 Q74 44 76 60" stroke="#8a3828" stroke-width="1.8" fill="none" opacity=".7"/>
+<path d="M36 72 Q30 90 24 110" stroke="#1a1008" stroke-width="4" fill="none" stroke-linecap="round"/>
+<path d="M68 72 Q74 90 80 110" stroke="#1a1008" stroke-width="4" fill="none" stroke-linecap="round"/></svg>`;
+
+const CAST={
+  cheng:{name:'Cheng Yu · advisor to the prime minister',svg:SVG_CHENG},
+  zhang:{name:'Zhang Liao · general of the vanguard',svg:SVG_ZHANG},
+  guan:{name:'Guan Yu · lord of Hanshou',svg:SVG_GUAN},
+  nar:{name:'',svg:null},
+};
+
+/* ================= VN engine ================= */
+const vnEl=document.getElementById('vn');
+const vnPortrait=document.getElementById('vnportrait');
+const vnName=document.getElementById('vnname');
+const vnText=document.getElementById('vntext');
+const vnChoices=document.getElementById('vnchoices');
+const vnNextEl=document.getElementById('vnnext');
+const vnToast=document.getElementById('vntoast');
+let vnQueue=[],vnDone=null,vnBusy=false;
+function playScene(steps,done){
+  vnQueue=steps.slice();vnDone=done;
+  choiceArea.innerHTML='';
+  setControls([]);
+  vnEl.style.display='block';
+  vnAdvance();
+}
+function vnAdvance(){
+  while(vnQueue.length&&vnQueue[0].if&&!vnQueue[0].if()){vnQueue.shift();}
+  if(!vnQueue.length){
+    vnEl.style.display='none';
+    const d=vnDone;vnDone=null;
+    if(d)d();
+    return;
+  }
+  renderVn(vnQueue.shift());
+}
+function renderVn(st){
+  const who=CAST[st.who]||CAST.nar;
+  vnPortrait.innerHTML=who.svg||'';
+  vnPortrait.style.display=who.svg?'block':'none';
+  vnName.textContent=who.name;
+  document.getElementById('vnbox').classList.toggle('vn-narr',st.who==='nar');
+  vnText.innerHTML=typeof st.text==='function'?st.text():st.text||'';
+  vnChoices.innerHTML='';
+  if(st.choices){
+    vnNextEl.style.display='none';vnBusy=true;
+    for(const c of st.choices){
+      const b=document.createElement('button');
+      b.className='vn-choice';b.textContent=c.label;
+      b.onclick=(ev)=>{
+        ev.stopPropagation();
+        if(c.d)for(const k in c.d){REL[k]=Math.max(0,REL[k]+c.d[k]);}
+        if(c.flag)FLAGS[c.flag]=true;
+        if(c.fx)c.fx();
+        if(c.toast)toast(c.toast);
+        if(c.reply)vnQueue=c.reply.concat(vnQueue);
+        vnBusy=false;vnAdvance();
+      };
+      vnChoices.appendChild(b);
+    }
+  }else{vnNextEl.style.display='block';vnBusy=false;}
+}
+document.getElementById('vnbox').addEventListener('click',()=>{if(!vnBusy&&vnEl.style.display==='block')vnAdvance();});
+function toast(t){
+  vnToast.textContent=t;vnToast.classList.add('show');
+  setTimeout(()=>vnToast.classList.remove('show'),1900);
+}
+
+/* ================= episode card ================= */
+const epEl=document.getElementById('epcard');
+function showOpenCard(){
+  epEl.innerHTML=`<div class="ep-inner">
+    <div class="ep-k">A narrative simulation · three laughs and one debt</div>
+    <div class="ep-t">RED CLIFFS</div>
+    <div class="ep-s">Episode Two · The Huarong Road</div>
+    <div class="ep-x">The fire on the Yangtze is behind you. The marshes are ahead. Cheng Yu warned you; you did not listen. Three times Zhuge Liang has left a door open on this road, and three times you will walk through it laughing. The fourth stop is not a door.</div>
+    <div class="ep-hint">tap to begin</div>
+  </div>`;
+  epEl.style.display='block';
+  epEl.onclick=()=>{
+    epEl.style.display='none';
+    playScene(SC_OPENING,afterOpening);
+  };
+}
+function showEndCard(){
+  epEl.innerHTML=`<div class="ep-inner">
+    <div class="ep-k">End of episode two</div>
+    <div class="ep-t">THE HUARONG ROAD</div>
+    <div class="ep-s">Cao Cao reached the north. The Three Kingdoms would take another fifteen years to fully form.</div>
+    <div class="ep-x">${handoffHtml()}</div>
+    <div class="ep-btns">
+      <button class="btn" id="epreplay">Replay the episode</button>
+      <button class="btn ghost" id="epclose">Close</button>
+    </div>
+  </div>`;
+  epEl.style.display='block';epEl.onclick=null;
+  document.getElementById('epreplay').onclick=()=>{epEl.style.display='none';enterStart();};
+  document.getElementById('epclose').onclick=()=>{epEl.style.display='none';};
+}
+function stars(v){return v>0?'★'.repeat(Math.min(v,3)):'·';}
+function handoffHtml(){
+  const marks=[];
+  if(FLAGS.advisorHeeded)marks.push('Cheng Yu’s counsel acknowledged');
+  if(FLAGS.debtNamed)marks.push('the debt named in front of both armies');
+  if(FLAGS.laughedThrice)marks.push('three laughs, three ambushes, one debt');
+  if(FLAGS.thriceWarned)marks.push('Zhuge Liang’s foresight witnessed');
+  return `<div class="ho-block"><div class="ho-k">The account</div>
+    <b>Bonds</b> · Zhang Liao ${stars(REL.zhang)} · Cheng Yu ${stars(REL.cheng)}<br>
+    <b>Laughs</b> · ${S.laughs} of three on the road<br>
+    <b>Marks</b> · ${marks.length?marks.join(' · '):'a quiet crossing'}</div>`;
+}
+function showChorus(){
+  const rows=CHOICELOG.map(c=>`<div class="ch-row">
+    <div class="ch-q">${c.title}</div>
+    <div class="ch-bar"><div style="width:${c.pct}%"></div></div>
+    <div class="ch-meta">You: ${c.pick} · ${c.pct}% chose the same · History: ${c.history}</div>
+  </div>`).join('');
+  epEl.innerHTML=`<div class="ep-inner">
+    <div class="ep-k">The chorus · what the audience chose</div>
+    <div style="max-width:480px;margin:22px auto 0">${rows}</div>
+    <div class="ep-x" style="margin-top:10px">Audience numbers are illustrative in this prototype.</div>
+    <div class="ep-btns"><button class="btn" id="chnext">End of Episode Two</button></div>
+  </div>`;
+  epEl.style.display='block';epEl.onclick=null;
+  document.getElementById('chnext').onclick=()=>{epEl.style.display='none';showEndCard();};
+}
+
+/* ================= scenes ================= */
+
+/* --- opening: the aftermath of Red Cliffs --- */
+const SC_OPENING=[
+  {who:'nar',text:`The fire on the Yangtze has been burning for two days. Cao Cao's fleet, eight hundred thousand men, the accumulated military power of the north: gone. What remains is a column of survivors, starving, soaked, moving north through marshes that want to swallow them. The prime minister rides at the head of it. He is not speaking.`},
+  {who:'cheng',text:`My lord. I said before the campaign: the river is not northern ground. Huang Gai's fire-ships, the chain across the fleet, the southeast wind on a winter night when no southeast wind should blow. Zhuge Liang is reading skies that have not yet formed. We are retreating through a landscape he has had months to study.`,choices:[
+    {label:'"You were right. What do you need from me now?"',d:{cheng:2},toast:'Bond · Cheng Yu',flag:'advisorHeeded',fx:()=>recordChoice('cheng-counsel','Cheng Yu before the march','You acknowledged the warning',61,'no record of their conversation'),reply:[
+      {who:'cheng',text:`Two things. First: trust no stretch of this road that looks easy, because easy is where an ambush hides. Second: do not laugh. Whatever you think you see through the trees, do not laugh. Zhuge Liang is listening for your confidence.`}]},
+    {label:'"That is enough. We march north."',fx:()=>recordChoice('cheng-counsel','Cheng Yu before the march','You cut him short',39,'no record of their conversation'),reply:[
+      {who:'cheng',text:`As you say. I will keep the count of things I said and you did not hear. The list is already long enough to be a document.`}]},
+  ]},
+  {who:'zhang',text:`The vanguard is ready, my lord. Three hundred men and the horses that made it out of the marsh. The Wulin ford is two hours north. After that: the wooded road, then Huarong. Then home, if the road stays clear.`,choices:[
+    {label:'"Stay close. If it goes wrong, I need you at the front."',d:{zhang:1},toast:'Bond · Zhang Liao',fx:()=>recordChoice('zhang-vanguard','Zhang Liao at the ford','Kept him close',68,'Zhang Liao was present throughout the escape'),reply:[
+      {who:'zhang',text:`Always, my lord. The column will not break while I am in front of it. And it will not break behind me either.`}]},
+    {label:'"Take the vanguard. I will ride with the main body."',fx:()=>recordChoice('zhang-vanguard','Zhang Liao at the ford','Sent him ahead',32,'Zhang Liao was present throughout the escape'),reply:[
+      {who:'zhang',text:`Understood. I will clear the road or die clearing it. There is no third thing for a general to do.`}]},
+  ]},
+  {who:'nar',text:`The column forms. Behind you the Yangtze is still orange, still roaring. Ahead: the muddy track north, and whatever Zhuge Liang has prepared along it. You have been outmaneuvered on water. The road is what remains.`},
+];
+function afterOpening(){
+  setPhase(0);
+  cine('west');
+  narrate('The flight · Wulin marshes',
+   `<p>The march north through the Wulin marshes. Horses sink. Men sink. Cao Cao orders those who cannot keep pace to take a different track; most never reach the rendezvous. What the fire did not take, the road is taking now, one boot-length at a time.</p>
+    <p><em>Drag the column east along the road toward Huarong. The distance counter will close. Move when you are ready.</em></p>`);
+  document.getElementById('counters').classList.add('show');
+  INTER.mode='drag-march';
+  setControls([]);
+}
+
+/* --- first laugh: the ford --- */
+function firstLaugh(){
+  setPhase(1);
+  cine('road');
+  setDay('The Wulin ford');
+  playScene([
+    {who:'nar',text:`The ford. Wide, shallow, a good crossing. Cao Cao surveys it from the bank and then, involuntarily, begins to laugh: the kind that comes from knowing you have outrun something that was supposed to catch you.`},
+    {who:'cheng',text:`My lord. This is exactly the kind of crossing where Kongming would place a unit. Do not laugh.`},
+    {who:'nar',text:`The laughter comes anyway. And then, from the tree line on the north bank: armor, banners, a hundred horsemen with drawn bows. They see Cao Cao and begin their charge.`,choices:[
+      {label:'Laugh louder: "I knew he would put someone here."',d:{zhang:1},fx:()=>{addLaugh();recordChoice('laugh-1','The first laugh at the ford','Laughed out loud',72,'the Romance describes three laughs');FLAGS.thriceWarned=true;},reply:[
+        {who:'zhang',text:`My lord, I will hold the ford. Keep moving north.`},
+        {who:'nar',text:`Zhang Liao's cavalry takes the bank. The ambush breaks on it and retreats north. Cao Cao is already past the ford, still laughing.`}]},
+      {label:'Say nothing. Order the cavalry forward.',fx:()=>recordChoice('laugh-1','The first laugh at the ford','Held back the laugh',28,'the Romance describes three laughs'),reply:[
+        {who:'cheng',text:`They broke. The cavalry broke them. Two more ambushes, if the pattern holds.`},
+        {who:'nar',text:`The ford is taken. The laugh does not come. Whether Zhuge Liang notices the silence is not something anyone can say.`}]},
+    ]},
+  ],afterFord);
+}
+function afterFord(){
+  setPhase(1);
+  narrate('The first ambush · past',
+   `<p>Past the ford. The dead stay at the bank. The column reforms and moves north through the second stretch of the road: wooded, narrow, every shadow its own question. The men who have been through the ford once now understand what the road costs.</p>`);
+  setControls([{label:'The wooded road', fn:secondLaugh}]);
+}
+
+/* --- second laugh: the wooded road --- */
+function secondLaugh(){
+  setPhase(2);
+  cine('road');
+  setDay('The wooded road');
+  playScene([
+    {who:'nar',text:`The wooded road. Pines on either side, close enough to touch, the kind of ground where cavalry cannot deploy and archers cannot miss. Cao Cao looks into the trees and laughs again: if he were Zhuge Liang, he would have placed a crossbow company here, and he almost certainly did.`},
+    {who:'cheng',text:`My lord. Please.`},
+    {who:'nar',text:`From the trees: crossbow bolts. The vanguard takes losses. From the southern flank: a second unit, trying to cut the road behind Cao Cao's position.`,choices:[
+      {label:'"Ha! I knew it. Keep moving. Zhang Liao, hold the south."',d:{cheng:-1},fx:()=>{addLaugh();recordChoice('laugh-2','The second laugh in the woods','Laughed again',65,'the Romance describes three laughs');},reply:[
+        {who:'cheng',text:`My lord, you are announcing our position with every laugh. Kongming can hear confidence from a hundred li away. The laughter is a gift to him.`},
+        {who:'zhang',text:`South is clear. The column is through.`}]},
+      {label:'Order silence. Advance at double pace.',fx:()=>recordChoice('laugh-2','The second laugh in the woods','Held the line quiet',35,'the Romance describes three laughs'),reply:[
+        {who:'cheng',text:`Wise. We may yet reach Huarong without announcing ourselves.`},
+        {who:'zhang',text:`Past them. South flank held. One more stretch.`}]},
+    ]},
+  ],afterWoods);
+}
+function afterWoods(){
+  setPhase(2);
+  narrate('The second ambush · past',
+   `<p>Past the wooded road. Two ambushes behind you. One road remaining: the Huarong defile, where the hills close in on either side and the road narrows to the width of two horses. Either it is clear, or it is the end of the march.</p>`);
+  setControls([{label:'The Huarong Road. March.', fn:toHuarong}]);
+}
+
+/* --- to Huarong: the drag reaches the pass --- */
+function toHuarong(){
+  cine('road');
+  setDay('Approaching Huarong');
+  narrate('Huarong · the last stretch',
+   `<p>The road bends east toward the pass. The hills close in. Ahead: the gate posts of the Huarong defile, and beyond them, open ground, safety, the north. Drag the column through to the pass entrance.</p>
+    <p><em>Drag Cao Cao to the pass gate to trigger the encounter.</em></p>`);
+  INTER.mode='drag-march';
+  setControls([]);
+}
+
+/* --- Guan Yu: appeal to the debt --- */
+function appealToGuan(){
+  setPhase(4);
+  FLAGS.debtNamed=true;
+  cine('pass');
+  playScene([
+    {who:'nar',text:`You call his name. Not a military form, not a title. His name, and the name of what happened at Bai Ma, and the name of the debt that has been sitting between you since the day he rode away to rejoin Liu Bei. You do this in front of both armies.`},
+    {who:'guan',text:`I received your gold. I received Red Hare. I killed Yan Liang at Bai Ma because the battle called for it, and because I was serving you at that moment, and a debt requires service to have weight. I know what you are doing.`},
+    {who:'guan',text:`My orders from Kongming are precise. This road is blocked. You know what that means.`,choices:[
+      {label:'"I know. And I know you know what it means to remember a debt in front of an army."',d:{zhang:1},toast:'The debt is named',fx:()=>recordChoice('guan-appeal','The appeal to Guan Yu','Named the debt directly',81,'Guan Yu released him: all sources agree on the outcome, disagree on the reasons'),reply:[
+        {who:'guan',text:`...You are a difficult man to hate correctly. Move north. I did not see you. The mist on this road is very thick today.`},
+        {who:'nar',text:`He turns his horse aside. The column passes in silence. The soldiers on both sides understand perfectly what has just happened, and no one speaks.`}]},
+      {label:'"I am asking you to honor what passed between us. That is all."',fx:()=>recordChoice('guan-appeal','The appeal to Guan Yu','Asked for mercy',19,'Guan Yu released him: all sources agree on the outcome, disagree on the reasons'),reply:[
+        {who:'guan',text:`Mercy is a different word than debt. But the road is the road, and I was not watching it closely enough. Move north, Prime Minister. Quickly.`}]},
+    ]},
+  ],gotoAftermath);
+}
+
+/* --- Guan Yu: counterfactual breakthrough --- */
+function forceBreakthrough(){
+  setPhase(4);
+  cine('pass');
+  narrate('Huarong · the charge · what if',
+   `<p>You order the escort forward. Eighty men, exhausted, against Guan Yu's mounted unit with the halberd already leveled. The charge breaks on the first contact. Zhang Liao takes a wound holding the flank. Guan Yu does not press the rout: he watches you scatter back from the gate and then, after a long moment, sheaths the blade.</p>
+    <p>He lets you go anyway, because the debt does not expire when you make the wrong choice. It expires when he decides it does. The debt is not a contract. It is a judgment. And his judgment, on this road, on this day, is that you have already paid enough.</p>
+    <p class="aside">The Romance has Cao Cao appeal directly to their history, and Guan Yu respond to it. The force option is a counterfactual: Guan Yu's eighty men, with his skill and the terrain, would have cut through three hundred exhausted soldiers without serious difficulty. What he chose to do with that advantage is the whole point of the scene. In historical record, Cao Cao escaped; Guan Yu's role is the novel's invention, but the question it poses, what obligation does an old debt carry against a present order, is a real question with no clean answer.</p>`);
+  setControls([{label:'Rewind · name the debt', fn:()=>{
+    goldRing.visible=true;redRing.visible=true;
+    INTER.mode='rings';
+    narrate('Huarong Road',
+     `<p>He is still there. The mist has not changed. The debt has not changed. Try again: <b>gold ring</b> to name the debt directly.</p>`);
+  }}]);
+}
+
+/* --- aftermath --- */
+function gotoAftermath(){
+  S.stage='safe';
+  guanS.visible=false;
+  passGlow.intensity=0;
+  S.dayTarget=0.65;
+  cine('wide');
+  setDay('North of Huarong · the road home');
+  setPhase(5);
+  narrate('The reckoning',
+   `<p>The column reaches open ground north of the pass. Cao Cao stops, dismounts, and orders a count. Of the hundreds of thousands who crossed the Yangtze in autumn, this is what remains: a column small enough to count by hand. The count is made, and made again, and the second count agrees with the first.</p>
+    <p>What the escape through Wulin bought: survival, the north, and the possibility of the next decade. What it did not buy: the Yangtze, which Sun Quan holds; the south, which Liu Bei will consolidate; or the certainty that Guan Yu's debt is fully paid, because a debt named in front of two armies is now a story that will be told for as long as anyone tells stories about this war.</p>
+    <p>The casualty figures for Red Cliffs and the retreat are genuinely uncertain. The Romance gives Cao Cao eight hundred thousand men; historians suggest eighty to two hundred thousand, of whom disease, desertion, and the fire may have taken more than half before the battle began. The escape through Wulin cost additional men to the marshes, the ambushes, and exposure. The numbers are a range: large, and not fully recoverable from the sources that survive.</p>
+    <p>The long-arc irony: Cao Cao was the finest military mind of his generation, and the defeat at Red Cliffs was not primarily a military failure. It was an intelligence failure, an environmental failure, and a failure of the kind of confidence that laughs three times on the road home. He went on to dominate the north for another eleven years, and the kingdom he built outlasted him, but the Three Kingdoms came into being on the day his fleet burned on the Yangtze, and they lasted sixty years after his death.</p>
+    <p>The transferable lesson: competence is not immunity. The three laughs are not stupidity: they are the particular blindness of a man who has been right so many times that he has started to treat certainty as a muscle he does not need to train. Zhuge Liang read that pattern better than Cao Cao read the road. The debt at Huarong was not a coincidence. It was the only tool Cao Cao had left that Kongming had not already planned around.</p>`);
+  setControls([{label:'The chorus · what others chose', fn:showChorus},{label:'Replay the episode', fn:enterStart, ghost:true}]);
+}
+
+/* ================= main loop ================= */
+const narrLabel=document.getElementById('narrLabel');
+const narrBody=document.getElementById('narrBody');
+const choiceArea=document.getElementById('choiceArea');
+const controls=document.getElementById('controls');
+function narrate(label,html){
+  narrLabel.textContent=label;
+  narrBody.innerHTML=html;
+  narrBody.classList.remove('fade-in');void narrBody.offsetWidth;
+  narrBody.classList.add('fade-in');
+  choiceArea.innerHTML='';
+}
+function setControls(btns){
+  controls.innerHTML='';
+  for(const b of btns){
+    const el=document.createElement('button');
+    el.className='btn'+(b.ghost?' ghost':'');el.textContent=b.label;el.onclick=b.fn;
+    controls.appendChild(el);
+  }
+}
+function setChoices(items){
+  choiceArea.innerHTML='';
+  const grid=document.createElement('div');grid.className='choices fade-in';
+  for(const it of items){
+    const c=document.createElement('button');c.className='choice';
+    c.innerHTML=`<h3>${it.title}</h3><p>${it.body}</p>`;
+    c.onclick=it.fn;grid.appendChild(c);
+  }
+  choiceArea.appendChild(grid);
+  controls.innerHTML='';
+}
+function setPhase(p){
+  S.phase=p;
+  document.querySelectorAll('.pill').forEach(el=>{
+    const n=+el.dataset.p;
+    el.classList.toggle('active',n===p);
+    el.classList.toggle('done',n<p);
+  });
+}
+
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05);
+  last=now;perfNow=now;S.st+=dt;
+  switch(S.stage){
+    case 'march1':{
+      let done=0,total=0;
+      for(const ss of [...troops(),caoPawn]){total++;if(moveToward(ss,0.55,dt))done++;}
+      if(done>=total){S.stage='idle';firstLaugh();}
+      break;
+    }
+    default:break;
+  }
+  if(INTER.mode==='drag-march'&&caoPawn){
+    moveToward(caoPawn,0.55,dt);
+    for(const ss of troops())moveToward(ss,0.45,dt);
+  }
+  updInteract(dt);
+  updateGuan();
+  smokes.forEach(sm=>{
+    sm.t+=dt;
+    sm.mesh.material.opacity=0.12+Math.sin(sm.t*0.6)*0.06;
+    sm.mesh.position.y+=dt*0.1;
+    if(sm.mesh.position.y>18){
+      sm.mesh.position.y=10+smokes.indexOf(sm)*2;
+    }
+  });
+  fireGlow.intensity=S.daylight>0.5?(0.3+Math.sin(now*0.003)*0.15)*Math.max(0,1-(S.st-2)*0.1):0;
+  marsh.position.y=-0.6+Math.sin(now*0.0011)*0.04;
+  applyDaylight(dt);
+  applyCamera(dt);
+  flushCrew();
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+
+/* ================= boot ================= */
+function enterStart(){
+  S.phase=0;S.stage='idle';S.sub='';S.subT=0;S.men=300;S.laughs=0;S.daylight=1;S.dayTarget=1;
+  REL.zhang=1;REL.cheng=0;
+  FLAGS.laughedThrice=false;FLAGS.debtNamed=false;FLAGS.advisorHeeded=false;FLAGS.thriceWarned=false;
+  CHOICELOG.length=0;
+  setDay('Red Cliffs burning');setCounter();
+  document.getElementById('counters').classList.remove('show');
+  guanS.visible=false;
+  passGlow.intensity=0;fireGlow.intensity=0.4;
+  goldRing.visible=false;redRing.visible=false;
+  INTER.mode=null;
+  spawnCrew();
+  cine('west');
+  narrate('The flight',`<p>The fleet is burning behind you. The road north runs through marshes, through forest, and through the mountain defile at Huarong. Zhuge Liang has had months to study this road.</p>`);
+}
+resize();
+enterStart();
+showOpenCard();
+requestAnimationFrame(loop);
+</script></body></html>
