@@ -107,7 +107,8 @@
   lon: 42.54
   brief: The Seljuk crescent, the false retreat at dusk, the betrayal in the reserve line, and the captured emperor who dined with the sultan.
   type: battle
-  status: pending
+  status: built
+  built: 2026-08-29
 - slug: fall-of-constantinople
   title: Constantinople
   year: "29 May 1453"
