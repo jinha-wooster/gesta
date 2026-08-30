@@ -117,7 +117,8 @@
   lon: 28.98
   brief: The Theodosian walls against the great bombard, ships hauled overland into the Golden Horn, and the last emperor's last hour.
   type: battle
-  status: pending
+  status: built
+  built: 2026-08-30
 - slug: battle-of-grunwald
   title: Grunwald
   year: "15 July 1410"
