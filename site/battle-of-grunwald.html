@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grunwald, 1410 · 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#141312; --ink-2:#1b1a18; --panel:#201e1b; --line:#38352f;
+    --parchment:#e5ddc8; --muted:#9c957f; --faint:#696355;
+    --bronze:#d9a441; --bronze-dim:#8f6f2e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{background:var(--ink)}
+  body{background:var(--ink);color:var(--parchment);font-family:'Source Serif 4',Georgia,serif;font-size:17px;line-height:1.65;min-height:100vh}
+  .wrap{max-width:1060px;margin:0 auto;padding:36px 18px 80px}
+  header{text-align:center;margin-bottom:26px}
+  .eyebrow{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  h1{font-family:'GFS Didot',serif;font-weight:400;font-size:clamp(38px,7vw,70px);letter-spacing:.06em;line-height:1}
+  .subtitle{color:var(--muted);font-style:italic;margin-top:12px;font-size:16px}
+  .meander{height:14px;margin:24px auto;max-width:520px;opacity:.55}
+  .phases{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+  .pill{font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:7px 13px;border:1px solid var(--line);border-radius:2px;color:var(--faint);transition:all .35s;white-space:nowrap}
+  .pill.active{color:var(--bronze);border-color:var(--bronze-dim);background:rgba(217,164,65,.06)}
+  .pill.done{color:var(--muted)}
+  .stage{position:relative;border:1px solid var(--line);background:#000;border-radius:3px;overflow:hidden}
+  #view{display:block;width:100%;height:560px;cursor:grab;touch-action:none}
+  #view.dragging{cursor:grabbing}
+  @media(max-width:700px){#view{height:420px}}
+  .counters{position:absolute;top:10px;left:12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;font-size:12px;letter-spacing:.08em;opacity:0;transition:opacity .6s}
+  .counters.show{opacity:1}
+  .counter{background:rgba(20,19,18,.74);padding:4px 10px;border-radius:2px;border:1px solid var(--line);width:max-content}
+  .counter b{font-weight:600}
+  .c-to b{color:#dcd8cc} .c-pl b{color:#c04040}
+  .daytag{position:absolute;bottom:10px;left:12px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(229,221,200,.7);background:rgba(20,19,18,.6);padding:5px 10px;border-radius:2px;pointer-events:none}
+  #formHud{display:none;position:absolute;bottom:92px;left:50%;transform:translateX(-50%);
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--bronze);
+    background:rgba(20,19,18,.85);border:1px solid var(--bronze-dim);padding:8px 16px;
+    border-radius:2px;pointer-events:none;white-space:nowrap;z-index:6}
+  .camctl{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:6px}
+  .cambtn{font-family:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;background:rgba(20,19,18,.74);border:1px solid var(--line);border-radius:2px;color:var(--muted);cursor:pointer;transition:all .2s}
+  .cambtn:hover{color:var(--bronze);border-color:var(--bronze-dim)}
+  .camhint{position:absolute;bottom:10px;right:12px;font-size:11px;letter-spacing:.06em;color:rgba(229,221,200,.55);background:rgba(20,19,18,.6);padding:4px 9px;border-radius:2px;pointer-events:none}
+  @media(max-width:700px){.camhint{display:none}}
+  .narration{border:1px solid var(--line);border-top:none;background:var(--panel);padding:26px 30px;border-radius:0 0 3px 3px;min-height:150px}
+  .narr-label{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--bronze);margin-bottom:10px}
+  .narration p{margin-bottom:12px}
+  .narration p:last-child{margin-bottom:0}
+  .narration em{color:var(--muted)}
+  .aside{font-size:14px;color:var(--muted);font-style:italic;border-left:2px solid var(--bronze-dim);padding-left:14px;margin-top:14px}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  @media(max-width:640px){.choices{grid-template-columns:1fr}}
+  .choice{border:1px solid var(--line);border-radius:3px;padding:20px;background:var(--ink-2);cursor:pointer;text-align:left;color:var(--parchment);font-family:inherit;font-size:16px;transition:border-color .25s,background .25s}
+  .choice:hover{border-color:var(--bronze-dim);background:#24221e80}
+  .choice h3{font-family:'GFS Didot',serif;font-weight:400;font-size:20px;letter-spacing:.04em;margin-bottom:8px;color:var(--bronze)}
+  .choice p{font-size:14.5px;color:var(--muted);line-height:1.55}
+  .controls{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn{font-family:inherit;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:13px 28px;background:transparent;color:var(--bronze);border:1px solid var(--bronze-dim);border-radius:2px;cursor:pointer;transition:all .25s}
+  .btn:hover{background:rgba(217,164,65,.1);border-color:var(--bronze)}
+  .btn.ghost{color:var(--muted);border-color:var(--line)}
+  .btn.ghost:hover{color:var(--parchment);background:rgba(255,255,255,.04)}
+  #dock{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:10px 14px 12px;
+      background:linear-gradient(transparent, rgba(12,12,10,.45) 18%, rgba(12,12,10,.9) 72%)}
+  #dock:not(:has(button)){display:none}
+  #dock .choices{max-width:880px;margin:0 auto;gap:10px}
+  #dock .choice{padding:12px 14px;background:rgba(24,22,18,.93)}
+  #dock .choice h3{font-size:17px;margin-bottom:5px}
+  #dock .choice p{font-size:13px;line-height:1.45}
+  #dock .controls{margin-top:0;padding-top:8px}
+  @media(max-width:640px){#dock .choice{padding:10px 12px}#dock .choice p{font-size:12px}}
+  #vn{display:none;position:absolute;left:0;right:0;bottom:0;padding:14px 16px 16px;
+      background:linear-gradient(transparent, rgba(12,12,10,.55) 18%, rgba(12,12,10,.92) 60%);z-index:5}
+  .vn-box{display:flex;gap:16px;max-width:860px;margin:0 auto;align-items:flex-end;cursor:pointer}
+  .vn-portrait{width:104px;height:128px;flex:0 0 auto;border:1px solid var(--bronze-dim);
+      border-radius:3px;background:#1c1814;overflow:hidden}
+  .vn-portrait svg{width:100%;height:100%;display:block}
+  .vn-main{flex:1;min-width:0}
+  .vn-name{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--bronze);margin-bottom:7px}
+  .vn-text{font-size:16.5px;line-height:1.6;color:var(--parchment);min-height:52px}
+  .vn-text em{color:var(--muted)}
+  .vn-next{font-size:11px;letter-spacing:.2em;color:var(--faint);margin-top:8px;text-transform:uppercase}
+  .vn-choices{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .vn-choice{font-family:inherit;font-size:14.5px;text-align:left;padding:11px 16px;background:rgba(24,22,18,.9);
+      border:1px solid var(--line);border-radius:2px;color:var(--parchment);cursor:pointer;transition:all .2s}
+  .vn-choice:hover{border-color:var(--bronze-dim);background:rgba(32,29,23,.95)}
+  #vntoast{position:absolute;right:16px;bottom:100%;margin-bottom:8px;font-size:11px;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--bronze);background:rgba(18,16,13,.85);border:1px solid var(--bronze-dim);
+      padding:6px 12px;border-radius:2px;opacity:0;transition:opacity .5s;pointer-events:none}
+  #vntoast.show{opacity:1}
+  .vn-narr .vn-text{font-style:italic;color:var(--muted)}
+  @media(max-width:640px){.vn-portrait{width:76px;height:96px}.vn-text{font-size:15px}}
+  footer{margin-top:44px;text-align:center;font-size:13px;color:var(--faint);line-height:1.7}
+  .fade-in{animation:fadeIn .6s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">15 July 1410 · the field of Grunwald · between Stebark and Lodwigowo</div>
+    <h1>GRUNWALD</h1>
+    <p class="subtitle">Two swords sent as an insult, a wing that vanished, and the day the Teutonic Order met the trap it had been riding toward for a century</p>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true">
+      <defs><pattern id="key" width="26" height="14" patternUnits="userSpaceOnUse">
+        <path d="M0 12 H10 V2 H20 V8 H14 V6 H18 V4 H12 V10 H22 V0 H26" fill="none" stroke="#d9a441" stroke-width="1.4"/>
+      </pattern></defs>
+      <rect width="520" height="14" fill="url(#key)"/>
+    </svg>
+  </header>
+
+  <nav class="phases" aria-label="Battle phases">
+    <span class="pill" data-p="0">Prologue</span>
+    <span class="pill" data-p="1">The Two Swords</span>
+    <span class="pill" data-p="2">Deployment</span>
+    <span class="pill" data-p="3">The Withdrawal</span>
+    <span class="pill" data-p="4">The Return</span>
+    <span class="pill" data-p="5">Aftermath</span>
+  </nav>
+
+  <div class="stage">
+    <div id="view" role="img" aria-label="3D battlefield of Grunwald, a summer field in Mazuria, July 1410"></div>
+    <div class="counters" id="counters">
+      <span class="counter c-to">Teutonic fallen&nbsp; <b id="toCt">0</b></span>
+      <span class="counter c-pl">Polish-Lithuanian fallen&nbsp; <b id="plCt">0</b></span>
+    </div>
+    <div class="daytag" id="daytag">Morning · the field between the villages · the Order's trumpets carry south</div>
+    <div id="formHud"></div>
+    <div class="camctl">
+      <button class="cambtn" data-cam="over">Overview</button>
+      <button class="cambtn" data-cam="tord">The Order</button>
+      <button class="cambtn" data-cam="lit">Lithuanian wing</button>
+      <button class="cambtn" data-cam="cent">The center</button>
+    </div>
+    <div class="camhint">drag · rotate&ensp;|&ensp;scroll · zoom&ensp;|&ensp;right-drag · pan</div>
+    <div id="dock"><div id="choiceArea"></div><div class="controls" id="controls"></div></div>
+    <div id="vn"><div id="vntoast"></div>
+      <div class="vn-box" id="vnbox">
+        <div class="vn-portrait" id="vnportrait"></div>
+        <div class="vn-main">
+          <div class="vn-name" id="vnname"></div>
+          <div class="vn-text" id="vntext"></div>
+          <div class="vn-choices" id="vnchoices"></div>
+          <div class="vn-next" id="vnnext">tap to continue &#9656;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="narration">
+    <div class="narr-label" id="narrLabel">Prologue</div>
+    <div id="narrBody"></div>
+  </div>
+
+  <footer>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true"><rect width="520" height="14" fill="url(#key)"/></svg>
+    Grounded in Jan Dlugosz, whose Annales recorded the battle within a generation of the men who fought it, and the
+    anonymous Cronica conflictus written within months of the day itself. Estimated forces: 27,000 to 39,000
+    Polish-Lithuanian, 17,000 to 27,000 Teutonic Order. One figure represents roughly 500 men.
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+
+/* ================= geography =================
+   Sim space 1000 x 620. Teutonic Order forms in the north (low y),
+   Polish-Lithuanian army in the south (high y). A rolling summer plain
+   in Mazuria with wooded flanks, July 1410. */
+const sx2w=x=>(x-500)*0.2, sy2w=y=>(y-310)*0.2;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const MEN_PER=500;
+
+const S={
+  phase:0, stage:'idle', st:0,
+  soldiers:[], arrows:[],
+  toDead:0, plDead:0,
+  depthN:3, orderCue:false, litGone:false, litBack:false,
+  pushSent:false, endCue:false,
+};
+
+/* ================= three.js ================= */
+const view=document.getElementById('view');
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x7a8e5e);
+scene.fog=new THREE.Fog(0x7a8e5e,150,440);
+const camera=new THREE.PerspectiveCamera(52,1,0.5,900);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const SHADOWS=window.innerWidth>700;
+if(SHADOWS){renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;}
+view.appendChild(renderer.domElement);
+function resize(){const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+scene.add(new THREE.HemisphereLight(0xe8f0d0,0x4a5c28,0.9));
+const sun=new THREE.DirectionalLight(0xfff4d0,0.85);
+sun.position.set(40,100,20);
+if(SHADOWS){
+  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+  const sc=sun.shadow.camera;
+  sc.left=-130;sc.right=130;sc.top=130;sc.bottom=-130;sc.far=360;
+  sc.updateProjectionMatrix();sun.shadow.bias=-0.0008;
+}
+scene.add(sun);
+
+/* ---------- terrain: summer Mazurian plain ---------- */
+function terrainH(wx,wz){
+  const x=wx/0.2+500,y=wz/0.2+310;
+  let h=Math.sin(x*0.04)*0.45+Math.cos(y*0.042)*0.4+Math.sin((x+y)*0.018)*0.35;
+  if(y<80)h+=(80-y)*0.04;
+  if(y>560)h+=(y-560)*0.04;
+  return h;
+}
+{
+  const g=new THREE.PlaneGeometry(230,150,140,100);
+  g.rotateX(-Math.PI/2);
+  const pos=g.attributes.position,colors=[];
+  const cGrass=new THREE.Color(0x6a7c3a),cDark=new THREE.Color(0x4a5c28),
+        cGold=new THREE.Color(0x9a8848),tmp=new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const wx=pos.getX(i),wz=pos.getZ(i);
+    pos.setY(i,terrainH(wx,wz));
+    const t=0.35+0.35*Math.sin(wx*0.09)*Math.sin(wz*0.11);
+    tmp.copy(cGrass).lerp(cDark,t);
+    tmp.lerp(cGold,0.12*Math.max(0,Math.sin(wx*0.04+1.2)));
+    tmp.offsetHSL(0,0,(Math.sin(wx*1.4)*Math.sin(wz*1.7))*0.03);
+    colors.push(tmp.r,tmp.g,tmp.b);
+  }
+  g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  g.computeVertexNormals();
+  const terrain=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}));
+  terrain.receiveShadow=SHADOWS;
+  scene.add(terrain);
+}
+/* forest fringe suggestion: dark scrub clumps near the flanks */
+{
+  const sm=new THREE.MeshLambertMaterial({color:0x3a4e1e});
+  for(let i=0;i<36;i++){
+    const side=i<18?rnd(30,130):rnd(870,970);
+    const x=side,y=rnd(60,560);
+    const t=new THREE.Mesh(new THREE.SphereGeometry(rnd(.7,1.4),6,5),sm);
+    const wx=sx2w(x),wz=sy2w(y);
+    t.position.set(wx,terrainH(wx,wz)+0.4,wz);t.scale.y=1.2;
+    scene.add(t);
+  }
+}
+
+/* ---------- figures ---------- */
+function buildFigure(parts){
+  let vC=0,iC=0;
+  for(const p of parts){vC+=p.g.attributes.position.count;iC+=p.g.index.count;}
+  const P=new Float32Array(vC*3),N=new Float32Array(vC*3),C=new Float32Array(vC*3),I=new Uint16Array(iC);
+  const col=new THREE.Color();
+  let vO=0,iO=0;
+  for(const p of parts){
+    P.set(p.g.attributes.position.array,vO*3);
+    N.set(p.g.attributes.normal.array,vO*3);
+    col.set(p.c);
+    const n=p.g.attributes.position.count;
+    for(let i=0;i<n;i++){C[(vO+i)*3]=col.r;C[(vO+i)*3+1]=col.g;C[(vO+i)*3+2]=col.b;}
+    const idx=p.g.index.array;
+    for(let i=0;i<idx.length;i++)I[iO+i]=idx[i]+vO;
+    vO+=n;iO+=idx.length;
+  }
+  const out=new THREE.BufferGeometry();
+  out.setAttribute('position',new THREE.BufferAttribute(P,3));
+  out.setAttribute('normal',new THREE.BufferAttribute(N,3));
+  out.setAttribute('color',new THREE.BufferAttribute(C,3));
+  out.setIndex(new THREE.BufferAttribute(I,1));
+  return out;
+}
+function cyl(r1,r2,h,seg,x,y,z,rz){const g=new THREE.CylinderGeometry(r1,r2,h,seg);if(rz)g.rotateZ(rz);g.translate(x,y,z);return g;}
+function sph(r,x,y,z){const g=new THREE.SphereGeometry(r,6,5);g.translate(x,y,z);return g;}
+function box(w,h,d,x,y,z){const g=new THREE.BoxGeometry(w,h,d);g.translate(x,y,z);return g;}
+
+function buildRider(o){
+  const skin=0xc9a075;
+  const parts=[
+    {g:box(1.55,.58,.5, 0,1.0,0),c:o.horse},
+    {g:box(.42,.55,.34, .85,1.3,0),c:o.horse},
+    {g:box(.3,.24,.3, 1.1,1.52,0),c:o.horse},
+    {g:box(.14,.9,.32, -.55,.45,0),c:o.horse},
+    {g:box(.14,.9,.32, .55,.45,0),c:o.horse},
+    {g:cyl(.21,.26,.72,6, -.05,1.86,0),c:o.coat},
+    {g:sph(.17,-.05,2.42,0),c:skin},
+  ];
+  if(o.helm)parts.push({g:sph(.18,-.05,2.5,0),c:o.helmC||0x8a8a7a});
+  else parts.push({g:sph(.18,-.05,2.5,0),c:0x2a2016});
+  if(o.lance)parts.push({g:cyl(.026,.026,2.4,4, .3,2.3,.3,-0.95),c:0x5c452c});
+  if(o.shieldC)parts.push({g:cyl(.28,.28,.05,8, -.1,1.95,-.44,Math.PI/2),c:o.shieldC});
+  return buildFigure(parts);
+}
+function buildFoot(o){
+  const skin=0xc9a075;
+  return buildFigure([
+    {g:cyl(.07,.085,.6,5, 0,.3,-.1),c:o.legs||0x4a3828},
+    {g:cyl(.07,.085,.6,5, 0,.3, .1),c:o.legs||0x4a3828},
+    {g:cyl(.17,.2,.44,6, 0,.86,0),c:o.body},
+    {g:cyl(.17,.15,.3,6, 0,1.22,0),c:o.tunic},
+    {g:cyl(.055,.06,.46,5, 0,1.1,-.24),c:skin},
+    {g:cyl(.055,.06,.46,5, 0,1.1, .24),c:skin},
+    {g:sph(.15,0,1.66,0),c:skin},
+    {g:sph(.16,0,1.74,0),c:o.helm||0x7a7a6a},
+    {g:cyl(.022,.022,1.8,4, .12,1.4,.22,-0.06),c:0x6a5236},
+    {g:box(.06,.85,.5, .02,1.1,-.34),c:o.shield},
+  ]);
+}
+
+/* Teutonic knights: white mantles, dark iron helms */
+const GEO={
+  tk:buildRider({horse:0x3a3028,coat:0xd8d4c4,helm:true,helmC:0x707060,lance:true,shieldC:0x282828}),
+  tw:buildRider({horse:0x4a3c2a,coat:0xd0ccbc,helm:true,helmC:0x686858,lance:true,shieldC:0x303020}),
+  ti:buildFoot({tunic:0x8a8a70,body:0x9a9080,legs:0x5a5040,helm:0x707060,shield:0x484838}),
+  pk:buildRider({horse:0x5c4a38,coat:0x8c2520,helm:true,helmC:0x9a9080,lance:true,shieldC:0xa82828}),
+  lt:buildRider({horse:0x6e5a3a,coat:0x7a6a40,helm:false,lance:true,shieldC:0x6a8040}),
+  pi:buildFoot({tunic:0x7a2020,body:0x8a3030,legs:0x3a2820,helm:0x8a8040,shield:0x5a1a1a}),
+};
+const MATS={};for(const k in GEO)MATS[k]=new THREE.MeshLambertMaterial({vertexColors:true});
+let MESH={};
+const M4=new THREE.Matrix4(),QT=new THREE.Quaternion(),V3=new THREE.Vector3(),SC=new THREE.Vector3(),EUL=new THREE.Euler();
+let perfNow=0;
+function soldier(x,y,side,grp,kind){
+  return {x,y,tx:x,ty:y,hx:x,hy:y,side,grp,kind,alive:true,flee:false,escaped:false,
+          jit:rnd(0,6.28),face:side==='p'?Math.PI/2:-Math.PI/2,moving:false,wps:null,pi:0,slot:0};
+}
+function buildInstances(){
+  for(const k in MESH)scene.remove(MESH[k]);
+  MESH={};
+  for(const k in GEO){
+    const list=S.soldiers.filter(s=>s.kind===k);
+    const m=new THREE.InstancedMesh(GEO[k],MATS[k],Math.max(list.length,1));
+    m.castShadow=SHADOWS;
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);
+    for(let i=0;i<m.count;i++)m.setMatrixAt(i,M4);
+    m.instanceMatrix.needsUpdate=true;
+    list.forEach((s,i)=>{s.idx=i;s.mesh=m;});
+    scene.add(m);MESH[k]=m;
+  }
+}
+function writeInstance(s){
+  const wx=sx2w(s.x),wz=sy2w(s.y);
+  if(s.escaped){SC.setScalar(0.0001);V3.set(wx,-80,wz);QT.set(0,0,0,1);}
+  else if(!s.alive){
+    V3.set(wx,terrainH(wx,wz)+0.22,wz);
+    EUL.set(Math.PI/2,s.jit,0);QT.setFromEuler(EUL);SC.set(1,1,0.35);
+  }else{
+    const mounted=(s.kind==='tk'||s.kind==='tw'||s.kind==='pk'||s.kind==='lt');
+    const bob=s.moving?Math.abs(Math.sin(perfNow*(mounted?0.014:0.011)+s.jit))*(0.14):0;
+    V3.set(wx,terrainH(wx,wz)+bob,wz);
+    EUL.set(s.moving?0.1:0,s.face,s.moving?Math.sin(perfNow*0.012+s.jit)*0.05:0,'YXZ');QT.setFromEuler(EUL);
+    SC.setScalar(1);
+  }
+  M4.compose(V3,QT,SC);s.mesh.setMatrixAt(s.idx,M4);
+}
+function flushInstances(){
+  for(const s of S.soldiers)writeInstance(s);
+  for(const k in MESH)MESH[k].instanceMatrix.needsUpdate=true;
+}
+function moveToward(s,speed,dt){
+  const dx=s.tx-s.x,dy=s.ty-s.y,d=Math.hypot(dx,dy);
+  if(d<1.5){s.moving=false;return true;}
+  s.moving=true;
+  s.x+=(dx/d)*speed*dt*60;s.y+=(dy/d)*speed*dt*60;
+  s.face=Math.atan2(-dy,dx);return false;
+}
+function kill(s){
+  if(!s.alive)return;s.alive=false;
+  if(s.side==='t')S.toDead++;else S.plDead++;
+  updateCounters();
+}
+function alive(side,grp){return S.soldiers.filter(s=>s.alive&&!s.escaped&&s.side===side&&(!grp||s.grp===grp));}
+function killRandom(list,n){
+  const pool=list.filter(s=>s.alive);
+  for(let i=0;i<n&&pool.length;i++){const j=Math.floor(Math.random()*pool.length);kill(pool[j]);pool.splice(j,1);}
+}
+function updateCounters(){
+  document.getElementById('toCt').textContent='~'+(S.toDead*MEN_PER).toLocaleString();
+  document.getElementById('plCt').textContent='~'+(S.plDead*MEN_PER).toLocaleString();
+}
+function setDay(t){document.getElementById('daytag').textContent=t;}
+
+/* ---------- javelins ---------- */
+const ARROW_MAX=160;
+const arrowMesh=new THREE.InstancedMesh(new THREE.CylinderGeometry(0.045,0.045,1.4,4),
+  new THREE.MeshLambertMaterial({color:0x3a2e1e}),ARROW_MAX);
+arrowMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(arrowMesh);
+const UP=new THREE.Vector3(0,1,0),DIR=new THREE.Vector3();
+function volley(n,shooters,targets,hit){
+  if(!shooters.length||!targets.length)return;
+  for(let i=0;i<n;i++){
+    const from=shooters[Math.floor(Math.random()*shooters.length)];
+    const tgt=targets[Math.floor(Math.random()*targets.length)];
+    const fx=sx2w(from.x),fz=sy2w(from.y),tx=sx2w(tgt.x+rnd(-3,3)),tz=sy2w(tgt.y+rnd(-3,3));
+    S.arrows.push({fx,fy:terrainH(fx,fz)+2.0,fz,tx,ty:terrainH(tx,tz)+0.5,tz,
+      t:0,dur:rnd(0.5,0.8),arc:rnd(2,5),simx:tgt.x,simy:tgt.y,px:fx,py:2,pz:fz,vx:0,vy:1,vz:0,side:tgt.side,hit});
+  }
+}
+function updArrowFlight(dt){
+  for(let i=S.arrows.length-1;i>=0;i--){
+    const a=S.arrows[i];a.t+=dt;
+    const u=Math.min(a.t/a.dur,1);
+    const nx=a.fx+(a.tx-a.fx)*u,nz=a.fz+(a.tz-a.fz)*u;
+    const ny=a.fy+(a.ty-a.fy)*u+Math.sin(u*Math.PI)*a.arc;
+    a.vx=nx-a.px;a.vy=ny-a.py;a.vz=nz-a.pz;a.px=nx;a.py=ny;a.pz=nz;
+    if(u>=1){
+      if(Math.random()<a.hit){
+        const near=S.soldiers.filter(s=>s.alive&&s.side===a.side&&Math.hypot(s.x-a.simx,s.y-a.simy)<9);
+        if(near.length)kill(near[0]);
+      }
+      S.arrows.splice(i,1);
+    }
+  }
+}
+function flushArrows(){
+  let i=0;
+  for(const a of S.arrows){
+    if(i>=ARROW_MAX)break;
+    V3.set(a.px,a.py,a.pz);DIR.set(a.vx,a.vy,a.vz).normalize();QT.setFromUnitVectors(UP,DIR);SC.setScalar(1);M4.compose(V3,QT,SC);
+    arrowMesh.setMatrixAt(i++,M4);
+  }
+  for(;i<ARROW_MAX;i++){SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);arrowMesh.setMatrixAt(i,M4);}
+  arrowMesh.instanceMatrix.needsUpdate=true;
+}
+
+/* ---------- banners ---------- */
+const banners={};
+function makeBanner(color){
+  const g=new THREE.Group();
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,5.6,5),new THREE.MeshLambertMaterial({color:0x4a3b26}));
+  pole.position.y=2.8;
+  const flag=new THREE.Mesh(new THREE.PlaneGeometry(2.1,1.25),new THREE.MeshLambertMaterial({color,side:THREE.DoubleSide}));
+  flag.position.set(1.1,4.7,0);
+  g.add(pole,flag);g.userData.flag=flag;scene.add(g);g.visible=false;return g;
+}
+banners.to=makeBanner(0xdcd8c8);
+banners.pl=makeBanner(0xa02828);
+function updateBanners(){
+  const sel={
+    to:s=>s.side==='t'&&(s.kind==='tk'||s.kind==='ti'),
+    pl:s=>s.side==='p'&&(s.kind==='pk'||s.kind==='pi'),
+  };
+  for(const k in banners){
+    const list=S.soldiers.filter(s=>s.alive&&!s.escaped&&sel[k](s));
+    const b=banners[k];if(list.length<5){b.visible=false;continue;}
+    let mx=0,my=0;for(const s of list){mx+=s.x;my+=s.y;}mx/=list.length;my/=list.length;
+    const wx=sx2w(mx),wz=sy2w(my);
+    b.position.set(wx,terrainH(wx,wz),wz);b.userData.flag.rotation.y=Math.sin(perfNow*0.002)*0.35;b.visible=true;
+  }
+}
+
+/* ================= camera ================= */
+const cam={yaw:Math.PI,pitch:0.95,dist:205,tx:0,ty:2,tz:0,auto:null};
+function applyCamera(dt){
+  if(cam.auto){
+    const a=cam.auto,k=1-Math.pow(0.001,dt);
+    cam.yaw+=(a.yaw-cam.yaw)*k;cam.pitch+=(a.pitch-cam.pitch)*k;cam.dist+=(a.dist-cam.dist)*k;
+    cam.tx+=(a.tx-cam.tx)*k;cam.ty+=(a.ty-cam.ty)*k;cam.tz+=(a.tz-cam.tz)*k;
+    if(Math.abs(a.dist-cam.dist)<0.5&&Math.abs(a.yaw-cam.yaw)<0.01)cam.auto=null;
+  }
+  cam.pitch=THREE.MathUtils.clamp(cam.pitch,0.14,1.42);
+  cam.dist=THREE.MathUtils.clamp(cam.dist,20,300);
+  const cp=Math.cos(cam.pitch);
+  camera.position.set(
+    cam.tx+Math.sin(cam.yaw)*cp*cam.dist,
+    cam.ty+Math.sin(cam.pitch)*cam.dist,
+    cam.tz+Math.cos(cam.yaw)*cp*cam.dist);
+  camera.lookAt(cam.tx,cam.ty,cam.tz);
+}
+const PRESETS={
+  over:{yaw:Math.PI,pitch:0.95,dist:205,tx:0,ty:2,tz:0},
+  tord:{yaw:Math.PI,pitch:0.5,dist:95,tx:0,ty:1,tz:sy2w(130)},
+  lit:{yaw:Math.PI-0.8,pitch:0.6,dist:120,tx:sx2w(700),ty:1,tz:sy2w(420)},
+  cent:{yaw:Math.PI,pitch:0.6,dist:100,tx:0,ty:1,tz:sy2w(320)},
+};
+document.querySelectorAll('.cambtn').forEach(b=>b.onclick=()=>{cam.auto={...PRESETS[b.dataset.cam]};});
+function cine(name){cam.auto={...PRESETS[name]};}
+
+let drag=null,formDrag=null;
+view.addEventListener('pointerdown',e=>{
+  view.setPointerCapture(e.pointerId);
+  if(S.stage==='deploy'&&e.button===0&&!e.shiftKey){
+    const hit=castAt(e,[formPlane]);
+    if(hit.length){formDrag={x0:e.clientX,d0:S.depthN};return;}
+  }
+  drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,btn:e.button,shift:e.shiftKey};
+  view.classList.add('dragging');cam.auto=null;
+});
+view.addEventListener('pointermove',e=>{
+  if(formDrag){
+    const d=THREE.MathUtils.clamp(Math.round(formDrag.d0+(e.clientX-formDrag.x0)*0.06),1,6);
+    if(d!==S.depthN){S.depthN=d;placePolish();formHudText();}
+    return;
+  }
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;
+  if(drag.btn===2||drag.shift){
+    const cp=Math.cos(cam.yaw),sp=Math.sin(cam.yaw),k=cam.dist*0.0016;
+    cam.tx-=(dx*cp-dy*sp)*k;cam.tz-=(-dx*sp-dy*cp)*k;
+    cam.tx=THREE.MathUtils.clamp(cam.tx,-105,105);cam.tz=THREE.MathUtils.clamp(cam.tz,-66,66);
+  }else{cam.yaw-=dx*0.0055;cam.pitch+=dy*0.0045;}
+});
+const endDrag=()=>{drag=null;view.classList.remove('dragging');};
+view.addEventListener('pointerup',e=>{
+  if(formDrag){formDrag=null;return;}
+  if(drag&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<12)tryPick(e);endDrag();
+});
+view.addEventListener('pointercancel',endDrag);
+view.addEventListener('wheel',e=>{e.preventDefault();cam.auto=null;cam.dist*=(1+Math.sign(e.deltaY)*0.09);},{passive:false});
+view.addEventListener('contextmenu',e=>e.preventDefault());
+let pinch=null;
+view.addEventListener('touchstart',e=>{if(e.touches.length===2)pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);});
+view.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&pinch){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);cam.dist*=pinch/d;pinch=d;cam.auto=null;}
+},{passive:true});
+view.addEventListener('touchend',()=>pinch=null);
+
+/* ================= command layer ================= */
+const raycaster=new THREE.Raycaster();
+const ndc=new THREE.Vector2();
+function castAt(e,objects){
+  const r=renderer.domElement.getBoundingClientRect();
+  ndc.x=((e.clientX-r.left)/r.width)*2-1;ndc.y=-((e.clientY-r.top)/r.height)*2+1;
+  raycaster.setFromCamera(ndc,camera);return raycaster.intersectObjects(objects,false);
+}
+const formPlane=new THREE.Mesh(
+  new THREE.PlaneGeometry(100,30),
+  new THREE.MeshBasicMaterial({color:0xd9a441,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
+formPlane.rotation.x=-Math.PI/2;scene.add(formPlane);
+const formHud=document.getElementById('formHud');
+function formHudText(){
+  if(S.depthN>=4)formHud.textContent='Polish center: '+S.depthN+' ranks deep · strong formation · drag to adjust';
+  else if(S.depthN===3)formHud.textContent='Polish center: 3 ranks · historical depth · drag to adjust';
+  else formHud.textContent='Polish center: '+S.depthN+' rank'+(S.depthN>1?'s':'')+' · dangerously thin · drag to adjust';
+}
+function ringMesh(color){
+  const m=new THREE.Mesh(new THREE.TorusGeometry(9,0.45,8,32),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.85}));
+  m.rotation.x=-Math.PI/2;m.visible=false;
+  const fill=new THREE.Mesh(new THREE.CircleGeometry(8.2,24),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.13,depthWrite:false,side:THREE.DoubleSide}));
+  fill.position.z=0.02;m.add(fill);scene.add(m);return m;
+}
+const ringA=ringMesh(0xd9a441);
+const ringB=ringMesh(0xc45540);
+const RINGS=[ringA,ringB];
+let ringT=0,pickMode=null;
+function updCommandFx(dt){
+  ringT+=dt;
+  formPlane.material.opacity=(S.stage==='deploy')?0.07+Math.sin(ringT*3)*0.03:0;
+  if(S.stage==='deploy'){
+    formPlane.position.set(sx2w(450),terrainH(sx2w(450),sy2w(468))+0.6,sy2w(468));
+  }
+  for(const r of RINGS){
+    if(!r.visible)continue;const k=1+Math.sin(ringT*3.4)*0.08;
+    r.scale.setScalar(k);r.material.opacity=0.55+Math.sin(ringT*3.4)*0.3;
+  }
+}
+function placeRing(r,sx,sy){
+  const wx=sx2w(sx),wz=sy2w(sy);r.position.set(wx,terrainH(wx,wz)+0.7,wz);r.visible=true;
+}
+function hideRings(){for(const r of RINGS)r.visible=false;pickMode=null;}
+function pickRing(e){
+  const rect=renderer.domElement.getBoundingClientRect();let best=null,bestD=1e9;
+  for(const r of RINGS){
+    if(!r.visible)continue;V3.copy(r.position).project(camera);if(V3.z>1)continue;
+    const px=(V3.x*0.5+0.5)*rect.width+rect.left,py=(-V3.y*0.5+0.5)*rect.height+rect.top;
+    const d=Math.hypot(e.clientX-px,e.clientY-py);if(d<bestD){bestD=d;best=r;}
+  }
+  return bestD<Math.max(56,rect.width*0.08)?best:null;
+}
+function tryPick(e){
+  if(!pickMode)return;const r=pickRing(e);if(!r)return;
+  const choice=r===ringA?'a':'b';hideRings();
+  if(choice==='a')holdFormation();else startPursuitCF();
+}
+function centroid(list){
+  let mx=0,my=0;for(const s of list){mx+=s.x;my+=s.y;}
+  return list.length?[mx/list.length,my/list.length]:[500,310];
+}
+
+/* ================= dialogue layer ================= */
+const REL={};
+const FLAGSV={};
+function PT(o){
+ const hats={
+  crest:`<path d="M34 46 Q34 24 52 22 Q70 24 70 46 L64 42 Q52 34 40 42 Z" fill="${o.hatC}"/><rect x="47" y="5" width="10" height="20" rx="4" fill="${o.crestC||'#a03028'}"/>`,
+  band:`<path d="M36 44 Q52 30 68 44 Z" fill="${o.hairC||'#3a2c1a'}"/><rect x="34" y="43" width="36" height="6" rx="2" fill="${o.hatC}"/>`,
+  wrap:`<path d="M32 52 Q32 24 52 22 Q72 24 72 52 Q66 36 52 36 Q38 36 32 52 Z" fill="${o.hatC}"/><rect x="32" y="48" width="40" height="7" rx="3" fill="${o.hatC}"/>`,
+  none:`<path d="M34 48 Q34 28 52 26 Q70 28 70 48 Q64 38 52 39 Q40 38 34 48 Z" fill="${o.hairC||'#3a2c1a'}"/>`,
+ };
+ const beard=o.beard?`<path d="M40 84 Q52 96 64 84 L62 ${o.beard==='long'?102:94} Q52 ${o.beard==='long'?110:100} 42 ${o.beard==='long'?102:94} Z" fill="${o.beardC||o.hairC||'#3a2c1a'}"/>`:'';
+ const stache=o.stache?`<path d="M41 76 Q52 71 63 76" stroke="${o.beardC||o.hairC||'#3a2c1a'}" stroke-width="3" fill="none" stroke-linecap="round"/>`:'';
+ return `<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="${o.bg}"/>
+<ellipse cx="52" cy="122" rx="40" ry="26" fill="${o.robe}"/><path d="M14 122 Q52 86 90 122" fill="${o.robe2}"/>
+${o.extra||''}
+<ellipse cx="52" cy="64" rx="20" ry="23" fill="${o.skin||'#c9a075'}"/>
+${hats[o.hat||'none']||''}
+<path d="M40 58 L48 57 M56 57 L64 58" stroke="#2a2012" stroke-width="2.2" stroke-linecap="round"/>
+<circle cx="44" cy="63" r="1.9" fill="#20180e"/><circle cx="60" cy="63" r="1.9" fill="#20180e"/>
+${stache}${beard}
+<path d="M46 80 Q52 ${o.stern?79:84} 58 80" stroke="#8a5a3a" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>`;
+}
+const CAST={
+  vyt:{name:'Vytautas · Grand Duke of Lithuania',svg:PT({bg:'#14180e',robe:'#5a6e3a',robe2:'#4a5a2e',hat:'band',hatC:'#8a7a40',hairC:'#1e1808',beard:'short',beardC:'#1e1808',skin:'#b89060'})},
+  her:{name:'Teutonic Herald · in the name of the Grand Master',svg:PT({bg:'#1a1a1c',robe:'#dcd8cc',robe2:'#c8c4b8',hat:'wrap',hatC:'#e8e4d8',hairC:'#382810',stern:1,extra:'<rect x="38" y="104" width="28" height="20" rx="2" fill="#282828"/>',skin:'#c9a075'})},
+  nar:{name:'',svg:null},
+};
+const vnEl=document.getElementById('vn');
+const vnPortrait=document.getElementById('vnportrait');
+const vnName=document.getElementById('vnname');
+const vnText=document.getElementById('vntext');
+const vnChoices=document.getElementById('vnchoices');
+const vnNextEl=document.getElementById('vnnext');
+const vnToast=document.getElementById('vntoast');
+let vnQueue=[],vnDone=null,vnBusy=false;
+function playScene(steps,done){
+  vnQueue=steps.slice();vnDone=done;
+  choiceArea.innerHTML='';setControls([]);
+  vnEl.style.display='block';vnAdvance();
+}
+function vnAdvance(){
+  while(vnQueue.length&&vnQueue[0].if&&!vnQueue[0].if()){vnQueue.shift();}
+  if(!vnQueue.length){
+    vnEl.style.display='none';const d=vnDone;vnDone=null;if(d)d();return;
+  }
+  renderVn(vnQueue.shift());
+}
+function renderVn(st){
+  const who=CAST[st.who]||CAST.nar;
+  vnPortrait.innerHTML=who.svg||'';vnPortrait.style.display=who.svg?'block':'none';
+  vnName.textContent=who.name;
+  document.getElementById('vnbox').classList.toggle('vn-narr',st.who==='nar');
+  vnText.innerHTML=typeof st.text==='function'?st.text():st.text||'';
+  vnChoices.innerHTML='';
+  if(st.choices){
+    vnNextEl.style.display='none';vnBusy=true;
+    for(const c of st.choices){
+      const b=document.createElement('button');b.className='vn-choice';b.textContent=c.label;
+      b.onclick=(ev)=>{
+        ev.stopPropagation();
+        if(c.d)for(const k in c.d){REL[k]=(REL[k]||0)+c.d[k];}
+        if(c.flag)FLAGSV[c.flag]=true;
+        if(c.toast)vToast(c.toast);
+        if(c.reply)vnQueue=c.reply.concat(vnQueue);
+        vnBusy=false;vnAdvance();
+      };
+      vnChoices.appendChild(b);
+    }
+  }else{vnNextEl.style.display='block';vnBusy=false;}
+}
+document.getElementById('vnbox').addEventListener('click',()=>{if(!vnBusy&&vnEl.style.display==='block')vnAdvance();});
+function vToast(t){vnToast.textContent=t;vnToast.classList.add('show');setTimeout(()=>vnToast.classList.remove('show'),1900);}
+
+/* ---- scenes ---- */
+const SC_G_OPEN=[
+  {who:'nar',text:`The morning has been spent in prayer. You have heard Mass once, then again, and now a third, while across the field the Grand Master's trumpets have blown their contempt and his heralds have gone back and forth with declarations. You are Wladyslaw II Jagiello, King of Poland since the year you were baptised and married in the same season, and this is the largest army you have ever commanded. Your cousin Vytautas of Lithuania rides at your right hand, and neither of you intends to be here by nightfall.`},
+  {who:'vyt',text:`The forest closes both our flanks: they cannot go around us, and we cannot go around them. Which means this field was chosen by someone who understood what that costs the heavier army. They have more knights in full armour than we have Lithuanians. Armour does not run, cousin. Speed runs.`,choices:[
+    {label:'"Then your wing is the speed. Draw them east and bring them back with you."',d:{vyt:1},toast:'Bond · Vytautas',reply:[
+      {who:'vyt',text:`Bring them back. Yes. Though a Lithuanian who has turned once does not easily stop at the second turn. We are thorough. You have my word on the return, and that is worth a great deal more than a Teutonic treaty.`}]},
+    {label:'"Every army on this field is heavy. Ours is simply more willing to move."',reply:[
+      {who:'vyt',text:`Then let it move. I will be on the right wing, cousin. Watch for dust in the east: that will be the Order chasing what it thinks is a rout.`}]},
+  ]},
+];
+const SC_G_SWORDS=[
+  {who:'nar',text:`A herald rides from the Teutonic lines: two banners, two horses, two bare swords carried flat across the saddle. He stops before the royal standard and delivers, without introduction, the message of Grand Master Ulrich von Jungingen.`},
+  {who:'her',text:`The Grand Master of the Teutonic Order, protector of the Prussian faith, sends these two naked swords to your majesty and to the Duke Vytautas, his enemy, so that you shall not longer hide in the groves and thickets but come forward to do battle, and so that the field shall be wider than you have chosen. He gives you this ground, and these weapons, as a gift, since you appear to lack them.`},
+  {who:'nar',text:`The insult is precise: a gift of swords to an army hiding in the forest, as if you needed weapons, as if you needed courage. Every man within earshot has understood. The Grand Master has just explained, in the language of knightly ceremony, that he does not think you are a knight at all.`},
+];
+function SC_G_AFTER(){
+  const steps=[];
+  steps.push({who:'nar',text:`The Grand Master Ulrich von Jungingen died somewhere in the press of the closing afternoon, unhorsed and surrounded. By the standards of his order he died well: on the field, with his men, which is more than most of the commanders who rode away could say. His body was found later, stripped but not dishonoured, and returned.`});
+  if((REL.vyt||0)>=1){
+    steps.push({who:'vyt',text:`It was the return that won it, cousin. Any cavalry can flee. It took discipline, and trust, to come back at the exact moment the Order had decided the battle was already theirs. I told you Lithuania is thorough. We are also, it turns out, punctual.`});
+  }else{
+    steps.push({who:'vyt',text:`The wing returned. It does not matter now whether you believed it would. The field is yours, and so is the question: what do you do with an Order that has held this coast for two hundred years? The answer you give will last longer than today.`});
+  }
+  return steps;
+}
+
+/* ================= armies ================= */
+function placePolish(){
+  let pkI=0,piI=0;
+  for(const s of S.soldiers){
+    if(s.grp==='pk'){
+      s.x=155+(pkI%6)*52;s.y=448+Math.floor(pkI/6)*10;
+      s.tx=s.x;s.ty=s.y;s.hx=s.x;s.hy=s.y;pkI++;
+    }else if(s.grp==='pi'){
+      const col=piI%10,row=Math.floor(piI/10);
+      s.x=210+col*50;
+      const rowGap=S.depthN>=4?S.depthN*2.5:10;
+      s.y=462+row*rowGap;
+      s.tx=s.x;s.ty=s.y;s.hx=s.x;s.hy=s.y;piI++;
+    }
+  }
+}
+function spawnAll(){
+  S.soldiers=[];
+  /* Teutonic Order: north, side 't' */
+  for(let i=0;i<14;i++)S.soldiers.push(soldier(180+(i%7)*82,140+Math.floor(i/7)*11,'t','tk','tk'));
+  for(let i=0;i<8;i++)S.soldiers.push(soldier(580+(i%4)*50,135+Math.floor(i/4)*11,'t','tw','tw'));
+  for(let i=0;i<16;i++)S.soldiers.push(soldier(180+(i%8)*76,170+Math.floor(i/8)*10,'t','ti','ti'));
+  /* Polish-Lithuanian: south, side 'p' */
+  for(let i=0;i<12;i++){const s=soldier(0,0,'p','pk','pk');s.slot=i;S.soldiers.push(s);}
+  for(let i=0;i<20;i++){const s=soldier(0,0,'p','pi','pi');s.slot=i;S.soldiers.push(s);}
+  for(let i=0;i<16;i++)S.soldiers.push(soldier(580+(i%8)*38,462+Math.floor(i/8)*9,'p','lt','lt'));
+  buildInstances();placePolish();
+}
+
+/* ================= phases ================= */
+function enterPrologue(){
+  setPhase(0);setDay('Morning · the field between the villages · July 1410');
+  S.toDead=0;S.plDead=0;updateCounters();
+  document.getElementById('counters').classList.remove('show');
+  S.arrows=[];S.depthN=3;S.orderCue=false;S.litGone=false;S.litBack=false;S.pushSent=false;S.endCue=false;
+  hideRings();formHud.style.display='none';formDrag=null;S.stage='idle';
+  spawnAll();cine('over');
+  narrate('Prologue',
+    `<p>It is the fifteenth of July, 1410, and across a summer field in Mazuria the largest army of knights
+     the Teutonic Order has ever assembled stands in formation, waiting. For two centuries the Order has
+     held the Baltic coast under the banner of crusade: first against the pagan Lithuanians, then, when
+     Lithuania accepted Christianity, against the same Lithuanians for other reasons. The reasons were never
+     really the point. The land was the point, and the tolls, and the amber, and the river mouths.</p>
+     <p>Today you command the answer to two centuries of that arithmetic. Your Polish-Lithuanian army numbers
+     perhaps 27,000 men, perhaps 39,000: the heralds count differently. Across from you the Grand Master
+     Ulrich von Jungingen has perhaps 17,000 to 27,000, fewer in number but almost all of them armoured
+     cavalry or professional infantry, the finest the Order has ever put into the field. He has also chosen
+     to wait, forcing you to advance across open ground. The forest closes both flanks. No one is going
+     around anyone today.</p>`);
+  setControls([{label:'Ride to Vytautas', fn:()=>playScene(SC_G_OPEN,()=>{
+    setPhase(1);playScene(SC_G_SWORDS,swordsChoice);
+  })}]);
+}
+function swordsChoice(){
+  narrate('The Two Swords',
+    `<p>The two bare swords stand in the ground before the royal standard. Every knight and bannerman
+     within sight has understood the ceremony: this is how you tell a king he is not worth fighting
+     with respect. The Grand Master has just handed you the single best gift a commander can give an
+     enemy army: a reason.</p>`);
+  setChoices([
+    {title:'Accept the swords. Complete the Mass.',
+     body:'Jagiello’s historical answer: accept the insult, complete the third Mass, refuse to move until the Order crosses the field itself. Let their armour work for you in July heat.',
+     fn:()=>{setPhase(2);enterDeployment();}},
+    {title:'Answer the insult now: advance.',
+     body:'Strike while the anger is fresh, before the men have time to calculate. The Order is not fully dressed to receive a charge, and surprise buys ground.',
+     fn:()=>{
+       narrate('The Two Swords · what if',
+         `<p>You order the advance before the third Mass, while the formation is still assembling and the
+          Lithuanian wing has not yet found its position. The Order, who expected to receive an attack on
+          their own schedule, responds with something unexpected: the Grand Master is ready, and you are not
+          quite. The first wave of Teutonic knights hits the half-formed Polish line with the full weight of
+          armoured cavalry moving downhill, and the disorder spreads faster than the anger does.</p>
+          <p>The insult deserved an answer. The answer deserved a formation. A fury without geometry is
+          not a charge: it is a crowd. Scipio completed his preparations at Zama while Hannibal made his
+          offer, and the patience was the battle. The catalogue keeps hearing this lesson in different
+          languages.</p>`);
+       setControls([{label:'Rewind · complete the Mass', fn:()=>{setPhase(2);enterDeployment();}}]);
+     }},
+  ]);
+}
+function enterDeployment(){
+  S.stage='deploy';document.getElementById('counters').classList.add('show');
+  cine('cent');formHud.style.display='block';formHudText();
+  narrate('Deployment',
+    `<p>The Third Mass complete, the army dresses its lines. On your right wing Vytautas’s Lithuanian
+     cavalry forms its own order, lighter and faster than the Polish centre, which is your heaviest
+     instrument. The question for the centre is depth: how many ranks of infantry and knights stand
+     behind the first contact?</p>
+     <p>More ranks means a centre that can absorb the first shock and hold while the wings do their work.
+     Fewer ranks means a wider front but less staying power, and the Teutonic knights, once they find
+     a breach, drive through like a wedge. The historical answer was a centre deep enough to hold without
+     winning, while the Lithuanian wing created the condition for victory elsewhere.</p>
+     <p><em>Drag left or right on the golden ground to set the depth of the Polish centre. Then sound
+     the advance when you are ready.</em></p>`);
+  setControls([{label:'Sound the advance', fn:confirmDepth}]);
+}
+function confirmDepth(){
+  formHud.style.display='none';setPhase(3);
+  if(S.depthN<2){
+    S.stage='cfclosed';S.st=0;
+    narrate('Deployment · what if',
+      `<p>A single rank across a wide front looks powerful from above, and gives the Order exactly what it
+       needs: a line thin enough to break. The first Teutonic charge does not need to route anyone. It
+       needs only to find the thinnest seam and push through, then wheel behind and roll up what remains.
+       The Polish centre at Grunwald was not the clever part of the plan. It was the anvil. An anvil must
+       be thick.</p>`);
+    setControls([{label:'Rewind · deepen the formation', fn:()=>{enterPrologue();}}]);
+    return;
+  }
+  startEngagement();
+}
+function updCfClosed(dt){
+  for(const s of alive('t','tk'))if(Math.random()<dt*0.5){s.tx=s.x;s.ty=490;}
+  for(const s of alive('t','tk'))moveToward(s,0.7,dt);
+  if(Math.random()<dt*3)killRandom(alive('p','pi'),1);
+  if(Math.random()<dt*0.4)killRandom(alive('t','tk'),1);
+  if(S.st>7){
+    S.stage='cffrozen';
+    narrate('Deployment · what if',
+      `<p>The Teutonic wedge found the gap and widened it. The centre that should have been the hinge of the
+       battle became the first casualty. Grunwald was won not by the wings alone but by the centre’s
+       willingness to stand and be struck and not break, for hours, while everything else was arranged.
+       Depth was the precondition of the trap.</p>`);
+    setControls([{label:'Rewind · deepen the centre', fn:()=>{enterPrologue();}}]);
+  }
+}
+function startEngagement(){
+  S.stage='engage';S.st=0;setDay('Midday · the lines close');
+  cine('over');
+  narrate('The Withdrawal',
+    `<p>The armies close at the walk, then the trot, and then it is no longer timed or orderly: the
+     Lithuanian right wing under Vytautas meets the Teutonic left, and within an hour something
+     unexpected happens. The Lithuanian cavalry turns.</p>
+     <p>Whether it is a rout or a feigned withdrawal is a question historians are still arguing. What
+     is not in dispute is what the Teutonic right wing does: it pursues, riding east, out of the
+     battle line, chasing what it believes is a victory already achieved. The Grand Master may have
+     ordered them back. They did not stop.</p>
+     <p><em>The Polish centre is now in contact with the Teutonic main body. Tap the golden ring to
+     hold formation and wait. Tap the red ring to commit the reserve cavalry into the gap the Teutonic
+     right has left.</em></p>`);
+  for(const s of alive('t','tk')){s.tx=s.hx;s.ty=360;}
+  for(const s of alive('t','ti')){s.tx=s.hx;s.ty=380;}
+  for(const s of alive('p','pk')){s.tx=s.hx;s.ty=380;}
+  for(const s of alive('p','pi')){s.tx=s.hx;s.ty=370;}
+  setControls([]);
+}
+function updEngage(dt){
+  for(const s of [...alive('t','tk'),...alive('t','ti'),...alive('p','pk'),...alive('p','pi')])moveToward(s,0.5,dt);
+  if(Math.random()<dt*1.8)killRandom(alive('t','ti'),1);
+  if(Math.random()<dt*1.4)killRandom(alive('p','pi'),1);
+  if(Math.random()<dt*0.5)killRandom(alive('t','tk'),1);
+  if(Math.random()<dt*0.4)killRandom(alive('p','pk'),1);
+  /* Lithuanian withdrawal after 4s */
+  if(S.st>4&&!S.litGone){
+    S.litGone=true;setDay('The Lithuanian wing turns east');
+    cine('lit');
+    for(const s of alive('p','lt')){s.wps=[[s.x+rnd(-30,30),620]];s.pi=0;}
+    for(const s of alive('t','tw')){s.wps=[[s.x+rnd(-20,20)+100,620]];s.pi=0;}
+  }
+  if(S.litGone){
+    for(const s of alive('p','lt')){if(s.wps&&s.pi<s.wps.length){s.tx=s.wps[s.pi][0];s.ty=s.wps[s.pi][1];if(moveToward(s,1.1,dt))s.pi++;}else s.escaped=true;}
+    for(const s of alive('t','tw')){if(s.wps&&s.pi<s.wps.length){s.tx=s.wps[s.pi][0];s.ty=s.wps[s.pi][1];if(moveToward(s,1.2,dt))s.pi++;}else s.escaped=true;}
+  }
+  if(S.st>7&&S.litGone&&!S.orderCue){
+    S.orderCue=true;
+    const [gx,gy]=centroid(alive('t','tk'));
+    placeRing(ringA,500,350);
+    placeRing(ringB,gx-20,gy+80);
+    pickMode='order';
+    setControls([]);
+  }
+}
+function holdFormation(){
+  S.stage='hold';S.st=0;cine('over');
+  narrate('The Withdrawal · holding the line',
+    `<p>You hold. The Polish centre is fully committed against the Teutonic main body, and you wait while
+     the dust in the east swallows the Lithuanian cavalry and the Teutonic right wing pursuing them.
+     The Teutonic knights in the centre are better equipped for the stand-up fight. The Polish infantry
+     bends but does not break, and hour by hour the price of the deadlock rises for both sides.</p>
+     <p>Then, to the east: dust again, but moving differently. The Lithuanians are coming back.</p>`);
+  for(const s of alive('p','pk')){s.tx=s.hx;s.ty=340;}
+  for(const s of alive('p','pi')){s.tx=s.hx;s.ty=340;}
+  setControls([{label:'The return', fn:startReturn}]);
+}
+function startPursuitCF(){
+  S.stage='cfpress';S.st=0;cine('cent');
+  narrate('The Withdrawal · what if',
+    `<p>You send the reserve cavalry into the gap the Teutonic right wing has left. For a moment it works:
+     Polish knights pour through the empty ground and wheel north, threatening the Teutonic flank. But the
+     reserve Teutonic infantry is waiting there, fresh and stationary, and the pursuing cavalry that drove
+     the Lithuanians east is already turning back. Your cavalry is now between two forces and moving in the
+     wrong direction.</p>
+     <p>The gap was a product of disorder, not invitation. An open ground in the middle of a battle is not
+     a door: it is a question about who owns the time. The Order owned it, at that moment. Holding the
+     line and waiting was the answer. Patience, again, in a different uniform.</p>`);
+  setControls([{label:'Rewind · hold the formation', fn:()=>{
+    S.stage='engage';
+    for(const s of alive('p','pk')){s.x=s.hx;s.y=380;s.tx=s.x;s.ty=s.y;}
+    S.orderCue=false;
+    const [gx,gy]=centroid(alive('t','tk'));
+    placeRing(ringA,500,350);placeRing(ringB,gx-20,gy+80);
+    pickMode='order';
+  }}]);
+}
+function updCfPress(dt){
+  if(Math.random()<dt*3.5)killRandom(alive('p','pk'),1);
+  if(Math.random()<dt*0.6)killRandom(alive('t','tk'),1);
+  if(S.st>5){
+    S.stage='cffrozen';
+    narrate('The Withdrawal · what if',
+      `<p>The Polish reserve cavalry is broken and the Teutonic line has closed again. Jan Dlugosz, writing
+       within a generation, describes Jagiello’s patience during the Lithuanian withdrawal as one of the
+       decisive choices of the battle: he held the army together by holding himself still. Command is
+       often the art of not doing the thing that looks like action.</p>`);
+    setControls([{label:'Rewind · hold the line', fn:()=>{
+      S.stage='hold';
+      for(const s of alive('p','pk')){s.x=s.hx;s.y=380;s.tx=s.x;s.ty=s.y;}
+      setControls([{label:'The return', fn:startReturn}]);
+    }}]);
+  }
+}
+function startReturn(){
+  setPhase(4);S.stage='return';S.st=0;setDay('Afternoon · the wing comes back');
+  cine('lit');
+  narrate('The Return',
+    `<p>The Lithuanian cavalry, however it left, comes back. Not all of it: some wings scattered too far
+     to rally, and some units arrived back individually and at different moments, which in this kind
+     of battle is good enough. The Teutonic right wing, which had ridden east in triumph, finds cavalry
+     coming from the direction of their own line and is struck from the rear while still trying to stop
+     and reform. The battle has reversed its geometry.</p>
+     <p>The Polish centre, which has been grinding against the Teutonic main body for four hours, can
+     now press. The Teutonic knights find their flanks gone, their right wing destroyed or routing,
+     and the Polish cavalry on their rear. Ulrich von Jungingen rides into the closing circle
+     personally. He does not come out.</p>`);
+  /* spawn returning Lithuanians from the south-east */
+  for(let i=0;i<12;i++){
+    const s=soldier(620+rnd(-30,30),620+rnd(-20,20),'p','lt2','lt');
+    const [gx,gy]=centroid(alive('t','tw').length?alive('t','tw'):alive('t','tk'));
+    s.wps=[[gx+rnd(-20,20),gy+60]];s.pi=0;S.soldiers.push(s);
+  }
+  buildInstances();
+  for(const s of alive('p','pk')){s.tx=s.hx;s.ty=310;}
+  for(const s of alive('p','pi')){s.tx=s.hx;s.ty=300;}
+  setControls([]);
+}
+function updReturn(dt){
+  for(const s of [...alive('p','pk'),...alive('p','pi')])moveToward(s,0.55,dt);
+  for(const s of alive('p','lt2')){
+    if(s.wps&&s.pi<s.wps.length){s.tx=s.wps[s.pi][0];s.ty=s.wps[s.pi][1];if(moveToward(s,1.3,dt))s.pi++;}
+    if(Math.random()<dt*1.5)killRandom(alive('t','tw').filter(t=>Math.hypot(t.x-s.x,t.y-s.y)<18),1);
+  }
+  if(Math.random()<dt*2.6)killRandom(alive('t','tk'),1);
+  if(Math.random()<dt*0.8)killRandom(alive('t','ti'),1);
+  if(Math.random()<dt*0.7)killRandom(alive('p','pi'),1);
+  if(Math.random()<dt*0.4)killRandom(alive('p','pk'),1);
+  if(alive('t','tk').length<6&&!S.endCue){
+    S.endCue=true;playScene(SC_G_AFTER(),aftermath);
+  }
+}
+function aftermath(){
+  setPhase(5);setDay('Evening · the field is Polish-Lithuanian');
+  S.stage='done';cine('over');
+  narrate('Aftermath',
+    `<p>Teutonic casualties are estimated at roughly 8,000 killed and 14,000 taken prisoner, including
+     much of the Order’s senior leadership. Grand Master Ulrich von Jungingen was found among the dead.
+     Polish-Lithuanian losses are harder to assess; modern estimates suggest 4,000 to 5,000 killed,
+     though contemporary sources undercount their own side’s dead, as they always do.</p>
+     <p>The battle did not destroy the Teutonic Order outright. The fortress of Marienburg held, and the
+     political will to press the siege evaporated within two months. What it destroyed was the Order’s
+     claim to military invincibility, the idea that had justified its existence for two centuries: that
+     crusading knights, properly organized, could not be beaten in the open field by a coalition of
+     eastern peoples. After Grunwald, that claim was never credible again.</p>
+     <p>The long-arc irony is this: Jagiello and Vytautas had fought each other in a civil war twenty
+     years before this morning, and the reconciliation between Poland and Lithuania had been the
+     precondition for the army that stood on this field. The Order spent a century trying to keep
+     them separate. The effort united them more thoroughly than anything else could have.</p>
+     <p class="aside">The two swords are now in the Polish royal collection. Dlugosz wrote that Jagiello
+     kept them and used them as a battle signal during the fighting. Whether the Grand Master sent them
+     expecting to receive them back as a trophy of his victory, or whether he simply wanted the battle
+     to begin, nobody recorded. The catalogue does not look away from what commands cost, or who pays them.</p>
+     <p class="aside">The lesson that transfers: the Lithuanian withdrawal, planned or panicked, functioned
+     as a forcing move only because the Polish centre was deep enough to hold without winning. The
+     interesting part of a trap is never the spring. It is the patience that sets it.</p>`);
+  setControls([{label:'Fight it again', fn:enterPrologue, ghost:true}]);
+}
+
+/* ================= narration and UI ================= */
+const narrLabel=document.getElementById('narrLabel');
+const narrBody=document.getElementById('narrBody');
+const choiceArea=document.getElementById('choiceArea');
+const controls=document.getElementById('controls');
+function narrate(label,html){
+  narrLabel.textContent=label;narrBody.innerHTML=html;
+  narrBody.classList.remove('fade-in');void narrBody.offsetWidth;narrBody.classList.add('fade-in');
+  choiceArea.innerHTML='';
+}
+function setControls(btns){
+  controls.innerHTML='';
+  for(const b of btns){
+    const el=document.createElement('button');
+    el.className='btn'+(b.ghost?' ghost':'');el.textContent=b.label;el.onclick=b.fn;controls.appendChild(el);
+  }
+}
+function setChoices(items){
+  choiceArea.innerHTML='';const grid=document.createElement('div');grid.className='choices fade-in';
+  for(const it of items){
+    const c=document.createElement('button');c.className='choice';
+    c.innerHTML=`<h3>${it.title}</h3><p>${it.body}</p>`;c.onclick=it.fn;grid.appendChild(c);
+  }
+  choiceArea.appendChild(grid);controls.innerHTML='';
+}
+function setPhase(p){
+  S.phase=p;
+  document.querySelectorAll('.pill').forEach(el=>{
+    const n=+el.dataset.p;el.classList.toggle('active',n===p);el.classList.toggle('done',n<p);
+  });
+}
+
+/* ================= main loop ================= */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05);last=now;perfNow=now;S.st+=dt;
+  switch(S.stage){
+    case 'cfclosed':updCfClosed(dt);break;
+    case 'engage':updEngage(dt);break;
+    case 'cfpress':updCfPress(dt);break;
+    case 'return':updReturn(dt);break;
+    case 'done':
+      for(const s of S.soldiers){if(s.alive&&s.side==='t'&&!s.escaped){s.tx=500;s.ty=40;moveToward(s,0.8,dt);}}
+      break;
+  }
+  updArrowFlight(dt);updCommandFx(dt);applyCamera(dt);flushInstances();flushArrows();updateBanners();
+  renderer.render(scene,camera);requestAnimationFrame(loop);
+}
+
+/* ================= boot ================= */
+resize();enterPrologue();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
