@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yarmouk, 636 · 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#141312; --ink-2:#1b1a18; --panel:#201e1b; --line:#38352f;
+    --parchment:#e5ddc8; --muted:#9c957f; --faint:#696355;
+    --bronze:#d9a441; --bronze-dim:#8f6f2e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{background:var(--ink)}
+  body{background:var(--ink);color:var(--parchment);font-family:'Source Serif 4',Georgia,serif;font-size:17px;line-height:1.65;min-height:100vh}
+  .wrap{max-width:1060px;margin:0 auto;padding:36px 18px 80px}
+  header{text-align:center;margin-bottom:26px}
+  .eyebrow{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  h1{font-family:'GFS Didot',serif;font-weight:400;font-size:clamp(38px,7vw,70px);letter-spacing:.06em;line-height:1}
+  .subtitle{color:var(--muted);font-style:italic;margin-top:12px;font-size:16px}
+  .meander{height:14px;margin:24px auto;max-width:520px;opacity:.55}
+  .phases{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+  .pill{font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:7px 13px;border:1px solid var(--line);border-radius:2px;color:var(--faint);transition:all .35s;white-space:nowrap}
+  .pill.active{color:var(--bronze);border-color:var(--bronze-dim);background:rgba(217,164,65,.06)}
+  .pill.done{color:var(--muted)}
+  .stage{position:relative;border:1px solid var(--line);background:#000;border-radius:3px;overflow:hidden}
+  #view{display:block;width:100%;height:560px;cursor:grab;touch-action:none}
+  #view.dragging{cursor:grabbing}
+  @media(max-width:700px){#view{height:420px}}
+  .counters{position:absolute;top:10px;left:12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;font-size:12px;letter-spacing:.08em;opacity:0;transition:opacity .6s}
+  .counters.show{opacity:1}
+  .counter{background:rgba(20,19,18,.74);padding:4px 10px;border-radius:2px;border:1px solid var(--line);width:max-content}
+  .counter b{font-weight:600}
+  .c-byz b{color:#9a70c8} .c-mus b{color:#7ab870}
+  .daytag{position:absolute;bottom:10px;left:12px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(229,221,200,.7);background:rgba(20,19,18,.6);padding:5px 10px;border-radius:2px;pointer-events:none}
+  #formHud{display:none;position:absolute;bottom:92px;left:50%;transform:translateX(-50%);
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--bronze);
+    background:rgba(20,19,18,.85);border:1px solid var(--bronze-dim);padding:8px 16px;
+    border-radius:2px;pointer-events:none;white-space:nowrap;z-index:6}
+  .camctl{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:6px}
+  .cambtn{font-family:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;background:rgba(20,19,18,.74);border:1px solid var(--line);border-radius:2px;color:var(--muted);cursor:pointer;transition:all .2s}
+  .cambtn:hover{color:var(--bronze);border-color:var(--bronze-dim)}
+  .camhint{position:absolute;bottom:10px;right:12px;font-size:11px;letter-spacing:.06em;color:rgba(229,221,200,.55);background:rgba(20,19,18,.6);padding:4px 9px;border-radius:2px;pointer-events:none}
+  @media(max-width:700px){.camhint{display:none}}
+  .narration{border:1px solid var(--line);border-top:none;background:var(--panel);padding:26px 30px;border-radius:0 0 3px 3px;min-height:150px}
+  .narr-label{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--bronze);margin-bottom:10px}
+  .narration p{margin-bottom:12px}
+  .narration p:last-child{margin-bottom:0}
+  .narration em{color:var(--muted)}
+  .aside{font-size:14px;color:var(--muted);font-style:italic;border-left:2px solid var(--bronze-dim);padding-left:14px;margin-top:14px}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  @media(max-width:640px){.choices{grid-template-columns:1fr}}
+  .choice{border:1px solid var(--line);border-radius:3px;padding:20px;background:var(--ink-2);cursor:pointer;text-align:left;color:var(--parchment);font-family:inherit;font-size:16px;transition:border-color .25s,background .25s}
+  .choice:hover{border-color:var(--bronze-dim);background:#24221e80}
+  .choice h3{font-family:'GFS Didot',serif;font-weight:400;font-size:20px;letter-spacing:.04em;margin-bottom:8px;color:var(--bronze)}
+  .choice p{font-size:14.5px;color:var(--muted);line-height:1.55}
+  .controls{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn{font-family:inherit;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:13px 28px;background:transparent;color:var(--bronze);border:1px solid var(--bronze-dim);border-radius:2px;cursor:pointer;transition:all .25s}
+  .btn:hover{background:rgba(217,164,65,.1);border-color:var(--bronze)}
+  .btn.ghost{color:var(--muted);border-color:var(--line)}
+  .btn.ghost:hover{color:var(--parchment);background:rgba(255,255,255,.04)}
+  #dock{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:10px 14px 12px;
+      background:linear-gradient(transparent, rgba(12,12,10,.45) 18%, rgba(12,12,10,.9) 72%)}
+  #dock:not(:has(button)){display:none}
+  #dock .choices{max-width:880px;margin:0 auto;gap:10px}
+  #dock .choice{padding:12px 14px;background:rgba(24,22,18,.93)}
+  #dock .choice h3{font-size:17px;margin-bottom:5px}
+  #dock .choice p{font-size:13px;line-height:1.45}
+  #dock .controls{margin-top:0;padding-top:8px}
+  @media(max-width:640px){#dock .choice{padding:10px 12px}#dock .choice p{font-size:12px}}
+  #vn{display:none;position:absolute;left:0;right:0;bottom:0;padding:14px 16px 16px;
+      background:linear-gradient(transparent, rgba(12,12,10,.55) 18%, rgba(12,12,10,.92) 60%);z-index:5}
+  .vn-box{display:flex;gap:16px;max-width:860px;margin:0 auto;align-items:flex-end;cursor:pointer}
+  .vn-portrait{width:104px;height:128px;flex:0 0 auto;border:1px solid var(--bronze-dim);
+      border-radius:3px;background:#1c1814;overflow:hidden}
+  .vn-portrait svg{width:100%;height:100%;display:block}
+  .vn-main{flex:1;min-width:0}
+  .vn-name{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--bronze);margin-bottom:7px}
+  .vn-text{font-size:16.5px;line-height:1.6;color:var(--parchment);min-height:52px}
+  .vn-text em{color:var(--muted)}
+  .vn-next{font-size:11px;letter-spacing:.2em;color:var(--faint);margin-top:8px;text-transform:uppercase}
+  .vn-choices{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .vn-choice{font-family:inherit;font-size:14.5px;text-align:left;padding:11px 16px;background:rgba(24,22,18,.9);
+      border:1px solid var(--line);border-radius:2px;color:var(--parchment);cursor:pointer;transition:all .2s}
+  .vn-choice:hover{border-color:var(--bronze-dim);background:rgba(32,29,23,.95)}
+  #vntoast{position:absolute;right:16px;bottom:100%;margin-bottom:8px;font-size:11px;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--bronze);background:rgba(18,16,13,.85);border:1px solid var(--bronze-dim);
+      padding:6px 12px;border-radius:2px;opacity:0;transition:opacity .5s;pointer-events:none}
+  #vntoast.show{opacity:1}
+  .vn-narr .vn-text{font-style:italic;color:var(--muted)}
+  @media(max-width:640px){.vn-portrait{width:76px;height:96px}.vn-text{font-size:15px}}
+  footer{margin-top:44px;text-align:center;font-size:13px;color:var(--faint);line-height:1.7}
+  .fade-in{animation:fadeIn .6s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">August 636 · the Yarmouk plateau · six days on the ravine's edge</div>
+    <h1>YARMOUK</h1>
+    <p class="subtitle">The mobile guard, the day that decided the Levant for a millennium</p>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true">
+      <defs><pattern id="key" width="26" height="14" patternUnits="userSpaceOnUse">
+        <path d="M0 12 H10 V2 H20 V8 H14 V6 H18 V4 H12 V10 H22 V0 H26" fill="none" stroke="#d9a441" stroke-width="1.4"/>
+      </pattern></defs>
+      <rect width="520" height="14" fill="url(#key)"/>
+    </svg>
+  </header>
+
+  <nav class="phases" aria-label="Battle phases">
+    <span class="pill" data-p="0">Prologue</span>
+    <span class="pill" data-p="1">The Formation</span>
+    <span class="pill" data-p="2">The Lines</span>
+    <span class="pill" data-p="3">The Guard</span>
+    <span class="pill" data-p="4">Day Six</span>
+    <span class="pill" data-p="5">Aftermath</span>
+  </nav>
+
+  <div class="stage">
+    <div id="view" role="img" aria-label="3D battlefield of Yarmouk on the Syrian plateau above the gorge"></div>
+    <div class="counters" id="counters">
+      <span class="counter c-byz">Byzantine fallen&nbsp; <b id="byzCt">0</b></span>
+      <span class="counter c-mus">Muslim fallen&nbsp; <b id="musCt">0</b></span>
+    </div>
+    <div class="daytag" id="daytag">Morning · the plateau above the Yarmouk gorge</div>
+    <div id="formHud"></div>
+    <div class="camctl">
+      <button class="cambtn" data-cam="over">Overview</button>
+      <button class="cambtn" data-cam="lines">The lines</button>
+      <button class="cambtn" data-cam="wings">The wings</button>
+      <button class="cambtn" data-cam="guard">The guard</button>
+    </div>
+    <div class="camhint">drag · rotate&ensp;|&ensp;scroll · zoom&ensp;|&ensp;right-drag · pan</div>
+    <div id="dock"><div id="choiceArea"></div><div class="controls" id="controls"></div></div>
+    <div id="vn"><div id="vntoast"></div>
+      <div class="vn-box" id="vnbox">
+        <div class="vn-portrait" id="vnportrait"></div>
+        <div class="vn-main">
+          <div class="vn-name" id="vnname"></div>
+          <div class="vn-text" id="vntext"></div>
+          <div class="vn-choices" id="vnchoices"></div>
+          <div class="vn-next" id="vnnext">tap to continue &#9656;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="narration">
+    <div class="narr-label" id="narrLabel">Prologue</div>
+    <div id="narrBody"></div>
+  </div>
+
+  <footer>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true"><rect width="520" height="14" fill="url(#key)"/></svg>
+    Grounded in al-Baladhuri's <em>Futuh al-Buldan</em>, al-Waqidi, Theophanes the Confessor, and Walter Kaegi's
+    <em>Byzantium and the Early Islamic Conquests</em> (1992). Casualty figures are among the most disputed in early
+    Islamic history: estimates range from tens of thousands to six figures on the Byzantine side.
+    One figure represents roughly 500 men.
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+
+/* ================= geography =================
+   Sim space 1000 x 620. Byzantine host in the north, Muslim army in the south.
+   The Yarmouk gorge lies beyond the southern edge. Troops routed past y=565 are gone. */
+const sx2w=x=>(x-500)*0.2, sy2w=y=>(y-310)*0.2;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const MEN_PER=500;
+
+const S={
+  phase:0, stage:'idle', st:0,
+  soldiers:[], arrows:[],
+  byzDead:0, musDead:0,
+  guardDepth:4, guardDeployed:false,
+  breachCue:false, endCue:false,
+  lineBroke:false, cavGone:false,
+};
+
+/* ================= three.js ================= */
+const view=document.getElementById('view');
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0xc4b48a);
+scene.fog=new THREE.Fog(0xc4b48a,150,440);
+const camera=new THREE.PerspectiveCamera(52,1,0.5,900);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const SHADOWS=window.innerWidth>700;
+if(SHADOWS){renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;}
+view.appendChild(renderer.domElement);
+function resize(){const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+scene.add(new THREE.HemisphereLight(0xf5e8c8,0x7a6848,0.95));
+const sun=new THREE.DirectionalLight(0xfff4d8,0.9);
+sun.position.set(35,100,-30);
+if(SHADOWS){
+  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+  const sc=sun.shadow.camera;
+  sc.left=-130;sc.right=130;sc.top=130;sc.bottom=-130;sc.far=360;
+  sc.updateProjectionMatrix();sun.shadow.bias=-0.0008;
+}
+scene.add(sun);
+
+/* ---------- terrain: the arid plateau ---------- */
+function terrainH(wx,wz){
+  const x=wx/0.2+500,y=wz/0.2+310;
+  let h=Math.sin(x*0.045)*0.3+Math.cos(y*0.05)*0.25+Math.sin((x+y)*0.018)*0.35;
+  h+=Math.sin(x*0.022)*Math.cos(y*0.028)*0.22;
+  if(y<70)h+=(70-y)*0.04;
+  return h;
+}
+{
+  const g=new THREE.PlaneGeometry(230,150,140,100);
+  g.rotateX(-Math.PI/2);
+  const pos=g.attributes.position,colors=[];
+  const cDust=new THREE.Color(0xb09060),cSand=new THREE.Color(0x9a8050),
+        cRock=new THREE.Color(0x7a6840),cRavine=new THREE.Color(0x1c1408),tmp=new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const wx=pos.getX(i),wz=pos.getZ(i);
+    pos.setY(i,terrainH(wx,wz));
+    const ysim=wz/0.2+310;
+    tmp.copy(cDust).lerp(cSand,0.3+0.3*Math.sin(wx*0.1)*Math.sin(wz*0.12));
+    tmp.lerp(cRock,0.18*Math.max(0,Math.sin(wx*0.05+1.8)));
+    tmp.offsetHSL(0,0,(Math.sin(wx*1.5)*Math.sin(wz*1.9))*0.025);
+    if(ysim>548){const t=Math.min((ysim-548)/55,1);tmp.lerp(cRavine,t*0.88);}
+    colors.push(tmp.r,tmp.g,tmp.b);
+  }
+  g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  g.computeVertexNormals();
+  const terrain=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}));
+  terrain.receiveShadow=SHADOWS;
+  scene.add(terrain);
+}
+{
+  const sm=new THREE.MeshLambertMaterial({color:0x7a6e50});
+  for(let i=0;i<60;i++){
+    const x=rnd(30,970),y=rnd(30,555);
+    const t=new THREE.Mesh(new THREE.SphereGeometry(rnd(.4,.9),6,5),sm);
+    const wx=sx2w(x),wz=sy2w(y);
+    t.position.set(wx,terrainH(wx,wz)+0.25,wz);t.scale.y=0.55;
+    scene.add(t);
+  }
+}
+
+/* ---------- figures ---------- */
+function buildFigure(parts){
+  let vC=0,iC=0;
+  for(const p of parts){vC+=p.g.attributes.position.count;iC+=p.g.index.count;}
+  const P=new Float32Array(vC*3),N=new Float32Array(vC*3),C=new Float32Array(vC*3),I=new Uint16Array(iC);
+  const col=new THREE.Color();
+  let vO=0,iO=0;
+  for(const p of parts){
+    P.set(p.g.attributes.position.array,vO*3);
+    N.set(p.g.attributes.normal.array,vO*3);
+    col.set(p.c);
+    const n=p.g.attributes.position.count;
+    for(let i=0;i<n;i++){C[(vO+i)*3]=col.r;C[(vO+i)*3+1]=col.g;C[(vO+i)*3+2]=col.b;}
+    const idx=p.g.index.array;
+    for(let i=0;i<idx.length;i++)I[iO+i]=idx[i]+vO;
+    vO+=n;iO+=idx.length;
+  }
+  const out=new THREE.BufferGeometry();
+  out.setAttribute('position',new THREE.BufferAttribute(P,3));
+  out.setAttribute('normal',new THREE.BufferAttribute(N,3));
+  out.setAttribute('color',new THREE.BufferAttribute(C,3));
+  out.setIndex(new THREE.BufferAttribute(I,1));
+  return out;
+}
+function cyl(r1,r2,h,seg,x,y,z,rz){const g=new THREE.CylinderGeometry(r1,r2,h,seg);if(rz)g.rotateZ(rz);g.translate(x,y,z);return g;}
+function sph(r,x,y,z){const g=new THREE.SphereGeometry(r,6,5);g.translate(x,y,z);return g;}
+function box(w,h,d,x,y,z){const g=new THREE.BoxGeometry(w,h,d);g.translate(x,y,z);return g;}
+
+function buildLegion(o){
+  const skin=0xc9a075;
+  return buildFigure([
+    {g:cyl(.07,.085,.6,5, 0,.3,-.1),c:0x6a5a44},
+    {g:cyl(.07,.085,.6,5, 0,.3, .1),c:0x6a5a44},
+    {g:cyl(.17,.2,.44,6, 0,.86,0),c:0x8a8a92},
+    {g:cyl(.17,.15,.3,6, 0,1.22,0),c:o.tunic},
+    {g:cyl(.055,.06,.46,5, 0,1.1,-.24),c:skin},
+    {g:cyl(.055,.06,.46,5, 0,1.1, .24),c:skin},
+    {g:sph(.15,0,1.66,0),c:skin},
+    {g:sph(.16,0,1.74,0),c:0x8a6f3a},
+    {g:cyl(.022,.022,1.8,4, .12,1.4,.22,-0.06),c:0x6a5236},
+    {g:box(.06,.85,.5, .02,1.1,-.34),c:o.shield},
+  ]);
+}
+function buildTribal(o){
+  const skin=0xc9a075;
+  return buildFigure([
+    {g:cyl(.07,.085,.6,5, 0,.3,-.1),c:0x5c4a38},
+    {g:cyl(.07,.085,.6,5, 0,.3, .1),c:0x5c4a38},
+    {g:cyl(.17,.2,.5,6, 0,.9,0),c:o.tunic},
+    {g:cyl(.055,.06,.46,5, 0,1.12,-.24),c:skin},
+    {g:cyl(.055,.06,.46,5, 0,1.12, .24),c:skin},
+    {g:sph(.15,0,1.66,0),c:skin},
+    {g:sph(.155,0,1.75,0),c:o.hair||0x3a2c1a},
+    {g:cyl(.024,.024,2.0,4, .12,1.45,.22,-0.08),c:0x6a5236},
+    {g:cyl(.26,.26,.05,8, .02,1.9,-.4,Math.PI/2),c:o.shield},
+  ]);
+}
+function buildRider(o){
+  const skin=0xc9a075;
+  const parts=[
+    {g:box(1.55,.58,.5, 0,1.0,0),c:o.horse},
+    {g:box(.42,.55,.34, .85,1.3,0),c:o.horse},
+    {g:box(.3,.24,.3, 1.1,1.52,0),c:o.horse},
+    {g:box(.14,.9,.32, -.55,.45,0),c:o.horse},
+    {g:box(.14,.9,.32, .55,.45,0),c:o.horse},
+    {g:cyl(.21,.26,.72,6, -.05,1.86,0),c:o.coat},
+    {g:sph(.17,-.05,2.42,0),c:skin},
+  ];
+  if(o.helm)parts.push({g:sph(.18,-.05,2.5,0),c:0x7a6030});
+  else parts.push({g:sph(.18,-.05,2.5,0),c:0x2a1c0c});
+  if(o.lance)parts.push({g:cyl(.026,.026,2.4,4, .3,2.3,.3,-0.95),c:0x5c452c});
+  if(o.shield)parts.push({g:cyl(.28,.28,.05,8, -.1,1.95,-.44,Math.PI/2),c:o.shield});
+  return buildFigure(parts);
+}
+
+const GEO={
+  mi:buildLegion({tunic:0x4a6030,shield:0x3a5020}),
+  mg:buildLegion({tunic:0xb89030,shield:0x786020}),
+  mc:buildRider({horse:0x6a5040,coat:0x4a6030,helm:false,lance:true}),
+  bh:buildLegion({tunic:0x5a1870,shield:0x8a2828}),
+  ba:buildTribal({tunic:0x7a5a38,shield:0x6a4828,hair:0x2a1c0c}),
+  bc:buildRider({horse:0x8a7060,coat:0x5a1870,helm:true,lance:true,shield:0x6a2880}),
+};
+const MATS={};for(const k in GEO)MATS[k]=new THREE.MeshLambertMaterial({vertexColors:true});
+let MESH={};
+const M4=new THREE.Matrix4(),QT=new THREE.Quaternion(),V3=new THREE.Vector3(),SC=new THREE.Vector3(),EUL=new THREE.Euler();
+let perfNow=0;
+function soldier(x,y,side,grp,kind){
+  return {x,y,tx:x,ty:y,hx:x,hy:y,side,grp,kind,alive:true,flee:false,escaped:false,
+          jit:rnd(0,6.28),face:side==='m'?Math.PI/2:-Math.PI/2,moving:false,wps:null,pi:0,slot:0};
+}
+function buildInstances(){
+  for(const k in MESH)scene.remove(MESH[k]);
+  MESH={};
+  for(const k in GEO){
+    const list=S.soldiers.filter(s=>s.kind===k);
+    const m=new THREE.InstancedMesh(GEO[k],MATS[k],Math.max(list.length,1));
+    m.castShadow=SHADOWS;
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);
+    for(let i=0;i<m.count;i++)m.setMatrixAt(i,M4);
+    m.instanceMatrix.needsUpdate=true;
+    list.forEach((s,i)=>{s.idx=i;s.mesh=m;});
+    scene.add(m);MESH[k]=m;
+  }
+}
+function writeInstance(s){
+  const wx=sx2w(s.x),wz=sy2w(s.y);
+  if(s.escaped){SC.setScalar(0.0001);V3.set(wx,-80,wz);QT.set(0,0,0,1);}
+  else if(!s.alive){
+    V3.set(wx,terrainH(wx,wz)+0.22,wz);
+    EUL.set(Math.PI/2,s.jit,0);QT.setFromEuler(EUL);
+    SC.set(1,1,0.35);
+  }else{
+    const mounted=(s.kind==='mc'||s.kind==='bc');
+    const bob=s.moving?Math.abs(Math.sin(perfNow*(mounted?0.014:0.011)+s.jit))*(mounted?0.1:0.14):0;
+    V3.set(wx,terrainH(wx,wz)+bob,wz);
+    EUL.set(s.moving?0.1:0,s.face,s.moving?Math.sin(perfNow*0.012+s.jit)*0.05:0,'YXZ');QT.setFromEuler(EUL);
+    SC.setScalar(1);
+  }
+  M4.compose(V3,QT,SC);
+  s.mesh.setMatrixAt(s.idx,M4);
+}
+function flushInstances(){
+  for(const s of S.soldiers)writeInstance(s);
+  for(const k in MESH)MESH[k].instanceMatrix.needsUpdate=true;
+}
+function moveToward(s,speed,dt){
+  const dx=s.tx-s.x,dy=s.ty-s.y,d=Math.hypot(dx,dy);
+  if(d<1.5){s.moving=false;return true;}
+  s.moving=true;
+  s.x+=(dx/d)*speed*dt*60;s.y+=(dy/d)*speed*dt*60;
+  s.face=Math.atan2(-dy,dx);
+  if(s.y>565&&!s.escaped)s.escaped=true;
+  return false;
+}
+function kill(s){
+  if(!s.alive)return;
+  s.alive=false;
+  if(s.side==='b')S.byzDead++;else S.musDead++;
+  updateCounters();
+}
+function alive(side,grp){return S.soldiers.filter(s=>s.alive&&!s.escaped&&s.side===side&&(!grp||s.grp===grp));}
+function killRandom(list,n){
+  const pool=list.filter(s=>s.alive);
+  for(let i=0;i<n&&pool.length;i++){
+    const j=Math.floor(Math.random()*pool.length);
+    kill(pool[j]);pool.splice(j,1);
+  }
+}
+function updateCounters(){
+  document.getElementById('byzCt').textContent='~'+(S.byzDead*MEN_PER).toLocaleString();
+  document.getElementById('musCt').textContent='~'+(S.musDead*MEN_PER).toLocaleString();
+}
+function setDay(t){document.getElementById('daytag').textContent=t;}
+
+/* ---------- javelins and arrows ---------- */
+const ARROW_MAX=200;
+const arrowMesh=new THREE.InstancedMesh(new THREE.CylinderGeometry(0.045,0.045,1.4,4),
+  new THREE.MeshLambertMaterial({color:0x3a2e1e}),ARROW_MAX);
+arrowMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(arrowMesh);
+const UP=new THREE.Vector3(0,1,0),DIR=new THREE.Vector3();
+function volley(n,shooters,targets,hit){
+  if(!shooters.length||!targets.length)return;
+  for(let i=0;i<n;i++){
+    const from=shooters[Math.floor(Math.random()*shooters.length)];
+    const tgt=targets[Math.floor(Math.random()*targets.length)];
+    const fx=sx2w(from.x),fz=sy2w(from.y),tx=sx2w(tgt.x+rnd(-3,3)),tz=sy2w(tgt.y+rnd(-3,3));
+    S.arrows.push({fx,fy:terrainH(fx,fz)+2.0,fz,tx,ty:terrainH(tx,tz)+0.5,tz,
+      t:0,dur:rnd(0.5,0.8),arc:rnd(3,6),simx:tgt.x,simy:tgt.y,px:fx,py:2,pz:fz,vx:0,vy:1,vz:0,side:tgt.side,hit});
+  }
+}
+function updArrowFlight(dt){
+  for(let i=S.arrows.length-1;i>=0;i--){
+    const a=S.arrows[i];a.t+=dt;
+    const u=Math.min(a.t/a.dur,1);
+    const nx=a.fx+(a.tx-a.fx)*u,nz=a.fz+(a.tz-a.fz)*u;
+    const ny=a.fy+(a.ty-a.fy)*u+Math.sin(u*Math.PI)*a.arc;
+    a.vx=nx-a.px;a.vy=ny-a.py;a.vz=nz-a.pz;
+    a.px=nx;a.py=ny;a.pz=nz;
+    if(u>=1){
+      if(Math.random()<a.hit){
+        const near=S.soldiers.filter(s=>s.alive&&s.side===a.side&&Math.hypot(s.x-a.simx,s.y-a.simy)<9);
+        if(near.length)kill(near[0]);
+      }
+      S.arrows.splice(i,1);
+    }
+  }
+}
+function flushArrows(){
+  let i=0;
+  for(const a of S.arrows){
+    if(i>=ARROW_MAX)break;
+    V3.set(a.px,a.py,a.pz);
+    DIR.set(a.vx,a.vy,a.vz).normalize();
+    QT.setFromUnitVectors(UP,DIR);
+    SC.setScalar(1);M4.compose(V3,QT,SC);
+    arrowMesh.setMatrixAt(i++,M4);
+  }
+  for(;i<ARROW_MAX;i++){SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);arrowMesh.setMatrixAt(i,M4);}
+  arrowMesh.instanceMatrix.needsUpdate=true;
+}
+
+/* ---------- banners ---------- */
+const banners={};
+function makeBanner(color){
+  const g=new THREE.Group();
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,5.6,5),new THREE.MeshLambertMaterial({color:0x4a3b26}));
+  pole.position.y=2.8;
+  const flag=new THREE.Mesh(new THREE.PlaneGeometry(2.1,1.25),new THREE.MeshLambertMaterial({color,side:THREE.DoubleSide}));
+  flag.position.set(1.1,4.7,0);
+  g.add(pole,flag);g.userData.flag=flag;
+  scene.add(g);g.visible=false;
+  return g;
+}
+banners.mus=makeBanner(0x3a6020);
+banners.byz=makeBanner(0x5a1870);
+function updateBanners(){
+  const sel={mus:s=>s.side==='m'&&s.kind!=='mc', byz:s=>s.side==='b'&&s.kind!=='bc'};
+  for(const k in banners){
+    const list=S.soldiers.filter(s=>s.alive&&!s.escaped&&sel[k](s));
+    const b=banners[k];
+    if(list.length<5){b.visible=false;continue;}
+    let mx=0,my=0;for(const s of list){mx+=s.x;my+=s.y;}
+    mx/=list.length;my/=list.length;
+    const wx=sx2w(mx),wz=sy2w(my);
+    b.position.set(wx,terrainH(wx,wz),wz);
+    b.userData.flag.rotation.y=Math.sin(perfNow*0.002)*0.35;
+    b.visible=true;
+  }
+}
+
+/* ================= camera ================= */
+const cam={yaw:Math.PI,pitch:0.95,dist:205,tx:0,ty:2,tz:0,auto:null};
+function applyCamera(dt){
+  if(cam.auto){
+    const a=cam.auto,k=1-Math.pow(0.001,dt);
+    cam.yaw+=(a.yaw-cam.yaw)*k;cam.pitch+=(a.pitch-cam.pitch)*k;cam.dist+=(a.dist-cam.dist)*k;
+    cam.tx+=(a.tx-cam.tx)*k;cam.ty+=(a.ty-cam.ty)*k;cam.tz+=(a.tz-cam.tz)*k;
+    if(Math.abs(a.dist-cam.dist)<0.5&&Math.abs(a.yaw-cam.yaw)<0.01)cam.auto=null;
+  }
+  cam.pitch=THREE.MathUtils.clamp(cam.pitch,0.14,1.42);
+  cam.dist=THREE.MathUtils.clamp(cam.dist,20,300);
+  const cp=Math.cos(cam.pitch);
+  camera.position.set(
+    cam.tx+Math.sin(cam.yaw)*cp*cam.dist,
+    cam.ty+Math.sin(cam.pitch)*cam.dist,
+    cam.tz+Math.cos(cam.yaw)*cp*cam.dist);
+  camera.lookAt(cam.tx,cam.ty,cam.tz);
+}
+const PRESETS={
+  over:{yaw:Math.PI,pitch:0.95,dist:205,tx:0,ty:2,tz:0},
+  lines:{yaw:Math.PI,pitch:0.5,dist:90,tx:0,ty:1,tz:sy2w(380)},
+  wings:{yaw:Math.PI-0.55,pitch:0.7,dist:150,tx:sx2w(800),ty:1,tz:sy2w(430)},
+  guard:{yaw:Math.PI,pitch:0.55,dist:105,tx:0,ty:1,tz:sy2w(500)},
+};
+document.querySelectorAll('.cambtn').forEach(b=>b.onclick=()=>{cam.auto={...PRESETS[b.dataset.cam]};});
+function cine(name){cam.auto={...PRESETS[name]};}
+
+let drag=null,formDrag=null;
+view.addEventListener('pointerdown',e=>{
+  view.setPointerCapture(e.pointerId);
+  if(S.stage==='deploy'&&e.button===0&&!e.shiftKey){
+    const hit=castAt(e,[formPlane]);
+    if(hit.length){formDrag={x0:e.clientX,d0:S.guardDepth};return;}
+  }
+  drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,btn:e.button,shift:e.shiftKey};
+  view.classList.add('dragging');cam.auto=null;
+});
+view.addEventListener('pointermove',e=>{
+  if(formDrag){
+    const d=THREE.MathUtils.clamp(formDrag.d0+(e.clientX-formDrag.x0)*0.08,0,14);
+    const q=Math.round(d);
+    if(q!==S.guardDepth){S.guardDepth=q;placeGuard();formHudText();}
+    return;
+  }
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  drag.x=e.clientX;drag.y=e.clientY;
+  if(drag.btn===2||drag.shift){
+    const cp=Math.cos(cam.yaw),sp=Math.sin(cam.yaw),k=cam.dist*0.0016;
+    cam.tx-=(dx*cp-dy*sp)*k;
+    cam.tz-=(-dx*sp-dy*cp)*k;
+    cam.tx=THREE.MathUtils.clamp(cam.tx,-105,105);
+    cam.tz=THREE.MathUtils.clamp(cam.tz,-66,66);
+  }else{cam.yaw-=dx*0.0055;cam.pitch+=dy*0.0045;}
+});
+const endDrag=()=>{drag=null;view.classList.remove('dragging');};
+view.addEventListener('pointerup',e=>{
+  if(formDrag){formDrag=null;return;}
+  if(drag&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<12)tryPick(e);
+  endDrag();
+});
+view.addEventListener('pointercancel',endDrag);
+view.addEventListener('wheel',e=>{e.preventDefault();cam.auto=null;cam.dist*=(1+Math.sign(e.deltaY)*0.09);},{passive:false});
+view.addEventListener('contextmenu',e=>e.preventDefault());
+let pinch=null;
+view.addEventListener('touchstart',e=>{if(e.touches.length===2)pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);});
+view.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&pinch){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    cam.dist*=pinch/d;pinch=d;cam.auto=null;
+  }
+},{passive:true});
+view.addEventListener('touchend',()=>pinch=null);
+
+/* ================= command layer ================= */
+const raycaster=new THREE.Raycaster();
+const ndc=new THREE.Vector2();
+function castAt(e,objects){
+  const r=renderer.domElement.getBoundingClientRect();
+  ndc.x=((e.clientX-r.left)/r.width)*2-1;
+  ndc.y=-((e.clientY-r.top)/r.height)*2+1;
+  raycaster.setFromCamera(ndc,camera);
+  return raycaster.intersectObjects(objects,false);
+}
+const formPlane=new THREE.Mesh(
+  new THREE.PlaneGeometry(80,28),
+  new THREE.MeshBasicMaterial({color:0xd9a441,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
+formPlane.rotation.x=-Math.PI/2;
+scene.add(formPlane);
+const formHud=document.getElementById('formHud');
+function formHudText(){
+  formHud.textContent=S.guardDepth>=9
+    ?'Mobile guard: deep formation · two full ranks · drag to adjust'
+    :S.guardDepth>=5
+    ?'Mobile guard: standard depth · one rank and reserve · drag to adjust'
+    :'Mobile guard: too thin · one scattered rank · drag to adjust';
+}
+function ringMesh(color){
+  const m=new THREE.Mesh(new THREE.TorusGeometry(9,0.45,8,32),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.85}));
+  m.rotation.x=-Math.PI/2;m.visible=false;
+  const fill=new THREE.Mesh(new THREE.CircleGeometry(8.2,24),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.13,depthWrite:false,side:THREE.DoubleSide}));
+  fill.position.z=0.02;
+  m.add(fill);
+  scene.add(m);
+  return m;
+}
+const ringA=ringMesh(0xd9a441);
+const ringB=ringMesh(0xc45540);
+const RINGS=[ringA,ringB];
+let ringT=0,pickMode=null;
+function updCommandFx(dt){
+  ringT+=dt;
+  formPlane.material.opacity=(S.stage==='deploy')?0.07+Math.sin(ringT*3)*0.03:0;
+  if(S.stage==='deploy'){
+    formPlane.position.set(0,terrainH(0,sy2w(490))+0.6,sy2w(490));
+  }
+  for(const r of RINGS){
+    if(!r.visible)continue;
+    const k=1+Math.sin(ringT*3.4)*0.08;
+    r.scale.setScalar(k);
+    r.material.opacity=0.55+Math.sin(ringT*3.4)*0.3;
+  }
+}
+function placeRing(r,sx,sy){
+  const wx=sx2w(sx),wz=sy2w(sy);
+  r.position.set(wx,terrainH(wx,wz)+0.7,wz);
+  r.visible=true;
+}
+function hideRings(){for(const r of RINGS)r.visible=false;pickMode=null;}
+function pickRing(e){
+  const rect=renderer.domElement.getBoundingClientRect();
+  let best=null,bestD=1e9;
+  for(const r of RINGS){
+    if(!r.visible)continue;
+    V3.copy(r.position).project(camera);
+    if(V3.z>1)continue;
+    const px=(V3.x*0.5+0.5)*rect.width+rect.left;
+    const py=(-V3.y*0.5+0.5)*rect.height+rect.top;
+    const d=Math.hypot(e.clientX-px,e.clientY-py);
+    if(d<bestD){bestD=d;best=r;}
+  }
+  return bestD<Math.max(56,rect.width*0.08)?best:null;
+}
+function tryPick(e){
+  if(!pickMode)return;
+  const r=pickRing(e);
+  if(!r)return;
+  const choice=r===ringA?'a':'b';
+  hideRings();
+  if(choice==='a')deployGuard();else deployGuardCF();
+}
+function centroid(list){
+  let mx=0,my=0;
+  for(const s of list){mx+=s.x;my+=s.y;}
+  return list.length?[mx/list.length,my/list.length]:[500,310];
+}
+
+/* ================= dialogue layer ================= */
+const REL={};
+function PT(o){
+  const hats={
+    crest:`<path d="M34 46 Q34 24 52 22 Q70 24 70 46 L64 42 Q52 34 40 42 Z" fill="${o.hatC}"/><rect x="47" y="5" width="10" height="20" rx="4" fill="${o.crestC||'#a03028'}"/>`,
+    band:`<path d="M36 44 Q52 30 68 44 Z" fill="${o.hairC||'#3a2c1a'}"/><rect x="34" y="43" width="36" height="6" rx="2" fill="${o.hatC}"/>`,
+    wrap:`<path d="M32 52 Q32 24 52 22 Q72 24 72 52 Q66 36 52 36 Q38 36 32 52 Z" fill="${o.hatC}"/><rect x="32" y="48" width="40" height="7" rx="3" fill="${o.hatC}"/>`,
+    none:`<path d="M34 48 Q34 28 52 26 Q70 28 70 48 Q64 38 52 39 Q40 38 34 48 Z" fill="${o.hairC||'#3a2c1a'}"/>`,
+  };
+  const beard=o.beard?`<path d="M40 84 Q52 96 64 84 L62 ${o.beard==='long'?102:94} Q52 ${o.beard==='long'?110:100} 42 ${o.beard==='long'?102:94} Z" fill="${o.beardC||o.hairC||'#3a2c1a'}"/>`:'';
+  const stache=o.stache?`<path d="M41 76 Q52 71 63 76" stroke="${o.beardC||o.hairC||'#3a2c1a'}" stroke-width="3" fill="none" stroke-linecap="round"/>`:'';
+  return `<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="${o.bg}"/>
+<ellipse cx="52" cy="122" rx="40" ry="26" fill="${o.robe}"/><path d="M14 122 Q52 86 90 122" fill="${o.robe2}"/>
+${o.extra||''}
+<ellipse cx="52" cy="64" rx="20" ry="23" fill="${o.skin||'#c9a075'}"/>
+${hats[o.hat||'none']||''}
+<path d="M40 58 L48 57 M56 57 L64 58" stroke="#2a2012" stroke-width="2.2" stroke-linecap="round"/>
+<circle cx="44" cy="63" r="1.9" fill="#20180e"/><circle cx="60" cy="63" r="1.9" fill="#20180e"/>
+${stache}${beard}
+<path d="M46 80 Q52 ${o.stern?79:84} 58 80" stroke="#8a5a3a" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>`;
+}
+const CAST={
+  abu:{name:'Abu Ubayda · commander of the faithful\'s army',svg:PT({bg:'#1a1c18',robe:'#2a4c20',robe2:'#3a6028',hat:'wrap',hatC:'#2a3c20',skin:'#9a7850',hairC:'#1a1208',beard:'long',beardC:'#1a1208'})},
+  van:{name:'Vahan · strategos of Byzantium',svg:PT({bg:'#161820',robe:'#4a1868',robe2:'#5a2080',hat:'band',hatC:'#7a5020',skin:'#b89870',hairC:'#2a2018',beard:'short',beardC:'#2a2018',stern:1})},
+  nar:{name:'',svg:null},
+};
+const vnEl=document.getElementById('vn');
+const vnPortrait=document.getElementById('vnportrait');
+const vnName=document.getElementById('vnname');
+const vnText=document.getElementById('vntext');
+const vnChoices=document.getElementById('vnchoices');
+const vnNextEl=document.getElementById('vnnext');
+const vnToast=document.getElementById('vntoast');
+let vnQueue=[],vnDone=null,vnBusy=false;
+function playScene(steps,done){
+  vnQueue=steps.slice();vnDone=done;
+  choiceArea.innerHTML='';
+  setControls([]);
+  vnEl.style.display='block';
+  vnAdvance();
+}
+function vnAdvance(){
+  while(vnQueue.length&&vnQueue[0].if&&!vnQueue[0].if()){vnQueue.shift();}
+  if(!vnQueue.length){
+    vnEl.style.display='none';
+    const d=vnDone;vnDone=null;
+    if(d)d();
+    return;
+  }
+  renderVn(vnQueue.shift());
+}
+function renderVn(st){
+  const who=CAST[st.who]||CAST.nar;
+  vnPortrait.innerHTML=who.svg||'';
+  vnPortrait.style.display=who.svg?'block':'none';
+  vnName.textContent=who.name;
+  document.getElementById('vnbox').classList.toggle('vn-narr',st.who==='nar');
+  vnText.innerHTML=typeof st.text==='function'?st.text():st.text||'';
+  vnChoices.innerHTML='';
+  if(st.choices){
+    vnNextEl.style.display='none';vnBusy=true;
+    for(const c of st.choices){
+      const b=document.createElement('button');
+      b.className='vn-choice';b.textContent=c.label;
+      b.onclick=(ev)=>{
+        ev.stopPropagation();
+        if(c.d)for(const k in c.d){REL[k]=(REL[k]||0)+c.d[k];}
+        if(c.toast)vToast(c.toast);
+        if(c.reply)vnQueue=c.reply.concat(vnQueue);
+        vnBusy=false;
+        vnAdvance();
+      };
+      vnChoices.appendChild(b);
+    }
+  }else{vnNextEl.style.display='block';vnBusy=false;}
+}
+document.getElementById('vnbox').addEventListener('click',()=>{if(!vnBusy&&vnEl.style.display==='block')vnAdvance();});
+function vToast(t){
+  vnToast.textContent=t;vnToast.classList.add('show');
+  setTimeout(()=>vnToast.classList.remove('show'),1900);
+}
+
+/* ---- dialogue scenes ---- */
+const SC_Y_OPEN=[
+  {who:'nar',text:`You are Khalid ibn al-Walid, the Sword of Allah, and the man whose hand is on the sword is Abu Ubayda ibn al-Jarrah: the caliph's commission transferred a month ago, by letter, while the campaign was already in motion. You did not protest. The men noticed. They notice everything when a general stops complaining about his orders. Across the plateau, the Byzantine host: 80,000, or 100,000, or more, depending on which account survives. The ravine of the Yarmouk river lies behind your southern flank. If your line breaks, there is nowhere to go but down.`},
+  {who:'abu',text:`Before the lines advance. You took my appointment without a word, Khalid. I want you to know I understand what that cost, and that I am not unaware of the difference between holding a commission and commanding a battle.`,choices:[
+    {label:'"A man who fights for God needs no title. The field is the field."',d:{abu:1},toast:'Bond · Abu Ubayda',reply:[
+      {who:'abu',text:`Then let your eye for ground be the commission and my name be the signature. I have never seen ground read the way you read it. Not once in forty years of prayer, nor in any battlefield I have crossed.`}]},
+    {label:'"The army is what matters. Where you need me, I will be."',reply:[
+      {who:'abu',text:`As you always have been. My commission, then. Your mind on the field. We will settle accounts after the plateau is won.`}]},
+  ]},
+  {who:'van',text:`(Vahan, strategos of Byzantium, reviews his lines from the north: three hundred thousand shields, some say, though he himself trusts the smaller figures more. He was given an army of exhausted men and told to end a war his emperor had already half-lost in the mind. He rode the plateau for three days before the battle. He understands the gorge as well as you do. He will push you toward it.)`,},
+  {who:'nar',text:`The mobile guard is the weapon. Three or four hundred horsemen under your direct command, held behind the center, able to ride to any breach in the line within minutes. It is not cavalry, exactly, and not infantry: it is the answer to whatever question the day asks first. Six questions will be asked on this plateau. The guard must answer all of them.`},
+];
+
+const SC_Y_BREACH=[
+  {who:'nar',text:`Day three. The Byzantine right cavalry has found the gap on your right flank and is through. They are behind the infantry, riding for the supply camp. The women in the camp have taken up what is at hand: tent poles, stones, whatever they could reach. The army's rear does not know it has cavalry in it yet. Two choices pulse on the plain: one at the breach on your right, one at the centre where the infantry line is bending.`},
+];
+
+function SC_Y_AFTER(){
+  const steps=[];
+  steps.push({who:'nar',text:`Day six. The Byzantine line has broken. The plateau tips south, toward the gorge, and what was an army an hour ago is a mass of men trying to cross ground that has no crossing. The Yarmouk ravine, three hundred feet deep, takes what the plateau cannot hold. The exact numbers of dead are disputed in every source that survives: some say 50,000, some far more. Many thousands were taken alive. The atrocity of the rout is in the record. The catalogue does not look away from what commands cost, or who pays them.`});
+  if((REL.abu||0)>=1){
+    steps.push({who:'abu',text:`The guard held every breach. All six days, every break, every gap they found in the line: the guard rode there first and sealed it. You were right about the formation. You are always right about the formation, and I am not too proud to say it plainly, Khalid, because the men who are alive today deserve to know why they are alive.`});
+  }else{
+    steps.push({who:'abu',text:`The field is ours. Heraclius is riding north. What was Syria, as of this morning, is a different word on the map. I do not know if there is a word yet for what it is.`});
+  }
+  steps.push({who:'van',text:`(Vahan died on the plateau, or in the gorge, or somewhere on the road north: the sources do not agree on how, only that he did not reach Damascus. He had been an able commander. He had been given an army late in its strength, a fractured command structure, and an emperor who had already accepted in his private mind that the Levant was lost. Some defeats belong to generals. This one belonged to an empire that had held the east for three centuries and found, on a summer plateau in August, the exact shape of its limit.)`});
+  return steps;
+}
+
+const SC_Y_TERMS=[
+  {who:'van',text:`Six days of this, Khalid. My cavalry loses a fifth of its strength in the first three charges. Your men fight like they have nowhere to go, and I will grant them that they do not. I am authorized to offer terms: withdrawal east of the river, both armies keep the ground they hold, and the Levant remains divided. Acceptable to both sides, and everyone alive at sunset.`},
+];
+
+/* ================= armies ================= */
+function placeGuard(){
+  S.soldiers.filter(s=>s.side==='m'&&s.grp==='mg').forEach((s,i)=>{
+    const row=Math.floor(i/4),col=i%4;
+    const yBase=510-S.guardDepth*1.4;
+    s.x=330+col*88+(row%2)*14;
+    s.y=yBase+row*14;
+    s.tx=s.x;s.ty=s.y;s.hx=s.x;s.hy=s.y;
+  });
+}
+function placeFormation(){
+  S.soldiers.filter(s=>s.side==='m'&&s.grp==='mi').forEach((s,i)=>{
+    s.x=230+(i%10)*58;s.y=430+Math.floor(i/10)*10;
+    s.tx=s.x;s.ty=s.y;s.hx=s.x;s.hy=s.y;
+  });
+  S.soldiers.filter(s=>s.grp==='mcL').forEach((s,i)=>{
+    s.x=130+rnd(-8,8);s.y=430+i*20+rnd(-5,5);
+    s.tx=s.x;s.ty=s.y;s.hx=s.x;s.hy=s.y;
+  });
+  S.soldiers.filter(s=>s.grp==='mcR').forEach((s,i)=>{
+    s.x=870+rnd(-8,8);s.y=430+i*20+rnd(-5,5);
+    s.tx=s.x;s.ty=s.y;s.hx=s.x;s.hy=s.y;
+  });
+  placeGuard();
+  S.soldiers.filter(s=>s.side==='b'&&s.grp==='bh').forEach((s,i)=>{
+    s.x=220+(i%9)*63;s.y=240+Math.floor(i/9)*10;
+    s.tx=s.x;s.ty=s.y;s.hx=s.x;s.hy=s.y;
+  });
+  S.soldiers.filter(s=>s.side==='b'&&s.grp==='ba').forEach((s,i)=>{
+    s.x=240+(i%6)*66;s.y=195+Math.floor(i/6)*10;
+    s.tx=s.x;s.ty=s.y;s.hx=s.x;s.hy=s.y;
+  });
+  S.soldiers.filter(s=>s.grp==='bcL').forEach((s,i)=>{
+    s.x=140+rnd(-10,10);s.y=252+i*22+rnd(-5,5);
+    s.tx=s.x;s.ty=s.y;s.hx=s.x;s.hy=s.y;
+  });
+  S.soldiers.filter(s=>s.grp==='bcR').forEach((s,i)=>{
+    s.x=862+rnd(-10,10);s.y=252+i*22+rnd(-5,5);
+    s.tx=s.x;s.ty=s.y;s.hx=s.x;s.hy=s.y;
+  });
+}
+function spawnAll(){
+  S.soldiers=[];
+  S.byzDead=0;S.musDead=0;updateCounters();
+  S.arrows=[];
+  for(let i=0;i<20;i++){const s=soldier(0,0,'m','mi','mi');s.slot=i;S.soldiers.push(s);}
+  for(let i=0;i<3;i++)S.soldiers.push(soldier(0,0,'m','mcL','mc'));
+  for(let i=0;i<3;i++)S.soldiers.push(soldier(0,0,'m','mcR','mc'));
+  for(let i=0;i<8;i++){const s=soldier(0,0,'m','mg','mg');s.slot=i;S.soldiers.push(s);}
+  for(let i=0;i<18;i++){const s=soldier(0,0,'b','bh','bh');s.slot=i;S.soldiers.push(s);}
+  for(let i=0;i<12;i++){const s=soldier(0,0,'b','ba','ba');s.slot=i;S.soldiers.push(s);}
+  for(let i=0;i<4;i++)S.soldiers.push(soldier(0,0,'b','bcL','bc'));
+  for(let i=0;i<4;i++)S.soldiers.push(soldier(0,0,'b','bcR','bc'));
+  buildInstances();
+  placeFormation();
+}
+
+/* ================= phases ================= */
+function enterPrologue(){
+  setPhase(0);setDay('Morning · the plateau above the Yarmouk gorge');
+  S.byzDead=0;S.musDead=0;updateCounters();
+  document.getElementById('counters').classList.remove('show');
+  S.arrows=[];S.guardDepth=4;S.guardDeployed=false;S.breachCue=false;
+  S.endCue=false;S.lineBroke=false;S.cavGone=false;
+  hideRings();formHud.style.display='none';formDrag=null;
+  S.stage='idle';
+  spawnAll();
+  cine('over');
+  narrate('Prologue',
+    `<p>You are Khalid ibn al-Walid, commander of the mobile guard, and you are fighting under Abu Ubayda's commission on a plateau in Syria in the late summer of 636. The Rashidun armies have been in Syria for two years. The Byzantine emperor Heraclius, shattered by Persian wars and not yet recovered, has assembled a host under the Armenian general Vahan: the numbers are disputed across every source that survives, but the host is large, the Muslim force is smaller, and the plateau above the Yarmouk gorge will hold all of them for six days.</p>
+    <p>The mobile guard is the instrument. A force of cavalry held behind the centre line, outside any fixed engagement, able to ride to any point of the Muslim line within the time it takes a breach to become a rout. In six days of battle, the Byzantine commanders will find ten or twelve such points. The mobile guard will ride to all of them.</p>`);
+  setControls([{label:'Ride the line',fn:()=>playScene(SC_Y_OPEN,()=>{setPhase(1);enterDeploy();})}]);
+}
+
+function enterDeploy(){
+  S.stage='deploy';
+  document.getElementById('counters').classList.add('show');
+  cine('guard');
+  formHud.style.display='block';formHudText();
+  narrate('The Formation',
+    `<p>The mobile guard stands behind the Muslim centre. Drag left or right on the glowing ground to adjust the guard's formation depth: spread thin across the rear, or concentrated in two tight ranks. The depth is the whole question. Too thin and the guard cannot concentrate force fast enough when the line breaks. Too deep and the reaction is slow for a different reason: the rear rank must push through the first before either reaches the breach.</p>
+    <p>Khalid ibn al-Walid's historical choice was concentration: tight formation, two ranks, able to form a wedge or a screen in the seconds between seeing the break and reaching it. <em>Drag the formation, then advance.</em></p>`);
+  setControls([{label:'Sound the advance',fn:confirmFormation}]);
+}
+
+function confirmFormation(){
+  formHud.style.display='none';
+  formDrag=null;
+  if(S.guardDepth<5){
+    S.stage='cfthin';S.st=0;
+    setPhase(2);
+    narrate('The Formation · what if',
+      `<p>You spread the guard across the entire rear, one thin rank stretched behind three thousand metres of infantry line. On day three, when the Byzantine right cavalry breaks through the right flank at three different points simultaneously, the guard cannot concentrate. Three groups of riders, each too small to seal a breach, each riding to a different gap. The camp goes first, then the right flank, then the panic spreads.</p>`);
+    setControls([{label:'Rewind · concentrate the guard',fn:()=>{enterPrologue();}}]);
+    return;
+  }
+  startLines();
+}
+
+function startLines(){
+  S.stage='lines';S.st=0;
+  setPhase(2);
+  setDay('Days 1 to 3 · the plateau holds');
+  cine('lines');
+  narrate('The Lines',
+    `<p>For three days the Byzantine army attacks in waves: Armenian allied infantry leading, Byzantine heavy infantry behind, the cataphracts on both wings testing for an opening. The Muslim line holds. It holds the way a line holds when it has nowhere to go: with the absolute certainty that retreat is the end of everything, and the gorge is two hundred yards behind the rear rank.</p>
+    <p>The mobile guard rides from the centre to the right to the left and back, sealing each break before it becomes a collapse. By the afternoon of the third day, Vahan has lost a third of his cavalry and the Muslim front is still where it was on day one. He sends a herald with terms.</p>`);
+  for(const s of alive('b','bh')){s.tx=s.x+rnd(-4,4);s.ty=s.y+8;}
+  for(const s of alive('b','ba')){s.tx=s.x+rnd(-4,4);s.ty=s.y+8;}
+  setControls([{label:'Hear the terms',fn:()=>playScene(SC_Y_TERMS,termsChoice)}]);
+}
+
+function termsChoice(){
+  narrate('The Lines · Vahan’s terms',
+    `<p>Withdrawal east, the Levant divided, the killing stopped. A reasonable offer from a general who has spent three days finding that this plateau and this army will not yield to the standard Byzantine approach. The question is what the terms would mean in five years, when the armies are rested and the emperor has replaced what he lost.</p>`);
+  setChoices([
+    {title:'Accept the terms',
+     body:'Syria divided, the armies withdraw, the war pauses. Carthage signed the peace and broke it. The question is whether this one holds.',
+     fn:()=>{
+       narrate('The Lines · what if',
+         `<p>You withdraw east as agreed. Vahan consolidates along the Jordan. Within two years, a rested Byzantine force under a new strategos pushes back across the river with fresh Armenian contingents. The terms buy the Rashidun caliphate a pause, not a peace: the plateau fight moves to the Jordan valley, to the Dead Sea, to a longer war and more dead on both sides before the same geography settles the same question. Some pauses are the right tactical move. This one extends the war.</p>`);
+       setControls([{label:'Rewind · refuse and hold the plateau',fn:()=>{setPhase(2);startLines();}}]);
+     }},
+    {title:'Refuse the terms',
+     body:'What Khalid answered: the plateau is not a table. The lines hold, and the question the plateau is asking will be answered on the plateau.',
+     fn:()=>{setPhase(3);enterBreachPhase();}},
+  ]);
+}
+
+function enterBreachPhase(){
+  S.stage='preguard';S.st=0;
+  setDay('Day 3 to 5 · the breach');
+  cine('wings');
+  narrate('The Guard',
+    `<p>Days four and five. Vahan has decided that the terms have been refused and that the Byzantine right cavalry must force the issue: if the right flank can break through and reach the Muslim supply camp, the army will panic and the gorge will do the rest. His right cavalry drives hard at the gap between the Muslim infantry right and the right wing horse. On day five, afternoon, they are through.</p>
+    <p><em>Tap the gold ring to send the mobile guard to the right flank breach. Tap the red ring to reinforce the bending centre instead.</em></p>`);
+  for(const s of alive('b','bcR')){s.tx=780+rnd(-20,20);s.ty=380+rnd(-10,10);}
+  placeRing(ringA,775,370);
+  placeRing(ringB,500,350);
+  pickMode='guard';
+  setControls([]);
+}
+
+function deployGuard(){
+  hideRings();
+  S.guardDeployed=true;
+  S.stage='guard';S.st=0;
+  setDay('Day 5 · the guard rides right');
+  cine('wings');
+  narrate('The Guard · the right flank',
+    `<p>The mobile guard rides east at the full canter, and the Byzantine cavalry already in the Muslim rear has seconds to understand what is coming toward it. Khalid ibn al-Walid's personal standard at the front of the wedge is not a signal anyone in the Byzantine force wants to misread. The wedge hits the breakthrough cavalry from the north-east, from a direction the cataphracts cannot receive well, and the breakthrough stalls within the time it takes to say it.</p>
+    <p>The camp holds. The right flank closes. And on the morning of day six, both armies look at the same plateau they have been looking at for five days, and the Byzantine commander understands that he has no flanking manoeuvre left.</p>`);
+  for(const s of alive('m','mg')){
+    s.wps=[[760+rnd(-20,20),430+rnd(-15,15)]];s.pi=0;
+  }
+  setControls([{label:'Day six',fn:enterDay6}]);
+}
+
+function deployGuardCF(){
+  hideRings();
+  S.stage='cfguard';S.st=0;
+  narrate('The Guard · what if',
+    `<p>The mobile guard rides to the bending centre. The centre holds. The right flank, with no guard to seal it, watches the Byzantine cataphracts ride into the camp and the supply lines. The women fight with tent poles, as the sources record they did in every case where the camp was threatened, and some of them hold some of the riders for some minutes. Not enough minutes. The rear panics, the right flank folds into the centre, and the plateau becomes the Byzantine general's problem to manage, not yours.</p>`);
+  setControls([{label:'Rewind · ride to the breach',fn:()=>{
+    S.stage='lines';
+    placeRing(ringA,775,370);
+    placeRing(ringB,500,350);
+    pickMode='guard';
+    narrate('The Guard',
+      `<p><em>Tap the gold ring to ride to the right flank breach. Tap the red ring to reinforce the centre instead.</em></p>`);
+    setControls([]);
+  }}]);
+}
+
+function enterDay6(){
+  S.stage='day6';S.st=0;
+  setPhase(4);
+  setDay('Day 6 · morning · the final choice');
+  cine('over');
+  narrate('Day Six',
+    `<p>Vahan commits everything to a final push on day six. The Muslim line, six days old, six days unbroken, receives the last Byzantine charge and holds it for the last time. And then the charge stops, and the men who made it look behind them for the line that was following, and the line has stopped too, and the plateau is turning in a direction it has not turned in five days. The question now is what to do with a routing army that has a three-hundred-foot gorge behind it.</p>`);
+  setChoices([
+    {title:'Drive them south',
+     body:'The historical order: press the rout toward the gorge. The broken Byzantine army, unable to form and unable to withdraw north fast enough, is pushed into the ravine by the pressure of its own rearmost ranks.',
+     fn:()=>{startPursuit();}},
+    {title:'Hold the line',
+     body:'Let the broken force escape north. Keep the Muslim army in formation, do not pursue into disorder, preserve the plateau for a clean victory. The charitable choice. The question is whether it holds.',
+     fn:()=>{holdCF();}},
+  ]);
+}
+
+function startPursuit(){
+  S.stage='pursuit';S.st=0;
+  setDay('Day 6 · the rout');
+  cine('over');
+  narrate('Day Six · the rout',
+    `<p>The Byzantine centre breaks and the flanks follow, and the Muslim army advances south for the first time in six days, which is a disorienting direction to advance given that south is the gorge they have been defending against since the first morning. But the gorge takes the routing army now, and the plateau above the Yarmouk becomes a Muslim problem, which is to say a solved one.</p>
+    <p>Heraclius, emperor of Byzantium, was at Antioch when the messenger arrived. The phrase attributed to him, in the sources that carry it, is something close to: farewell, O Syria, and what a fine country this is for an enemy. He left for Constantinople and did not return to the east in his lifetime.</p>`);
+  for(const s of alive('b','bh')){s.tx=s.x+rnd(-30,30);s.ty=580+rnd(0,40);}
+  for(const s of alive('b','ba')){s.tx=s.x+rnd(-30,30);s.ty=570+rnd(0,40);}
+  for(const s of alive('b','bcL')){s.tx=60+rnd(-20,20);s.ty=80;}
+  for(const s of alive('b','bcR')){s.tx=940+rnd(-20,20);s.ty=80;}
+  setControls([]);
+}
+
+function holdCF(){
+  S.stage='cfhold';S.st=0;
+  narrate('Day Six · what if',
+    `<p>You hold the line and let the Byzantine force break north. They regroup at Damascus within a week: not the force they were, but a force. Vahan is replaced, a new strategos brings fresh Armenian contingents from Anatolia, and the war continues for two more years before the geography settles it on a different plateau, with higher total casualties on both sides. The discipline that saved the Muslim line for six days could not see the moment when discipline needed to become pursuit. Some battles end on the field. This one required the gorge.</p>`);
+  setControls([{label:'Rewind · press the rout',fn:()=>{
+    S.stage='day6';
+    setChoices([
+      {title:'Drive them south',
+       body:'The historical order: press the rout toward the gorge.',
+       fn:()=>{startPursuit();}},
+      {title:'Hold the line',
+       body:'Let them escape north. Preserve the army’s formation.',
+       fn:()=>{holdCF();}},
+    ]);
+  }}]);
+}
+
+function updCfThin(dt){
+  if(S.st>5){
+    S.stage='cffrozen';
+    narrate('The Formation · what if',
+      `<p>The thin guard cannot concentrate. The camp falls. The lesson is the same lesson the mobile guard teaches every time it is studied: reserve mass is only useful if the reserve can arrive as a mass. A line of cavalry spread across a kilometre is not a reserve. It is a delay. Khalid ibn al-Walid's innovation was not that he had cavalry in the rear: everyone did. It was that he kept the cavalry together and rode it to each crisis intact.</p>`);
+    setControls([{label:'Rewind · concentrate the guard',fn:enterPrologue}]);
+  }
+}
+
+function updPreguard(dt){
+  for(const s of alive('b','bcR'))moveToward(s,0.7,dt);
+  if(Math.random()<dt*1.2)killRandom(alive('m','mi').filter(t=>t.x>700),1);
+}
+
+function updGuard(dt){
+  for(const s of alive('m','mg')){
+    if(s.wps&&s.pi<s.wps.length){s.tx=s.wps[s.pi][0];s.ty=s.wps[s.pi][1];if(moveToward(s,1.2,dt))s.pi++;}
+  }
+  for(const s of alive('b','bcR'))moveToward(s,0.5,dt);
+  if(Math.random()<dt*0.6)killRandom(alive('b','bcR'),1);
+}
+
+function updLines(dt){
+  for(const s of alive('b','bh')){s.tx=s.hx;s.ty=s.hy+8+Math.sin(S.st*0.3)*5;}
+  for(const s of alive('b','ba')){s.tx=s.hx;s.ty=s.hy+6;}
+  for(const s of [...alive('b','bh'),...alive('b','ba'),...alive('m','mi')])moveToward(s,0.35,dt);
+  if(Math.random()<dt*1.0)killRandom(alive('b','bh'),1);
+  if(Math.random()<dt*0.8)killRandom(alive('b','ba'),1);
+  if(Math.random()<dt*0.4)killRandom(alive('m','mi'),1);
+  if(Math.random()<dt*2){
+    volley(6,alive('b','ba'),alive('m','mi'),0.25);
+    volley(4,alive('m','mi'),alive('b','bh'),0.2);
+  }
+}
+
+function updPursuit(dt){
+  for(const s of [...alive('b','bh'),...alive('b','ba')])moveToward(s,0.9,dt);
+  if(Math.random()<dt*2.2)killRandom([...alive('b','bh'),...alive('b','ba')],1);
+  const rem=alive('b','bh').length+alive('b','ba').length;
+  if(rem<8&&!S.endCue){
+    S.endCue=true;
+    playScene(SC_Y_AFTER(),()=>{aftermath();});
+  }
+}
+
+function aftermath(){
+  setPhase(5);setDay('Evening · the Levant is decided');
+  S.stage='done';cine('over');
+  narrate('Aftermath',
+    `<p>The numbers are disputed in every account that survives: some say 4,000 Muslim dead across six days, some say more. Byzantine casualties run into the tens of thousands in the most conservative estimates. The Yarmouk gorge is part of the record, and its part is not a clean one. The catalogue does not look away from what commands cost, or who pays them.</p>
+    <p>What the battle bought was the Levant in a single afternoon: Syria fell within months, Palestine the same year, Egypt by 641. Heraclius died in 641 without having recovered the east. The Byzantine empire retreated to Anatolia and did not seriously contest the Levant again for centuries.</p>
+    <p class="aside">The long arc: the mobile guard as a tactical concept re-enters the European military tradition through the Crusades and the Mongol wars, studied by every Islamic and Byzantine military writer of the next four centuries. Khalid ibn al-Walid died in bed at Homs in 642, never having lost a battle in forty-odd engagements, which is the kind of record that makes both the historians and the enemies uncomfortable. The catalogue keeps that discomfort rather than resolving it. The lesson that survives all the dispute is the simpler one: a reserve is only a reserve if it can reach the crisis intact. Mass, speed, and a commander who reads the ground are the three components. All three were present on this plateau in August 636.</p>`);
+  setControls([{label:'Fight the plateau again',fn:enterPrologue,ghost:true}]);
+}
+
+/* ================= narration and UI ================= */
+const narrLabel=document.getElementById('narrLabel');
+const narrBody=document.getElementById('narrBody');
+const choiceArea=document.getElementById('choiceArea');
+const controls=document.getElementById('controls');
+function narrate(label,html){
+  narrLabel.textContent=label;
+  narrBody.innerHTML=html;
+  narrBody.classList.remove('fade-in');void narrBody.offsetWidth;
+  narrBody.classList.add('fade-in');
+  choiceArea.innerHTML='';
+}
+function setControls(btns){
+  controls.innerHTML='';
+  for(const b of btns){
+    const el=document.createElement('button');
+    el.className='btn'+(b.ghost?' ghost':'');el.textContent=b.label;el.onclick=b.fn;
+    controls.appendChild(el);
+  }
+}
+function setChoices(items){
+  choiceArea.innerHTML='';
+  const grid=document.createElement('div');grid.className='choices fade-in';
+  for(const it of items){
+    const c=document.createElement('button');c.className='choice';
+    c.innerHTML=`<h3>${it.title}</h3><p>${it.body}</p>`;
+    c.onclick=it.fn;grid.appendChild(c);
+  }
+  choiceArea.appendChild(grid);
+  controls.innerHTML='';
+}
+function setPhase(p){
+  S.phase=p;
+  document.querySelectorAll('.pill').forEach(el=>{
+    const n=+el.dataset.p;
+    el.classList.toggle('active',n===p);
+    el.classList.toggle('done',n<p);
+  });
+}
+
+/* ================= main loop ================= */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05);
+  last=now;perfNow=now;S.st+=dt;
+  switch(S.stage){
+    case 'cfthin':updCfThin(dt);break;
+    case 'lines':updLines(dt);break;
+    case 'preguard':updPreguard(dt);updLines(dt);break;
+    case 'guard':updGuard(dt);updLines(dt);break;
+    case 'pursuit':updPursuit(dt);break;
+    case 'done':
+      for(const s of S.soldiers){if(s.alive&&s.side==='b'&&!s.escaped){s.tx=500;s.ty=40;moveToward(s,0.6,dt);}}
+      break;
+  }
+  updArrowFlight(dt);
+  updCommandFx(dt);
+  applyCamera(dt);
+  flushInstances();
+  flushArrows();
+  updateBanners();
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+
+/* ================= boot ================= */
+resize();
+enterPrologue();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

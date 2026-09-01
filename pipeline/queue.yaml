@@ -137,7 +137,8 @@
   lon: 35.95
   brief: Six days on the ravine's edge, the mobile guard plugging every break, and the day that decided the Levant for a millennium.
   type: battle
-  status: pending
+  status: built
+  built: 2026-09-01
 - slug: battle-of-lepanto
   title: Lepanto
   year: "7 October 1571"
