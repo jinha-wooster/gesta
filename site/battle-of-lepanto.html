@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lepanto, 1571 · 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#141312; --ink-2:#1b1a18; --panel:#201e1b; --line:#38352f;
+    --parchment:#e5ddc8; --muted:#9c957f; --faint:#696355;
+    --bronze:#d9a441; --bronze-dim:#8f6f2e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{background:var(--ink)}
+  body{background:var(--ink);color:var(--parchment);font-family:'Source Serif 4',Georgia,serif;font-size:17px;line-height:1.65;min-height:100vh}
+  .wrap{max-width:1060px;margin:0 auto;padding:36px 18px 80px}
+  header{text-align:center;margin-bottom:26px}
+  .eyebrow{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  h1{font-family:'GFS Didot',serif;font-weight:400;font-size:clamp(38px,7vw,70px);letter-spacing:.06em;line-height:1}
+  .subtitle{color:var(--muted);font-style:italic;margin-top:12px;font-size:16px}
+  .meander{height:14px;margin:24px auto;max-width:520px;opacity:.55}
+  .phases{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+  .pill{font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:7px 13px;border:1px solid var(--line);border-radius:2px;color:var(--faint);transition:all .35s;white-space:nowrap}
+  .pill.active{color:var(--bronze);border-color:var(--bronze-dim);background:rgba(217,164,65,.06)}
+  .pill.done{color:var(--muted)}
+  .stage{position:relative;border:1px solid var(--line);background:#000;border-radius:3px;overflow:hidden}
+  #view{display:block;width:100%;height:560px;cursor:grab;touch-action:none}
+  #view.dragging{cursor:grabbing}
+  @media(max-width:700px){#view{height:420px}}
+  .counters{position:absolute;top:10px;left:12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;font-size:12px;letter-spacing:.08em;opacity:0;transition:opacity .6s}
+  .counters.show{opacity:1}
+  .counter{background:rgba(20,19,18,.74);padding:4px 10px;border-radius:2px;border:1px solid var(--line);width:max-content}
+  .counter b{font-weight:600}
+  .c-hl b{color:#7a9cd8} .c-ot b{color:#d87060}
+  .daytag{position:absolute;bottom:10px;left:12px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(229,221,200,.7);background:rgba(20,19,18,.6);padding:5px 10px;border-radius:2px;pointer-events:none}
+  #formHud{display:none;position:absolute;bottom:92px;left:50%;transform:translateX(-50%);
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--bronze);
+    background:rgba(20,19,18,.85);border:1px solid var(--bronze-dim);padding:8px 16px;
+    border-radius:2px;pointer-events:none;white-space:nowrap;z-index:6}
+  .camctl{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:6px}
+  .cambtn{font-family:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;background:rgba(20,19,18,.74);border:1px solid var(--line);border-radius:2px;color:var(--muted);cursor:pointer;transition:all .2s}
+  .cambtn:hover{color:var(--bronze);border-color:var(--bronze-dim)}
+  .camhint{position:absolute;bottom:10px;right:12px;font-size:11px;letter-spacing:.06em;color:rgba(229,221,200,.55);background:rgba(20,19,18,.6);padding:4px 9px;border-radius:2px;pointer-events:none}
+  @media(max-width:700px){.camhint{display:none}}
+  .narration{border:1px solid var(--line);border-top:none;background:var(--panel);padding:26px 30px;border-radius:0 0 3px 3px;min-height:150px}
+  .narr-label{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--bronze);margin-bottom:10px}
+  .narration p{margin-bottom:12px}
+  .narration p:last-child{margin-bottom:0}
+  .narration em{color:var(--muted)}
+  .aside{font-size:14px;color:var(--muted);font-style:italic;border-left:2px solid var(--bronze-dim);padding-left:14px;margin-top:14px}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  @media(max-width:640px){.choices{grid-template-columns:1fr}}
+  .choice{border:1px solid var(--line);border-radius:3px;padding:20px;background:var(--ink-2);cursor:pointer;text-align:left;color:var(--parchment);font-family:inherit;font-size:16px;transition:border-color .25s,background .25s}
+  .choice:hover{border-color:var(--bronze-dim);background:#24221e80}
+  .choice h3{font-family:'GFS Didot',serif;font-weight:400;font-size:20px;letter-spacing:.04em;margin-bottom:8px;color:var(--bronze)}
+  .choice p{font-size:14.5px;color:var(--muted);line-height:1.55}
+  .controls{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn{font-family:inherit;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:13px 28px;background:transparent;color:var(--bronze);border:1px solid var(--bronze-dim);border-radius:2px;cursor:pointer;transition:all .25s}
+  .btn:hover{background:rgba(217,164,65,.1);border-color:var(--bronze)}
+  .btn.ghost{color:var(--muted);border-color:var(--line)}
+  .btn.ghost:hover{color:var(--parchment);background:rgba(255,255,255,.04)}
+  #dock{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:10px 14px 12px;
+      background:linear-gradient(transparent, rgba(12,12,10,.45) 18%, rgba(12,12,10,.9) 72%)}
+  #dock:not(:has(button)){display:none}
+  #dock .choices{max-width:880px;margin:0 auto;gap:10px}
+  #dock .choice{padding:12px 14px;background:rgba(24,22,18,.93)}
+  #dock .choice h3{font-size:17px;margin-bottom:5px}
+  #dock .choice p{font-size:13px;line-height:1.45}
+  #dock .controls{margin-top:0;padding-top:8px}
+  @media(max-width:640px){#dock .choice{padding:10px 12px}#dock .choice p{font-size:12px}}
+  #vn{display:none;position:absolute;left:0;right:0;bottom:0;padding:14px 16px 16px;
+      background:linear-gradient(transparent, rgba(12,12,10,.55) 18%, rgba(12,12,10,.92) 60%);z-index:5}
+  .vn-box{display:flex;gap:16px;max-width:860px;margin:0 auto;align-items:flex-end;cursor:pointer}
+  .vn-portrait{width:104px;height:128px;flex:0 0 auto;border:1px solid var(--bronze-dim);
+      border-radius:3px;background:#1c1814;overflow:hidden}
+  .vn-portrait svg{width:100%;height:100%;display:block}
+  .vn-main{flex:1;min-width:0}
+  .vn-name{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--bronze);margin-bottom:7px}
+  .vn-text{font-size:16.5px;line-height:1.6;color:var(--parchment);min-height:52px}
+  .vn-text em{color:var(--muted)}
+  .vn-next{font-size:11px;letter-spacing:.2em;color:var(--faint);margin-top:8px;text-transform:uppercase}
+  .vn-choices{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .vn-choice{font-family:inherit;font-size:14.5px;text-align:left;padding:11px 16px;background:rgba(24,22,18,.9);
+      border:1px solid var(--line);border-radius:2px;color:var(--parchment);cursor:pointer;transition:all .2s}
+  .vn-choice:hover{border-color:var(--bronze-dim);background:rgba(32,29,23,.95)}
+  #vntoast{position:absolute;right:16px;bottom:100%;margin-bottom:8px;font-size:11px;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--bronze);background:rgba(18,16,13,.85);border:1px solid var(--bronze-dim);
+      padding:6px 12px;border-radius:2px;opacity:0;transition:opacity .5s;pointer-events:none}
+  #vntoast.show{opacity:1}
+  .vn-narr .vn-text{font-style:italic;color:var(--muted)}
+  @media(max-width:640px){.vn-portrait{width:76px;height:96px}.vn-text{font-size:15px}}
+  footer{margin-top:44px;text-align:center;font-size:13px;color:var(--faint);line-height:1.7}
+  .fade-in{animation:fadeIn .6s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">7 October, 1571 · the Gulf of Patras · the last great battle of oared ships</div>
+    <h1>LEPANTO</h1>
+    <p class="subtitle">Six floating fortresses anchor a line across the sea, and the age of the galley ends in one afternoon</p>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true">
+      <defs><pattern id="key" width="26" height="14" patternUnits="userSpaceOnUse">
+        <path d="M0 12 H10 V2 H20 V8 H14 V6 H18 V4 H12 V10 H22 V0 H26" fill="none" stroke="#d9a441" stroke-width="1.4"/>
+      </pattern></defs>
+      <rect width="520" height="14" fill="url(#key)"/>
+    </svg>
+  </header>
+
+  <nav class="phases" aria-label="Battle phases">
+    <span class="pill" data-p="0">Prologue</span>
+    <span class="pill" data-p="1">The galleasses</span>
+    <span class="pill" data-p="2">The lines close</span>
+    <span class="pill" data-p="3">The center</span>
+    <span class="pill" data-p="4">Aftermath</span>
+  </nav>
+
+  <div class="stage">
+    <div id="view" role="img" aria-label="3D naval battlefield of Lepanto in the Gulf of Patras"></div>
+    <div class="counters" id="counters">
+      <span class="counter c-ot">Ottoman fallen&nbsp; <b id="otCt">0</b></span>
+      <span class="counter c-hl">Holy League fallen&nbsp; <b id="hlCt">0</b></span>
+    </div>
+    <div class="daytag" id="daytag">Dawn · the Gulf of Patras · a Sunday</div>
+    <div id="formHud"></div>
+    <div class="camctl">
+      <button class="cambtn" data-cam="over">Overview</button>
+      <button class="cambtn" data-cam="center">The center</button>
+      <button class="cambtn" data-cam="left">Left wing</button>
+      <button class="cambtn" data-cam="right">Right wing</button>
+    </div>
+    <div class="camhint">drag · rotate&ensp;|&ensp;scroll · zoom&ensp;|&ensp;right-drag · pan</div>
+    <div id="dock"><div id="choiceArea"></div><div class="controls" id="controls"></div></div>
+    <div id="vn"><div id="vntoast"></div>
+      <div class="vn-box" id="vnbox">
+        <div class="vn-portrait" id="vnportrait"></div>
+        <div class="vn-main">
+          <div class="vn-name" id="vnname"></div>
+          <div class="vn-text" id="vntext"></div>
+          <div class="vn-choices" id="vnchoices"></div>
+          <div class="vn-next" id="vnnext">tap to continue &#9656;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="narration">
+    <div class="narr-label" id="narrLabel">Prologue</div>
+    <div id="narrBody"></div>
+  </div>
+
+  <footer>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true"><rect width="520" height="14" fill="url(#key)"/></svg>
+    Sources: Gian Pietro Contarini's contemporary account, Fernand Braudel's <em>The Mediterranean</em>, and
+    John F. Guilmartin's <em>Gunpowder and Galleys</em>. The Holy League fielded roughly 206 galleys, 6 galleasses,
+    and some 84,000 men; the Ottomans roughly 251 galleys, 56 galliots, and 88,000 men.
+    One figure represents approximately 3 galleys or 1,200 oarsmen and soldiers.
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+
+/* ================= geography =================
+   Sim space 1000 x 620. Holy League forms in the south, Ottomans in the north.
+   Center of the gulf: flat sea. Galleasses deploy ahead of the HL line. */
+const sx2w=x=>(x-500)*0.22, sy2w=y=>(y-310)*0.22;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const SHIPS_PER=3;
+
+const S={
+  phase:0, stage:'idle', st:0,
+  ships:[], shots:[],
+  otDead:0, hlDead:0,
+  gaDist:6, venierBonded:false, reserveSent:false, centerPushed:false,
+  ulujBroke:false, endCue:false,
+};
+
+/* ================= three.js ================= */
+const view=document.getElementById('view');
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x1a3040);
+scene.fog=new THREE.FogExp2(0x1a3040,0.0028);
+const camera=new THREE.PerspectiveCamera(52,1,0.5,900);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const SHADOWS=window.innerWidth>700;
+if(SHADOWS){renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;}
+view.appendChild(renderer.domElement);
+function resize(){const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+scene.add(new THREE.HemisphereLight(0xc8dce8,0x0a1820,0.85));
+const sun=new THREE.DirectionalLight(0xfff4d8,0.9);
+sun.position.set(-20,80,40);
+if(SHADOWS){
+  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+  const sc=sun.shadow.camera;
+  sc.left=-140;sc.right=140;sc.top=140;sc.bottom=-140;sc.far=400;
+  sc.updateProjectionMatrix();sun.shadow.bias=-0.001;
+}
+scene.add(sun);
+
+/* ---------- sea terrain ---------- */
+function seaH(wx,wz){
+  return Math.sin(wx*0.18+0.3)*0.18+Math.cos(wz*0.22+0.8)*0.14+Math.sin((wx+wz)*0.09)*0.10;
+}
+{
+  const g=new THREE.PlaneGeometry(260,180,180,120);
+  g.rotateX(-Math.PI/2);
+  const pos=g.attributes.position,colors=[];
+  const cDeep=new THREE.Color(0x1a3a50),cMid=new THREE.Color(0x1e4460),
+        cFoam=new THREE.Color(0x2a5870),tmp=new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const wx=pos.getX(i),wz=pos.getZ(i);
+    const h=seaH(wx,wz);
+    pos.setY(i,h);
+    const t=Math.max(0,Math.min(1,(h+0.3)/0.6));
+    tmp.copy(cDeep).lerp(cMid,t*0.7).lerp(cFoam,t*0.4*Math.abs(Math.sin(wx*0.3+wz*0.2)));
+    tmp.offsetHSL(0,0,(Math.random()-0.5)*0.015);
+    colors.push(tmp.r,tmp.g,tmp.b);
+  }
+  g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  g.computeVertexNormals();
+  const sea=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}));
+  sea.receiveShadow=SHADOWS;
+  scene.add(sea);
+}
+
+/* ---------- ship figure builder ---------- */
+function buildFigure(parts){
+  let vC=0,iC=0;
+  for(const p of parts){vC+=p.g.attributes.position.count;iC+=p.g.index.count;}
+  const P=new Float32Array(vC*3),N=new Float32Array(vC*3),C=new Float32Array(vC*3),I=new Uint16Array(iC);
+  const col=new THREE.Color();
+  let vO=0,iO=0;
+  for(const p of parts){
+    P.set(p.g.attributes.position.array,vO*3);
+    N.set(p.g.attributes.normal.array,vO*3);
+    col.set(p.c);
+    const n=p.g.attributes.position.count;
+    for(let i=0;i<n;i++){C[(vO+i)*3]=col.r;C[(vO+i)*3+1]=col.g;C[(vO+i)*3+2]=col.b;}
+    const idx=p.g.index.array;
+    for(let i=0;i<idx.length;i++)I[iO+i]=idx[i]+vO;
+    vO+=n;iO+=idx.length;
+  }
+  const out=new THREE.BufferGeometry();
+  out.setAttribute('position',new THREE.BufferAttribute(P,3));
+  out.setAttribute('normal',new THREE.BufferAttribute(N,3));
+  out.setAttribute('color',new THREE.BufferAttribute(C,3));
+  out.setIndex(new THREE.BufferAttribute(I,1));
+  return out;
+}
+function cyl(r1,r2,h,seg,x,y,z,rx){const g=new THREE.CylinderGeometry(r1,r2,h,seg);if(rx)g.rotateX(rx);g.translate(x,y,z);return g;}
+function box(w,h,d,x,y,z){const g=new THREE.BoxGeometry(w,h,d);g.translate(x,y,z);return g;}
+
+function buildGalley(o){
+  return buildFigure([
+    {g:box(5.4,0.7,1.4, 0,0.35,0),c:o.hull},
+    {g:box(0.9,0.5,1.3, 2.9,0.6,0),c:o.prow},
+    {g:box(0.5,0.4,1.4, -2.8,0.5,0),c:o.stern},
+    {g:cyl(0.08,0.08,3.6,5, 0,2.2,0),c:0x6a5236},
+    {g:box(2.4,0.05,0.3, 0,1.6,0),c:o.sail},
+    {g:box(5.0,0.12,0.18, 0,0.75,0.72),c:o.hull},
+    {g:box(5.0,0.12,0.18, 0,0.75,-0.72),c:o.hull},
+    {g:box(0.12,0.12,1.5, 1.8,0.6,0),c:o.banner||o.hull},
+  ]);
+}
+function buildGalleass(){
+  return buildFigure([
+    {g:box(6.0,1.0,2.8, 0,0.5,0),c:0x3a5070},
+    {g:box(1.2,0.7,2.6, 3.3,0.9,0),c:0x2a3e58},
+    {g:box(1.0,0.6,2.6, -3.2,0.85,0),c:0x2a3e58},
+    {g:box(2.2,0.5,2.4, 0,1.2,0),c:0x2e4a66},
+    {g:cyl(0.09,0.09,4.0,5, -0.8,3.2,0),c:0x6a5236},
+    {g:cyl(0.09,0.09,3.4,5,  0.8,2.9,0),c:0x6a5236},
+    {g:box(2.8,0.06,0.35, -0.8,1.8,0),c:0xd9a441},
+    {g:box(0.22,0.22,2.8, 0,1.05,0),c:0x8c2f2a},
+    {g:box(0.22,0.22,2.8, -1.2,1.05,0),c:0x8c2f2a},
+    {g:box(0.22,0.22,2.8,  1.2,1.05,0),c:0x8c2f2a},
+  ]);
+}
+
+const GEO={
+  hl:buildGalley({hull:0x2a3c6a,prow:0x3a4c80,stern:0x1e2e58,sail:0xd8d0bc,banner:0x8c2f2a}),
+  ot:buildGalley({hull:0x7a2020,prow:0x8a2c2c,stern:0x5c1818,sail:0xc8a820,banner:0xd9a441}),
+  ga:buildGalleass(),
+};
+const MATS={};for(const k in GEO)MATS[k]=new THREE.MeshLambertMaterial({vertexColors:true});
+let MESH={};
+const M4=new THREE.Matrix4(),QT=new THREE.Quaternion(),V3=new THREE.Vector3(),SC=new THREE.Vector3(),EUL=new THREE.Euler();
+let perfNow=0;
+
+function ship(x,y,side,grp,kind){
+  return {x,y,tx:x,ty:y,hx:x,hy:y,side,grp,kind,alive:true,flee:false,escaped:false,
+          jit:rnd(0,6.28),face:side==='hl'?-Math.PI/2:Math.PI/2,moving:false,wps:null,pi:0,slot:0};
+}
+function buildInstances(){
+  for(const k in MESH)scene.remove(MESH[k]);
+  MESH={};
+  for(const k in GEO){
+    const list=S.ships.filter(s=>s.kind===k);
+    const m=new THREE.InstancedMesh(GEO[k],MATS[k],Math.max(list.length,1));
+    m.castShadow=SHADOWS;
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);
+    for(let i=0;i<m.count;i++)m.setMatrixAt(i,M4);
+    m.instanceMatrix.needsUpdate=true;
+    list.forEach((s,i)=>{s.idx=i;s.mesh=m;});
+    scene.add(m);MESH[k]=m;
+  }
+}
+function writeInstance(s){
+  const wx=sx2w(s.x),wz=sy2w(s.y);
+  if(s.escaped){SC.setScalar(0.0001);V3.set(wx,-80,wz);QT.set(0,0,0,1);}
+  else if(!s.alive){
+    V3.set(wx,seaH(wx,wz)+0.15,wz);
+    EUL.set(Math.PI/2,s.jit,0);QT.setFromEuler(EUL);
+    SC.set(1,1,0.22);
+  }else{
+    const bob=s.moving?Math.abs(Math.sin(perfNow*0.009+s.jit))*0.14:Math.sin(perfNow*0.006+s.jit)*0.06;
+    V3.set(wx,seaH(wx,wz)+bob,wz);
+    EUL.set(0,s.face,s.moving?Math.sin(perfNow*0.01+s.jit)*0.03:0,'YXZ');QT.setFromEuler(EUL);
+    SC.setScalar(1);
+  }
+  M4.compose(V3,QT,SC);
+  s.mesh.setMatrixAt(s.idx,M4);
+}
+function flushInstances(){
+  for(const s of S.ships)writeInstance(s);
+  for(const k in MESH)MESH[k].instanceMatrix.needsUpdate=true;
+}
+function moveToward(s,speed,dt){
+  const dx=s.tx-s.x,dy=s.ty-s.y,d=Math.hypot(dx,dy);
+  if(d<1.8){s.moving=false;return true;}
+  s.moving=true;
+  s.x+=(dx/d)*speed*dt*60;s.y+=(dy/d)*speed*dt*60;
+  s.face=Math.atan2(-dy,dx);
+  return false;
+}
+function sink(s){
+  if(!s.alive)return;
+  s.alive=false;
+  if(s.side==='ot')S.otDead++;else S.hlDead++;
+  updateCounters();
+}
+function alive(side,grp){return S.ships.filter(s=>s.alive&&!s.escaped&&s.side===side&&(!grp||s.grp===grp));}
+function killRandom(list,n){
+  const pool=list.filter(s=>s.alive);
+  for(let i=0;i<n&&pool.length;i++){
+    const j=Math.floor(Math.random()*pool.length);
+    sink(pool[j]);pool.splice(j,1);
+  }
+}
+function updateCounters(){
+  document.getElementById('otCt').textContent='~'+(S.otDead*SHIPS_PER)+' ships';
+  document.getElementById('hlCt').textContent='~'+(S.hlDead*SHIPS_PER)+' ships';
+}
+function setDay(t){document.getElementById('daytag').textContent=t;}
+
+/* ---------- cannon shot (simplified) ---------- */
+const SHOT_MAX=120;
+const shotMesh=new THREE.InstancedMesh(new THREE.SphereGeometry(0.22,5,4),
+  new THREE.MeshLambertMaterial({color:0x2a1e10}),SHOT_MAX);
+shotMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(shotMesh);
+const UP=new THREE.Vector3(0,1,0),DIR=new THREE.Vector3();
+function volley(n,shooters,targets,hit){
+  if(!shooters.length||!targets.length)return;
+  for(let i=0;i<n;i++){
+    const fr=shooters[Math.floor(Math.random()*shooters.length)];
+    const tg=targets[Math.floor(Math.random()*targets.length)];
+    const fx=sx2w(fr.x),fz=sy2w(fr.y),tx=sx2w(tg.x+rnd(-4,4)),tz=sy2w(tg.y+rnd(-4,4));
+    S.shots.push({fx,fy:seaH(fx,fz)+1.2,fz,tx,ty:seaH(tx,tz)+0.4,tz,
+      t:0,dur:rnd(0.4,0.7),arc:rnd(2,4),px:fx,py:1.2,pz:fz,vx:0,vy:1,vz:0,
+      simx:tg.x,simy:tg.y,side:tg.side,hit});
+  }
+}
+function updShots(dt){
+  for(let i=S.shots.length-1;i>=0;i--){
+    const a=S.shots[i];a.t+=dt;
+    const u=Math.min(a.t/a.dur,1);
+    const nx=a.fx+(a.tx-a.fx)*u,nz=a.fz+(a.tz-a.fz)*u;
+    const ny=a.fy+(a.ty-a.fy)*u+Math.sin(u*Math.PI)*a.arc;
+    a.vx=nx-a.px;a.vy=ny-a.py;a.vz=nz-a.pz;
+    a.px=nx;a.py=ny;a.pz=nz;
+    if(u>=1){
+      if(Math.random()<a.hit){
+        const near=S.ships.filter(s=>s.alive&&s.side===a.side&&Math.hypot(s.x-a.simx,s.y-a.simy)<10);
+        if(near.length)sink(near[0]);
+      }
+      S.shots.splice(i,1);
+    }
+  }
+}
+function flushShots(){
+  let i=0;
+  for(const a of S.shots){
+    if(i>=SHOT_MAX)break;
+    V3.set(a.px,a.py,a.pz);
+    DIR.set(a.vx,a.vy,a.vz).normalize();
+    QT.setFromUnitVectors(UP,DIR);
+    SC.setScalar(1);M4.compose(V3,QT,SC);
+    shotMesh.setMatrixAt(i++,M4);
+  }
+  for(;i<SHOT_MAX;i++){SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);shotMesh.setMatrixAt(i,M4);}
+  shotMesh.instanceMatrix.needsUpdate=true;
+}
+
+/* ---------- banners ---------- */
+const banners={};
+function makeBanner(color){
+  const g=new THREE.Group();
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.09,6,5),new THREE.MeshLambertMaterial({color:0x4a3b26}));
+  pole.position.y=3;
+  const flag=new THREE.Mesh(new THREE.PlaneGeometry(2.4,1.4),new THREE.MeshLambertMaterial({color,side:THREE.DoubleSide}));
+  flag.position.set(1.2,5.2,0);
+  g.add(pole,flag);g.userData.flag=flag;
+  scene.add(g);g.visible=false;
+  return g;
+}
+banners.hl=makeBanner(0x8c2f2a);
+banners.ot=makeBanner(0xc8a820);
+function updateBanners(){
+  const sel={hl:s=>s.side==='hl'&&s.kind!=='ga', ot:s=>s.side==='ot'};
+  for(const k in banners){
+    const list=S.ships.filter(s=>s.alive&&!s.escaped&&sel[k](s));
+    const b=banners[k];
+    if(list.length<4){b.visible=false;continue;}
+    let mx=0,my=0;for(const s of list){mx+=s.x;my+=s.y;}
+    mx/=list.length;my/=list.length;
+    const wx=sx2w(mx),wz=sy2w(my);
+    b.position.set(wx,seaH(wx,wz),wz);
+    b.userData.flag.rotation.y=Math.sin(perfNow*0.002)*0.4;
+    b.visible=true;
+  }
+}
+
+/* ================= camera ================= */
+const cam={yaw:Math.PI,pitch:0.88,dist:210,tx:0,ty:2,tz:0,auto:null};
+function applyCamera(dt){
+  if(cam.auto){
+    const a=cam.auto,k=1-Math.pow(0.001,dt);
+    cam.yaw+=(a.yaw-cam.yaw)*k;cam.pitch+=(a.pitch-cam.pitch)*k;cam.dist+=(a.dist-cam.dist)*k;
+    cam.tx+=(a.tx-cam.tx)*k;cam.ty+=(a.ty-cam.ty)*k;cam.tz+=(a.tz-cam.tz)*k;
+    if(Math.abs(a.dist-cam.dist)<0.5&&Math.abs(a.yaw-cam.yaw)<0.01)cam.auto=null;
+  }
+  cam.pitch=THREE.MathUtils.clamp(cam.pitch,0.14,1.42);
+  cam.dist=THREE.MathUtils.clamp(cam.dist,20,300);
+  const cp=Math.cos(cam.pitch);
+  camera.position.set(
+    cam.tx+Math.sin(cam.yaw)*cp*cam.dist,
+    cam.ty+Math.sin(cam.pitch)*cam.dist,
+    cam.tz+Math.cos(cam.yaw)*cp*cam.dist);
+  camera.lookAt(cam.tx,cam.ty,cam.tz);
+}
+const PRESETS={
+  over:{yaw:Math.PI,pitch:0.88,dist:210,tx:0,ty:2,tz:0},
+  center:{yaw:Math.PI+0.1,pitch:0.55,dist:100,tx:0,ty:1,tz:sy2w(310)},
+  left:{yaw:Math.PI-0.5,pitch:0.6,dist:130,tx:sx2w(180),ty:1,tz:sy2w(300)},
+  right:{yaw:Math.PI+0.5,pitch:0.6,dist:130,tx:sx2w(820),ty:1,tz:sy2w(300)},
+};
+document.querySelectorAll('.cambtn').forEach(b=>b.onclick=()=>{cam.auto={...PRESETS[b.dataset.cam]};});
+function cine(name){cam.auto={...PRESETS[name]};}
+
+let drag=null,formDrag=null;
+view.addEventListener('pointerdown',e=>{
+  view.setPointerCapture(e.pointerId);
+  if(S.stage==='deploy'&&e.button===0&&!e.shiftKey){
+    const hit=castAt(e,[formPlane]);
+    if(hit.length){formDrag={x0:e.clientY,d0:S.gaDist};return;}
+  }
+  drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,btn:e.button,shift:e.shiftKey};
+  view.classList.add('dragging');cam.auto=null;
+});
+view.addEventListener('pointermove',e=>{
+  if(formDrag){
+    const d=THREE.MathUtils.clamp(formDrag.d0-(e.clientY-formDrag.x0)*0.07,2,14);
+    const q=Math.round(d);
+    if(q!==S.gaDist){S.gaDist=q;placeGalleasses();formHudText();}
+    return;
+  }
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  drag.x=e.clientX;drag.y=e.clientY;
+  if(drag.btn===2||drag.shift){
+    const cp=Math.cos(cam.yaw),sp=Math.sin(cam.yaw),k=cam.dist*0.0016;
+    cam.tx-=(dx*cp-dy*sp)*k;cam.tz-=(-dx*sp-dy*cp)*k;
+    cam.tx=THREE.MathUtils.clamp(cam.tx,-120,120);
+    cam.tz=THREE.MathUtils.clamp(cam.tz,-70,70);
+  }else{cam.yaw-=dx*0.0055;cam.pitch+=dy*0.0045;}
+});
+const endDrag=()=>{drag=null;view.classList.remove('dragging');};
+view.addEventListener('pointerup',e=>{
+  if(formDrag){formDrag=null;return;}
+  if(drag&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<12)tryPick(e);
+  endDrag();
+});
+view.addEventListener('pointercancel',endDrag);
+view.addEventListener('wheel',e=>{e.preventDefault();cam.auto=null;cam.dist*=(1+Math.sign(e.deltaY)*0.09);},{passive:false});
+view.addEventListener('contextmenu',e=>e.preventDefault());
+let pinch=null;
+view.addEventListener('touchstart',e=>{if(e.touches.length===2)pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);});
+view.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&pinch){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    cam.dist*=pinch/d;pinch=d;cam.auto=null;
+  }
+},{passive:true});
+view.addEventListener('touchend',()=>pinch=null);
+
+/* ================= command layer ================= */
+const raycaster=new THREE.Raycaster();
+const ndc=new THREE.Vector2();
+function castAt(e,objects){
+  const r=renderer.domElement.getBoundingClientRect();
+  ndc.x=((e.clientX-r.left)/r.width)*2-1;
+  ndc.y=-((e.clientY-r.top)/r.height)*2+1;
+  raycaster.setFromCamera(ndc,camera);
+  return raycaster.intersectObjects(objects,false);
+}
+const formPlane=new THREE.Mesh(
+  new THREE.PlaneGeometry(120,40),
+  new THREE.MeshBasicMaterial({color:0xd9a441,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
+formPlane.rotation.x=-Math.PI/2;
+scene.add(formPlane);
+const formHud=document.getElementById('formHud');
+function formHudText(){
+  const dist=S.gaDist;
+  formHud.textContent=dist>=10
+    ?'Galleasses far forward · full broadsides before contact · drag to adjust'
+    :dist<=4
+    ?'Galleasses close to line · less time to fire · drag to adjust'
+    :'Galleasses deployed · '+dist+' lengths ahead of the line · drag to adjust';
+}
+function ringMesh(color){
+  const m=new THREE.Mesh(new THREE.TorusGeometry(10,0.5,8,32),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.85}));
+  m.rotation.x=-Math.PI/2;m.visible=false;
+  const fill=new THREE.Mesh(new THREE.CircleGeometry(9.2,24),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.13,depthWrite:false,side:THREE.DoubleSide}));
+  fill.position.z=0.02;
+  m.add(fill);scene.add(m);
+  return m;
+}
+const ringA=ringMesh(0xd9a441);
+const ringB=ringMesh(0xc45540);
+const RINGS=[ringA,ringB];
+let ringT=0,pickMode=null;
+function updCommandFx(dt){
+  ringT+=dt;
+  const gaY=sy2w(430-S.gaDist*12);
+  formPlane.material.opacity=(S.stage==='deploy')?0.07+Math.sin(ringT*3)*0.03:0;
+  if(S.stage==='deploy')formPlane.position.set(0,seaH(0,gaY)+0.5,gaY);
+  for(const r of RINGS){
+    if(!r.visible)continue;
+    const k=1+Math.sin(ringT*3.4)*0.08;
+    r.scale.setScalar(k);
+    r.material.opacity=0.55+Math.sin(ringT*3.4)*0.3;
+  }
+}
+function placeRing(r,sx,sy){
+  const wx=sx2w(sx),wz=sy2w(sy);
+  r.position.set(wx,seaH(wx,wz)+0.8,wz);
+  r.visible=true;
+}
+function hideRings(){for(const r of RINGS)r.visible=false;pickMode=null;}
+function pickRing(e){
+  const rect=renderer.domElement.getBoundingClientRect();
+  let best=null,bestD=1e9;
+  for(const r of RINGS){
+    if(!r.visible)continue;
+    V3.copy(r.position).project(camera);
+    if(V3.z>1)continue;
+    const px=(V3.x*0.5+0.5)*rect.width+rect.left;
+    const py=(-V3.y*0.5+0.5)*rect.height+rect.top;
+    const d=Math.hypot(e.clientX-px,e.clientY-py);
+    if(d<bestD){bestD=d;best=r;}
+  }
+  return bestD<Math.max(56,rect.width*0.08)?best:null;
+}
+function tryPick(e){
+  if(!pickMode)return;
+  const r=pickRing(e);
+  if(!r)return;
+  const choice=r===ringA?'a':'b';
+  hideRings();
+  if(choice==='a')startPressDirect();else startHoldCF();
+}
+function centroid(list){
+  let mx=0,my=0;
+  for(const s of list){mx+=s.x;my+=s.y;}
+  return list.length?[mx/list.length,my/list.length]:[500,310];
+}
+
+/* ================= dialogue layer ================= */
+const REL={};
+const FLAGSV={};
+function PT(o){
+ const hats={
+  crest:`<path d="M34 46 Q34 24 52 22 Q70 24 70 46 L64 42 Q52 34 40 42 Z" fill="${o.hatC}"/><rect x="47" y="5" width="10" height="20" rx="4" fill="${o.crestC||'#a03028'}"/>`,
+  band:`<path d="M36 44 Q52 30 68 44 Z" fill="${o.hairC||'#3a2c1a'}"/><rect x="34" y="43" width="36" height="6" rx="2" fill="${o.hatC}"/>`,
+  wrap:`<path d="M32 52 Q32 24 52 22 Q72 24 72 52 Q66 36 52 36 Q38 36 32 52 Z" fill="${o.hatC}"/><rect x="32" y="48" width="40" height="7" rx="3" fill="${o.hatC}"/>`,
+  none:`<path d="M34 48 Q34 28 52 26 Q70 28 70 48 Q64 38 52 39 Q40 38 34 48 Z" fill="${o.hairC||'#3a2c1a'}"/>`,
+ };
+ const beard=o.beard?`<path d="M40 84 Q52 96 64 84 L62 ${o.beard==='long'?102:94} Q52 ${o.beard==='long'?110:100} 42 ${o.beard==='long'?102:94} Z" fill="${o.beardC||o.hairC||'#3a2c1a'}"/>`:'';
+ const stache=o.stache?`<path d="M41 76 Q52 71 63 76" stroke="${o.beardC||o.hairC||'#3a2c1a'}" stroke-width="3" fill="none" stroke-linecap="round"/>`:'';
+ return `<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="${o.bg}"/>
+<ellipse cx="52" cy="122" rx="40" ry="26" fill="${o.robe}"/><path d="M14 122 Q52 86 90 122" fill="${o.robe2}"/>
+${o.extra||''}
+<ellipse cx="52" cy="64" rx="20" ry="23" fill="${o.skin||'#c9a075'}"/>
+${hats[o.hat||'none']||''}
+<path d="M40 58 L48 57 M56 57 L64 58" stroke="#2a2012" stroke-width="2.2" stroke-linecap="round"/>
+<circle cx="44" cy="63" r="1.9" fill="#20180e"/><circle cx="60" cy="63" r="1.9" fill="#20180e"/>
+${stache}${beard}
+<path d="M46 80 Q52 ${o.stern?79:84} 58 80" stroke="#8a5a3a" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>`;
+}
+const CAST={
+ don:{name:'Don Juan of Austria · commander, Holy League',svg:PT({bg:'#1a1a22',robe:'#8c2f2a',robe2:'#a03830',hat:'crest',hatC:'#6a7090',crestC:'#d9a441',skin:'#c4a078',hairC:'#2a1c10',stache:true,stern:1})},
+ req:{name:'Luis de Requesens · lieutenant general',svg:PT({bg:'#181a18',robe:'#3a4a30',robe2:'#4a5a3c',hat:'none',hairC:'#2a1e10',beard:'short',beardC:'#2a1e10'})},
+ ali:{name:'Ali Pasha · kapudan-i derya of the Ottomans',svg:PT({bg:'#16141a',robe:'#7a2020',robe2:'#8a2c2c',hat:'wrap',hatC:'#c8a820',skin:'#9a7050',beard:'short',beardC:'#1e1408',stern:1})},
+ nar:{name:'',svg:null},
+};
+const vnEl=document.getElementById('vn');
+const vnPortrait=document.getElementById('vnportrait');
+const vnName=document.getElementById('vnname');
+const vnText=document.getElementById('vntext');
+const vnChoices=document.getElementById('vnchoices');
+const vnNextEl=document.getElementById('vnnext');
+const vnToast=document.getElementById('vntoast');
+let vnQueue=[],vnDone=null,vnBusy=false;
+function playScene(steps,done){
+  vnQueue=steps.slice();vnDone=done;
+  choiceArea.innerHTML='';setControls([]);
+  vnEl.style.display='block';vnAdvance();
+}
+function vnAdvance(){
+  while(vnQueue.length&&vnQueue[0].if&&!vnQueue[0].if()){vnQueue.shift();}
+  if(!vnQueue.length){
+    vnEl.style.display='none';
+    const d=vnDone;vnDone=null;if(d)d();return;
+  }
+  renderVn(vnQueue.shift());
+}
+function renderVn(st){
+  const who=CAST[st.who]||CAST.nar;
+  vnPortrait.innerHTML=who.svg||'';
+  vnPortrait.style.display=who.svg?'block':'none';
+  vnName.textContent=who.name;
+  document.getElementById('vnbox').classList.toggle('vn-narr',st.who==='nar');
+  vnText.innerHTML=typeof st.text==='function'?st.text():st.text||'';
+  vnChoices.innerHTML='';
+  if(st.choices){
+    vnNextEl.style.display='none';vnBusy=true;
+    for(const c of st.choices){
+      const b=document.createElement('button');
+      b.className='vn-choice';b.textContent=c.label;
+      b.onclick=(ev)=>{
+        ev.stopPropagation();
+        if(c.d)for(const k in c.d){REL[k]=(REL[k]||0)+c.d[k];}
+        if(c.flag)FLAGSV[c.flag]=true;
+        if(c.toast)vToast(c.toast);
+        if(c.reply)vnQueue=c.reply.concat(vnQueue);
+        vnBusy=false;vnAdvance();
+      };
+      vnChoices.appendChild(b);
+    }
+  }else{vnNextEl.style.display='block';vnBusy=false;}
+}
+document.getElementById('vnbox').addEventListener('click',()=>{if(!vnBusy&&vnEl.style.display==='block')vnAdvance();});
+function vToast(t){vnToast.textContent=t;vnToast.classList.add('show');setTimeout(()=>vnToast.classList.remove('show'),1900);}
+
+/* ---- the scenes ---- */
+const SC_L_OPEN=[
+ {who:'nar',text:`The morning is clear and the wind has shifted. All season it blew from the west, penning your fleet in Messina while the Ottomans burned Cyprus and the League argued about money. Now it blows from the east: toward them, into their eyes, into their sails. You are twenty-four years old, illegitimate son of the Emperor, and the Pope has given you the most powerful fleet in the Mediterranean. Across fourteen miles of gulf water, two hundred and fifty Ottoman galleys are already forming.`},
+ {who:'req',text:`Requesens, with the captains. They are ready, my lord. The galleasses are towed into position. The rams, as you ordered, have been cut from every prow so the bow guns can bear directly forward. The men have heard the prayers. Cervantes is at his station on the Marquesa, half-fevered from his last illness and refusing to leave the deck. He says he would rather die for God and the King than hide below in good health.`,choices:[
+  {label:'"Then God has fine taste in soldiers. Every man at his post."',reply:[
+   {who:'req',text:`The captains are asking about Venier. He has been flying signals all morning. He wants the Venetian squadron to advance now, before the signal, before the line is fully dressed.`}]},
+  {label:'"Tell Cervantes a sword arm is a sword arm. We have use of both."',d:{req:1},toast:'Bond · Requesens',reply:[
+   {who:'req',text:`I will tell him. And I will tell you the captains are asking about Venier. He wants the Venetian squadron to advance before the signal, before the line is fully dressed.`}]},
+ ]},
+ {who:'don',text:``,if:()=>false},
+];
+const SC_L_VENIER=[
+ {who:'nar',text:`Sebastiano Venier commands the Venetian squadron on your left. He is seventy-five years old, has been at war with the Ottomans for three years, and has watched his city's empire stripped island by island. Three months ago you ordered one of his men hanged for insubordination; he drew his crossbow on you in return and you came within a decision of destroying the alliance. Today he wants to move.`},
+ {who:'don',text:'',choices:[
+  {label:'"Let Venice lead. Follow the guns."',d:{ven:1},flag:'venier_go',toast:'Bond · Venier',reply:[
+   {who:'nar',text:`You order your own captain to match Venier's advance, and the Venetian squadron opens fire while the lines are still forming. It is premature and dangerous and it works: the galleasses on the left catch the Ottoman right wing while it is still closing ranks, and the slaughter there begins early.`}]},
+  {label:'"Hold the signal. One line, one moment. Tell him to dress his rank."',reply:[
+   {who:'nar',text:`Venier holds, furious. The line finishes forming. You fire a cannon shot as the signal, and every galley in the fleet advances together. Venier will not speak to you again for six months. History does not record that it mattered.`}]},
+ ]},
+];
+function SC_L_AFTER(){
+  const steps=[];
+  steps.push({who:'nar',text:`On the Sultana, Ali Pasha is dead. His head has been raised on a pike at the prow of his own flagship, and when the Ottoman center saw it the resistance, which had been fierce, became flight. The water around you is thick with wreckage.`});
+  if((REL.ven||0)>=1){
+    steps.push({who:'req',text:`Venier will want credit for the left. Give it to him, my lord. His squadron held when Barbarigo fell, and Venice is owed the truth of what it did today.`});
+  }else{
+    steps.push({who:'req',text:`The count stands at one hundred and seventeen Ottoman galleys taken, eighty sunk, twenty-three thousand prisoners freed from the oar-benches. And we have lost perhaps eight thousand of our own. It is the largest sea battle in two hundred years and it is yours.`});
+  }
+  steps.push({who:'ali',text:`(His last words, reported by survivors: that he had done everything his sultan ordered and more. The admiral whose fleet had never lost a battle was killed boarding the Sultana in person, fighting with sword in hand on his own deck. He was a capable man who met a better-prepared opponent on a day when preparation decided everything.)`});
+  return steps;
+}
+
+/* ================= fleets ================= */
+function placeGalleasses(){
+  const gaY=430-S.gaDist*12;
+  S.ships.filter(s=>s.kind==='ga').forEach((s,i)=>{
+    s.x=200+i*120;s.y=gaY;s.tx=s.x;s.ty=s.y;s.hx=s.x;s.hy=s.y;
+  });
+}
+function spawnAll(){
+  S.ships=[];
+  /* Holy League center: 20 galleys */
+  for(let i=0;i<20;i++){const s=ship(0,0,'hl','hlc','hl');s.slot=i;S.ships.push(s);}
+  /* Holy League left (Barbarigo): 8 galleys */
+  for(let i=0;i<8;i++){const s=ship(0,0,'hl','hll','hl');s.slot=i;S.ships.push(s);}
+  /* Holy League right (Doria): 8 galleys */
+  for(let i=0;i<8;i++){const s=ship(0,0,'hl','hlr','hl');s.slot=i;S.ships.push(s);}
+  /* 6 galleasses */
+  for(let i=0;i<6;i++){const s=ship(0,0,'hl','hlg','ga');s.slot=i;S.ships.push(s);}
+  /* Ottoman center: 28 galleys */
+  for(let i=0;i<28;i++){const s=ship(0,0,'ot','otc','ot');s.slot=i;S.ships.push(s);}
+  /* Ottoman left (Uluj Ali): 10 galleys */
+  for(let i=0;i<10;i++){const s=ship(0,0,'ot','otu','ot');s.slot=i;S.ships.push(s);}
+  /* Ottoman right (Mehmed Siroco): 10 galleys */
+  for(let i=0;i<10;i++){const s=ship(0,0,'ot','otr','ot');s.slot=i;S.ships.push(s);}
+
+  /* Place Holy League line */
+  alive('hl','hlc').forEach((s,i)=>{s.x=145+(i%10)*71;s.y=430+(Math.floor(i/10))*14;s.tx=s.x;s.ty=s.y;s.hx=s.x;s.hy=s.y;});
+  alive('hl','hll').forEach((s,i)=>{s.x=80+(i%4)*36;s.y=428+(Math.floor(i/4))*14;s.tx=s.x;s.ty=s.y;s.hx=s.x;s.hy=s.y;});
+  alive('hl','hlr').forEach((s,i)=>{s.x=855+(i%4)*36;s.y=428+(Math.floor(i/4))*14;s.tx=s.x;s.ty=s.y;s.hx=s.x;s.hy=s.y;});
+
+  /* Place Ottoman line */
+  alive('ot','otc').forEach((s,i)=>{s.x=130+(i%14)*54;s.y=190+(Math.floor(i/14))*12;s.tx=s.x;s.ty=s.y;s.hx=s.x;s.hy=s.y;});
+  alive('ot','otu').forEach((s,i)=>{s.x=860+(i%5)*28;s.y=192+(Math.floor(i/5))*12;s.tx=s.x;s.ty=s.y;s.hx=s.x;s.hy=s.y;});
+  alive('ot','otr').forEach((s,i)=>{s.x=55+(i%5)*28;s.y=192+(Math.floor(i/5))*12;s.tx=s.x;s.ty=s.y;s.hx=s.x;s.hy=s.y;});
+
+  S.gaDist=6;
+  buildInstances();
+  placeGalleasses();
+}
+
+/* ================= phases ================= */
+function enterPrologue(){
+  setPhase(0);setDay('Dawn · the Gulf of Patras · a Sunday');
+  S.otDead=0;S.hlDead=0;updateCounters();
+  document.getElementById('counters').classList.remove('show');
+  S.shots=[];S.gaDist=6;S.venierBonded=false;S.reserveSent=false;
+  S.centerPushed=false;S.ulujBroke=false;S.endCue=false;
+  hideRings();formHud.style.display='none';formDrag=null;
+  S.stage='idle';
+  spawnAll();cine('over');
+  narrate('Prologue',
+   `<p>You are Don Juan of Austria, twenty-four years old, natural son of the Emperor Charles V and a
+    Bavarian singer named Barbara Blomberg, raised in obscurity and discovered at seventeen to be a
+    prince. The Pope who summoned this Holy League calls you the champion of Christendom. You have
+    never commanded a fleet.</p>
+    <p>What you have is two hundred and six galleys, six galleasses, and the knowledge that Cyprus is
+    already lost, that the Ottomans have not lost a significant sea battle in a century, and that if
+    this fleet fails there is no second one. You also have this morning's wind, which turned in the
+    night: it blows now from the west, into Ottoman eyes, filling Holy League sails. There are men
+    across the water who have noticed.</p>`);
+  setControls([{label:'Ride the line', fn:()=>playScene(SC_L_OPEN,()=>{
+    setPhase(1);
+    playScene(SC_L_VENIER,enterDeploy);
+  })}]);
+}
+
+function enterDeploy(){
+  S.stage='deploy';
+  document.getElementById('counters').classList.add('show');
+  cine('center');
+  formHud.style.display='block';formHudText();
+  narrate('The galleasses',
+   `<p>Six Venetian galleasses: not galleys but floating artillery platforms, wider, slower, impossible
+    to row without a favoring wind, and armed with guns on all four sides. Before the fleets make
+    contact you have ordered them towed two miles ahead of your line, anchored in pairs across the
+    Ottoman approach. They cannot fight as galleys fight, ship against ship, oar against oar. They
+    can only stand and fire in every direction at once, and whatever Ottoman galleys try to pass
+    through will find six stationary fortresses in the way.</p>
+    <p><em>Drag up on the glowing water to push the galleasses further forward, closer to the Ottoman
+    line, or down to pull them back. Further forward: more time firing before the fleets close.
+    Closer back: safer, but fewer salvos before contact. Then sound the advance.</em></p>`);
+  setControls([{label:'Sound the advance', fn:confirmDeploy}]);
+}
+
+function confirmDeploy(){
+  formHud.style.display='none';S.stage='advance';S.st=0;
+  setPhase(2);setDay('Mid-morning · the lines close');
+  cine('over');
+  if(S.gaDist<4){
+    narrate('The galleasses · what if',
+     `<p>Deployed so close to your own line the galleasses have time for one broadside before the Ottoman
+      galleys crash through between them and into your front rank. One broadside from six guns platforms
+      is not nothing, but the idea of the galleasse is time: the longer they sit between the fleets,
+      the more of the Ottoman line they unmake before the oarsmen ever touch. Keep them further forward
+      next time.</p>`);
+    setControls([{label:'Rewind · deploy further ahead', fn:()=>{enterPrologue();}}]);
+    return;
+  }
+  narrate('The advance',
+   `<p>Both lines are moving. Your galleasses sit anchored between them, drawing fire, shrugging it off
+    with their heavy hulls, and returning it from every gun they carry. The Ottoman vanguard loses its
+    formation trying to thread between them and arrives at your galley line in pieces, in disordered
+    groups, already bled. Ahead, the flagship of Ali Pasha, the Sultana, is flying her standard at the
+    center: the green banner of the caliphate, embroidered in gold thread with the name of God twenty-
+    eight thousand nine hundred times. He has come in person, and he is coming for your center.</p>`);
+  for(const s of alive('hl','hlc')){s.tx=s.hx;s.ty=360;}
+  for(const s of alive('hl','hll')){s.tx=s.hx;s.ty=360;}
+  for(const s of alive('hl','hlr')){s.tx=s.hx;s.ty=360;}
+  for(const s of alive('ot','otc')){s.tx=s.hx;s.ty=260;}
+  for(const s of alive('ot','otu')){s.tx=s.hx;s.ty=260;}
+  for(const s of alive('ot','otr')){s.tx=s.hx;s.ty=260;}
+  setControls([]);
+}
+
+function updAdvance(dt){
+  for(const s of [...alive('hl','hlc'),...alive('hl','hll'),...alive('hl','hlr'),
+                  ...alive('ot','otc'),...alive('ot','otu'),...alive('ot','otr')])moveToward(s,0.55,dt);
+  /* galleasses fire on approaching Ottoman center */
+  if(Math.random()<dt*3.5)volley(4,alive('hl','hlg'),alive('ot','otc'),0.45);
+  if(Math.random()<dt*2.5)volley(3,alive('hl','hlg'),alive('ot','otu'),0.35);
+  if(Math.random()<dt*2.5)volley(3,alive('hl','hlg'),alive('ot','otr'),0.35);
+  /* Ottomans return fire at galleasses */
+  if(Math.random()<dt*1.5)volley(2,alive('ot','otc'),alive('hl','hlg'),0.15);
+  const cDist=Math.hypot(
+    centroid(alive('ot','otc'))[0]-centroid(alive('hl','hlc'))[0],
+    centroid(alive('ot','otc'))[1]-centroid(alive('hl','hlc'))[1]);
+  if(cDist<100&&!S.centerPushed){
+    S.centerPushed=true;
+    orderRings();
+  }
+}
+
+function orderRings(){
+  narrate('The lines close · the order',
+   `<p>The galleasses have done their work. Now the galleys meet. Ali Pasha is driving straight for your
+    flagship, the Real, trying to board and capture the commander of the Holy League in the first
+    contact. That is how this kind of battle is decided: not by manoeuvre, not by gunnery, but by
+    boarding parties and hand-to-hand fighting on enemy decks, and he means to take yours.</p>
+    <p><em>Tap the golden ring to drive straight for the Sultana: meet him in the center, fight for the
+    flagship, end it fast. Tap the red ring to hold your center and let the wings decide it.</em></p>`);
+  const [cx,cy]=centroid(alive('ot','otc'));
+  placeRing(ringA,500,310);
+  placeRing(ringB,cx-80,cy+60);
+  pickMode='order';
+  setControls([]);
+}
+
+function startPressDirect(){
+  setPhase(3);S.stage='center';S.st=0;
+  setDay('Midday · the boarding');
+  cine('center');
+  narrate('The center',
+   `<p>Your flagship, the Real, drives for the Sultana at ramming speed, and Ali Pasha receives you.
+    For two hours the flagships are locked together, bow to bow, fighting over the railing, losing men
+    by the score. Three times the Ottoman boarding parties push onto your deck; three times your
+    Spanish soldiers push them back. Don Juan himself is fighting on the forecastle, bleeding from a
+    leg wound he will not acknowledge until the battle is over.</p>`);
+  for(const s of alive('hl','hlc')){s.tx=s.hx;s.ty=300;}
+  for(const s of alive('ot','otc')){s.tx=s.hx;s.ty=320;}
+  setControls([{label:'The wings decide', fn:enterWings}]);
+}
+
+function startHoldCF(){
+  S.stage='cfhold';S.st=0;
+  narrate('The lines · what if',
+   `<p>You anchor your center and wait. On your flanks the fight goes badly: Barbarigo on the left takes
+    an arrow to the eye and dies, and his command fragments. Uluj Ali on the right pushes through the
+    gap Doria opened and begins rolling up your line from the end. A battle decided by the wings is
+    a battle Ali Pasha wins in detail, because his wings are stronger than yours and his center is
+    fresh. At Lepanto the center had to go to the center. Ali Pasha understood this; so did
+    Don Juan.</p>`);
+  setControls([{label:'Rewind · press the center', fn:()=>{
+    hideRings();setPhase(2);
+    S.stage='advance';S.centerPushed=false;S.st=3;
+    for(const s of alive('ot','otc')){s.tx=s.hx;s.ty=260;}
+  }}]);
+}
+
+function updCenter(dt){
+  for(const s of [...alive('hl','hlc'),...alive('ot','otc')])moveToward(s,0.45,dt);
+  if(Math.random()<dt*2.2)killRandom(alive('ot','otc'),1);
+  if(Math.random()<dt*1.8)killRandom(alive('hl','hlc'),1);
+  /* Ottoman right presses Holy League left */
+  for(const s of alive('ot','otr')){s.tx=s.hx;s.ty=s.ty+dt*8;}
+  if(Math.random()<dt*1.4)killRandom(alive('hl','hll'),1);
+  if(Math.random()<dt*0.9)killRandom(alive('ot','otr'),1);
+  /* Uluj Ali on right */
+  if(!S.ulujBroke&&S.st>5){
+    S.ulujBroke=true;
+    for(const s of alive('ot','otu')){s.wps=[[s.x,s.y+180],[s.x-80,s.y+220]];s.pi=0;}
+    narrate('The center · the right wing crisis',
+     `<p>Uluj Ali, commanding the Ottoman left, has spotted the gap that opened when Doria's squadron
+      spread too wide to the south, trying to avoid being outflanked. He has driven through it.
+      He has captured the Maltese flagship, killed its crew, and is turning along your rear. You
+      have a reserve squadron, galleys held back for exactly this moment.</p>`);
+    setChoices([
+      {title:'Send the reserve right',
+       body:'Commit the reserve galleys to the right wing. Close the gap before Uluj Ali can exploit it further. The center will hold without them.',
+       fn:()=>{
+         S.reserveSent=true;
+         narrate('The right wing · reserve committed',
+          `<p>The reserve galleys arrive before Uluj Ali can consolidate. He holds what he has taken, the
+           Maltese flagship and the honor of being the only Ottoman commander to escape with ships intact,
+           but the gap closes behind him and he cannot turn his breakthrough into a rout. He runs north
+           with eighty-seven galleys: the only Ottoman force to leave the field undefeated, and the
+           only check on what is otherwise a total destruction.</p>`);
+         setControls([{label:'The battle ends', fn:startFinal}]);
+       }},
+      {title:'Hold the reserve',
+       body:'The center is not yet broken. Let Uluj Ali overextend before committing. A reserve spent too early is a reserve spent twice.',
+       fn:()=>{
+         narrate('The right wing · what if',
+          `<p>By the time the overextension is clear, Uluj Ali has looped his column through your rear
+           and is attacking the flagship from behind. Your reserve arrives into a melee it cannot
+           sort: friend and enemy locked together, no clear target. What might have been a controlled
+           counter becomes a three-way fight in open water, and the casualties on both sides double.
+           The battle is still won, but the toll is worse than it needed to be.</p>`);
+         setControls([{label:'Rewind · send the reserve early', fn:()=>{
+           S.ulujBroke=false;S.st=4;
+           for(const s of alive('ot','otu')){s.tx=s.hx;s.ty=s.hy;}
+           S.stage='center';
+           narrate('The center',`<p>The lines are still locked. The right wing crisis is coming. Watch for Uluj Ali.</p>`);
+           setControls([{label:'The wings decide', fn:enterWings}]);
+         }}]);
+       }},
+    ]);
+  }
+}
+
+function enterWings(){
+  S.stage='wings';S.st=0;
+  setDay('The wings and the center together');
+  cine('over');
+  narrate('The center · the wings',
+   `<p>On the left, Barbarigo is dying from an arrow wound and his Venetians are fighting without their
+    commander. On the right, Doria has spread too wide and Uluj Ali is driving through the gap.
+    The center is locked in a boarding fight that has lasted two hours and neither flagship has
+    struck her colors. The whole line, two miles of it, is a single continuous melee, and the
+    outcome depends on which center breaks first.</p>`);
+  for(const s of alive('hl','hll')){s.tx=s.hx;s.ty=310;}
+  for(const s of alive('ot','otr')){s.tx=s.hx;s.ty=310;}
+  setControls([{label:'Ali Pasha falls', fn:startFinal}]);
+}
+
+function updWings(dt){
+  for(const s of [...alive('hl','hlc'),...alive('ot','otc'),...alive('hl','hll'),...alive('ot','otr')])moveToward(s,0.4,dt);
+  if(Math.random()<dt*1.8)killRandom(alive('ot','otc'),1);
+  if(Math.random()<dt*1.4)killRandom(alive('hl','hlc'),1);
+  if(Math.random()<dt*1.5)killRandom(alive('ot','otr'),1);
+  if(Math.random()<dt*1.1)killRandom(alive('hl','hll'),1);
+}
+
+function startFinal(){
+  S.stage='final';S.st=0;
+  setDay('Afternoon · Ali Pasha falls');
+  cine('center');
+  narrate('The center · the Sultana taken',
+   `<p>A Spanish soldier fighting his way onto the Sultana finds Ali Pasha wounded on his own quarterdeck.
+    There is no formal surrender. The man kills him, takes his head, and raises it on a pike at the
+    Sultana's prow. It is visible for a mile. The Ottoman center, which has been fighting in good
+    order, sees the head of their commander on a stick at the prow of his flagship, and the fight
+    goes out of them.</p>`);
+  for(const s of alive('ot','otc')){s.wps=[[s.x+rnd(-20,20),s.y-80]];s.pi=0;}
+  for(const s of alive('ot','otr')){s.wps=[[s.x-30,s.y-60]];s.pi=0;}
+  setControls([]);
+}
+
+function updFinal(dt){
+  for(const s of S.ships){
+    if(s.alive&&s.side==='ot'&&s.wps&&s.pi<s.wps.length){
+      s.tx=s.wps[s.pi][0];s.ty=s.wps[s.pi][1];
+      if(moveToward(s,0.9,dt))s.pi++;
+    }
+    if(s.alive&&s.side==='ot'&&s.wps&&s.pi>=(s.wps?s.wps.length:0))s.escaped=true;
+  }
+  if(Math.random()<dt*2.6)killRandom(alive('ot','otc'),1);
+  if(Math.random()<dt*1.8)killRandom(alive('ot','otr'),1);
+  if(S.st>7&&!S.endCue){
+    S.endCue=true;
+    playScene(SC_L_AFTER(),enterAftermath);
+  }
+}
+
+function enterAftermath(){
+  setPhase(4);setDay('Evening · the count begins');
+  S.stage='done';cine('over');
+  narrate('Aftermath',
+   `<p>The numbers, for what they are worth: roughly 30,000 Ottomans killed or captured, perhaps 8,000
+    Holy League dead, some 117 Ottoman galleys taken and 50 sunk. Twelve thousand Christian galley
+    slaves, men rowing under the lash for years, were freed from the captured benches. One of them,
+    on a galley that turned during the fight, rowed straight into an Ottoman vessel and drove his
+    oar through its hull.</p>
+    <p>What the victory did not do is worth attending to. Cyprus was not recovered: it remained Ottoman.
+    The Holy League dissolved within a year, Venice making a separate peace, Spain unwilling to fund
+    another campaign without Venetian ships, the Pope who summoned the whole thing dead within months
+    of the battle. The chain that stretched Ottoman naval expansion in the western Mediterranean was
+    real, but the chain had a specific length.</p>
+    <p>Cervantes, who fought here with a fever on the Marquesa and took an arquebus ball through his left
+    hand and two more in his chest, would spend the next five years as a slave in Algiers after his
+    ship was taken on the voyage home. He called Lepanto the greatest occasion that past or present
+    ages have seen or future ones may hope to see. He wrote Don Quixote with his right hand. The
+    catalogue does not look away from what commands cost, or who pays them.</p>
+    <p class="aside">The longer irony: within a year, the Ottoman shipyards had replaced the lost fleet.
+    They built faster than the League had destroyed, and the empire that seemed broken at Lepanto was
+    projecting force into the western Mediterranean within two seasons. What the battle killed was not
+    Ottoman sea power but the myth of Ottoman invincibility, and myths, once killed, do not rebuild
+    themselves. The lesson: a decisive battle decides the moment. What comes after the moment is
+    a different war.</p>`);
+  setControls([{label:'Fight the day again', fn:enterPrologue, ghost:true}]);
+}
+
+/* ================= narration & UI ================= */
+const narrLabel=document.getElementById('narrLabel');
+const narrBody=document.getElementById('narrBody');
+const choiceArea=document.getElementById('choiceArea');
+const controls=document.getElementById('controls');
+function narrate(label,html){
+  narrLabel.textContent=label;
+  narrBody.innerHTML=html;
+  narrBody.classList.remove('fade-in');void narrBody.offsetWidth;
+  narrBody.classList.add('fade-in');
+  choiceArea.innerHTML='';
+}
+function setControls(btns){
+  controls.innerHTML='';
+  for(const b of btns){
+    const el=document.createElement('button');
+    el.className='btn'+(b.ghost?' ghost':'');el.textContent=b.label;el.onclick=b.fn;
+    controls.appendChild(el);
+  }
+}
+function setChoices(items){
+  choiceArea.innerHTML='';
+  const grid=document.createElement('div');grid.className='choices fade-in';
+  for(const it of items){
+    const c=document.createElement('button');c.className='choice';
+    c.innerHTML=`<h3>${it.title}</h3><p>${it.body}</p>`;
+    c.onclick=it.fn;grid.appendChild(c);
+  }
+  choiceArea.appendChild(grid);
+  controls.innerHTML='';
+}
+function setPhase(p){
+  S.phase=p;
+  document.querySelectorAll('.pill').forEach(el=>{
+    const n=+el.dataset.p;
+    el.classList.toggle('active',n===p);
+    el.classList.toggle('done',n<p);
+  });
+}
+
+/* ================= main loop ================= */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05);
+  last=now;perfNow=now;S.st+=dt;
+  switch(S.stage){
+    case 'advance':updAdvance(dt);break;
+    case 'center':updCenter(dt);break;
+    case 'wings':updWings(dt);break;
+    case 'final':updFinal(dt);break;
+    case 'cfhold':break;
+    case 'done':
+      for(const s of S.ships){if(s.alive&&s.side==='ot'&&!s.escaped){s.tx=500;s.ty=40;moveToward(s,0.7,dt);}}
+      break;
+  }
+  updShots(dt);
+  updCommandFx(dt);
+  applyCamera(dt);
+  flushInstances();
+  flushShots();
+  updateBanners();
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+
+/* ================= boot ================= */
+resize();
+enterPrologue();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
+
+

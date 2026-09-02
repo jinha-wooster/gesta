@@ -147,7 +147,8 @@
   lon: 21.3
   brief: The last great battle of oared ships, six galleasses anchored like fortresses, and a Spanish soldier named Cervantes losing the use of a hand.
   type: battle
-  status: pending
+  status: built
+  built: 2026-09-02
 - slug: battle-of-bannockburn
   title: Bannockburn
   year: "23 June 1314"
