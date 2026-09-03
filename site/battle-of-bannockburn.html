@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bannockburn, 1314 · 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#141312; --ink-2:#1b1a18; --panel:#201e1b; --line:#38352f;
+    --parchment:#e5ddc8; --muted:#9c957f; --faint:#696355;
+    --bronze:#d9a441; --bronze-dim:#8f6f2e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{background:var(--ink)}
+  body{background:var(--ink);color:var(--parchment);font-family:'Source Serif 4',Georgia,serif;font-size:17px;line-height:1.65;min-height:100vh}
+  .wrap{max-width:1060px;margin:0 auto;padding:36px 18px 80px}
+  header{text-align:center;margin-bottom:26px}
+  .eyebrow{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  h1{font-family:'GFS Didot',serif;font-weight:400;font-size:clamp(38px,7vw,70px);letter-spacing:.06em;line-height:1}
+  .subtitle{color:var(--muted);font-style:italic;margin-top:12px;font-size:16px}
+  .meander{height:14px;margin:24px auto;max-width:520px;opacity:.55}
+  .phases{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+  .pill{font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:7px 13px;border:1px solid var(--line);border-radius:2px;color:var(--faint);transition:all .35s;white-space:nowrap}
+  .pill.active{color:var(--bronze);border-color:var(--bronze-dim);background:rgba(217,164,65,.06)}
+  .pill.done{color:var(--muted)}
+  .stage{position:relative;border:1px solid var(--line);background:#000;border-radius:3px;overflow:hidden}
+  #view{display:block;width:100%;height:560px;cursor:grab;touch-action:none}
+  #view.dragging{cursor:grabbing}
+  @media(max-width:700px){#view{height:420px}}
+  .counters{position:absolute;top:10px;left:12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;font-size:12px;letter-spacing:.08em;opacity:0;transition:opacity .6s}
+  .counters.show{opacity:1}
+  .counter{background:rgba(20,19,18,.74);padding:4px 10px;border-radius:2px;border:1px solid var(--line);width:max-content}
+  .counter b{font-weight:600}
+  .c-sc b{color:#7ab87a} .c-en b{color:#e0705c}
+  .daytag{position:absolute;bottom:10px;left:12px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(229,221,200,.7);background:rgba(20,19,18,.6);padding:5px 10px;border-radius:2px;pointer-events:none}
+  #formHud{display:none;position:absolute;bottom:92px;left:50%;transform:translateX(-50%);
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--bronze);
+    background:rgba(20,19,18,.85);border:1px solid var(--bronze-dim);padding:8px 16px;
+    border-radius:2px;pointer-events:none;white-space:nowrap;z-index:6}
+  .camctl{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:6px}
+  .cambtn{font-family:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;background:rgba(20,19,18,.74);border:1px solid var(--line);border-radius:2px;color:var(--muted);cursor:pointer;transition:all .2s}
+  .cambtn:hover{color:var(--bronze);border-color:var(--bronze-dim)}
+  .camhint{position:absolute;bottom:10px;right:12px;font-size:11px;letter-spacing:.06em;color:rgba(229,221,200,.55);background:rgba(20,19,18,.6);padding:4px 9px;border-radius:2px;pointer-events:none}
+  @media(max-width:700px){.camhint{display:none}}
+  .narration{border:1px solid var(--line);border-top:none;background:var(--panel);padding:26px 30px;border-radius:0 0 3px 3px;min-height:150px}
+  .narr-label{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--bronze);margin-bottom:10px}
+  .narration p{margin-bottom:12px}
+  .narration p:last-child{margin-bottom:0}
+  .narration em{color:var(--muted)}
+  .aside{font-size:14px;color:var(--muted);font-style:italic;border-left:2px solid var(--bronze-dim);padding-left:14px;margin-top:14px}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  @media(max-width:640px){.choices{grid-template-columns:1fr}}
+  .choice{border:1px solid var(--line);border-radius:3px;padding:20px;background:var(--ink-2);cursor:pointer;text-align:left;color:var(--parchment);font-family:inherit;font-size:16px;transition:border-color .25s,background .25s}
+  .choice:hover{border-color:var(--bronze-dim);background:#24221e80}
+  .choice h3{font-family:'GFS Didot',serif;font-weight:400;font-size:20px;letter-spacing:.04em;margin-bottom:8px;color:var(--bronze)}
+  .choice p{font-size:14.5px;color:var(--muted);line-height:1.55}
+  .controls{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn{font-family:inherit;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:13px 28px;background:transparent;color:var(--bronze);border:1px solid var(--bronze-dim);border-radius:2px;cursor:pointer;transition:all .25s}
+  .btn:hover{background:rgba(217,164,65,.1);border-color:var(--bronze)}
+  .btn.ghost{color:var(--muted);border-color:var(--line)}
+  .btn.ghost:hover{color:var(--parchment);background:rgba(255,255,255,.04)}
+  #dock{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:10px 14px 12px;
+      background:linear-gradient(transparent, rgba(12,12,10,.45) 18%, rgba(12,12,10,.9) 72%)}
+  #dock:not(:has(button)){display:none}
+  #dock .choices{max-width:880px;margin:0 auto;gap:10px}
+  #dock .choice{padding:12px 14px;background:rgba(24,22,18,.93)}
+  #dock .choice h3{font-size:17px;margin-bottom:5px}
+  #dock .choice p{font-size:13px;line-height:1.45}
+  #dock .controls{margin-top:0;padding-top:8px}
+  @media(max-width:640px){#dock .choice{padding:10px 12px}#dock .choice p{font-size:12px}}
+  #vn{display:none;position:absolute;left:0;right:0;bottom:0;padding:14px 16px 16px;
+      background:linear-gradient(transparent, rgba(12,12,10,.55) 18%, rgba(12,12,10,.92) 60%);z-index:5}
+  .vn-box{display:flex;gap:16px;max-width:860px;margin:0 auto;align-items:flex-end;cursor:pointer}
+  .vn-portrait{width:104px;height:128px;flex:0 0 auto;border:1px solid var(--bronze-dim);
+      border-radius:3px;background:#1c1814;overflow:hidden}
+  .vn-portrait svg{width:100%;height:100%;display:block}
+  .vn-main{flex:1;min-width:0}
+  .vn-name{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--bronze);margin-bottom:7px}
+  .vn-text{font-size:16.5px;line-height:1.6;color:var(--parchment);min-height:52px}
+  .vn-text em{color:var(--muted)}
+  .vn-next{font-size:11px;letter-spacing:.2em;color:var(--faint);margin-top:8px;text-transform:uppercase}
+  .vn-choices{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .vn-choice{font-family:inherit;font-size:14.5px;text-align:left;padding:11px 16px;background:rgba(24,22,18,.9);
+      border:1px solid var(--line);border-radius:2px;color:var(--parchment);cursor:pointer;transition:all .2s}
+  .vn-choice:hover{border-color:var(--bronze-dim);background:rgba(32,29,23,.95)}
+  #vntoast{position:absolute;right:16px;bottom:100%;margin-bottom:8px;font-size:11px;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--bronze);background:rgba(18,16,13,.85);border:1px solid var(--bronze-dim);
+      padding:6px 12px;border-radius:2px;opacity:0;transition:opacity .5s;pointer-events:none}
+  #vntoast.show{opacity:1}
+  .vn-narr .vn-text{font-style:italic;color:var(--muted)}
+  @media(max-width:640px){.vn-portrait{width:76px;height:96px}.vn-text{font-size:15px}}
+  footer{margin-top:44px;text-align:center;font-size:13px;color:var(--faint);line-height:1.7}
+  .fade-in{animation:fadeIn .6s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">23 June 1314 · the Dryfield above Stirling · Fourteen years of guerrilla war come to a field</div>
+    <h1>BANNOCKBURN</h1>
+    <p class="subtitle">The schiltrons that walked into a cavalry charge, and the burns that caught a kingdom</p>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true">
+      <defs><pattern id="key" width="26" height="14" patternUnits="userSpaceOnUse">
+        <path d="M0 12 H10 V2 H20 V8 H14 V6 H18 V4 H12 V10 H22 V0 H26" fill="none" stroke="#d9a441" stroke-width="1.4"/>
+      </pattern></defs>
+      <rect width="520" height="14" fill="url(#key)"/>
+    </svg>
+  </header>
+
+  <nav class="phases" aria-label="Battle phases">
+    <span class="pill" data-p="0">Prologue</span>
+    <span class="pill" data-p="1">The Challenge</span>
+    <span class="pill" data-p="2">Deployment</span>
+    <span class="pill" data-p="3">The Advance</span>
+    <span class="pill" data-p="4">The Carse</span>
+    <span class="pill" data-p="5">Aftermath</span>
+  </nav>
+
+  <div class="stage">
+    <div id="view" role="img" aria-label="3D battlefield of Bannockburn on the Scottish lowlands"></div>
+    <div class="counters" id="counters">
+      <span class="counter c-sc">Scottish fallen&nbsp; <b id="scCt">0</b></span>
+      <span class="counter c-en">English fallen&nbsp; <b id="enCt">0</b></span>
+    </div>
+    <div class="daytag" id="daytag">Eve of battle · the Dryfield, Stirling</div>
+    <div id="formHud"></div>
+    <div class="camctl">
+      <button class="cambtn" data-cam="over">Overview</button>
+      <button class="cambtn" data-cam="schiltron">Schiltrons</button>
+      <button class="cambtn" data-cam="carse">The Carse</button>
+      <button class="cambtn" data-cam="english">English line</button>
+    </div>
+    <div class="camhint">drag · rotate&ensp;|&ensp;scroll · zoom&ensp;|&ensp;right-drag · pan</div>
+    <div id="dock"><div id="choiceArea"></div><div class="controls" id="controls"></div></div>
+    <div id="vn"><div id="vntoast"></div>
+      <div class="vn-box" id="vnbox">
+        <div class="vn-portrait" id="vnportrait"></div>
+        <div class="vn-main">
+          <div class="vn-name" id="vnname"></div>
+          <div class="vn-text" id="vntext"></div>
+          <div class="vn-choices" id="vnchoices"></div>
+          <div class="vn-next" id="vnnext">tap to continue &#9656;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="narration">
+    <div class="narr-label" id="narrLabel">Prologue</div>
+    <div id="narrBody"></div>
+  </div>
+
+  <footer>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true"><rect width="520" height="14" fill="url(#key)"/></svg>
+    Grounded in John Barbour's <em>The Brus</em> (c. 1375), the Lanercost Chronicle, and Vita Edwardi Secundi.
+    Scottish forces: roughly 6,000 to 8,000 spearmen and a small mounted contingent.
+    English forces: estimates range from 15,000 to 20,000, including heavy cavalry and longbowmen.
+    One figure represents roughly 500 men.
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+
+/* ================= geography =================
+   Sim space 1000 x 620. English in the north (low y), Scots in the south (high y).
+   The Carse of Stirling: boggy lowland where English cavalry founders.
+   The Dryfield: the higher, drier ground held by the Scottish schiltrons. */
+const sx2w=x=>(x-500)*0.2, sy2w=y=>(y-310)*0.2;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const MEN_PER=500;
+
+const S={
+  phase:0, stage:'idle', st:0,
+  soldiers:[], arrows:[],
+  scDead:0, enDead:0,
+  depth:3,
+  bohunDead:false, archersBroke:false, cavalryBroke:false,
+  folkShown:false, endCue:false, orderCue:false,
+};
+
+/* ================= three.js ================= */
+const view=document.getElementById('view');
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x7a9470);
+scene.fog=new THREE.Fog(0x7a9470,140,400);
+const camera=new THREE.PerspectiveCamera(52,1,0.5,900);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const SHADOWS=window.innerWidth>700;
+if(SHADOWS){renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;}
+view.appendChild(renderer.domElement);
+function resize(){const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+scene.add(new THREE.HemisphereLight(0xd4e8c4,0x4a5c38,1.0));
+const sun=new THREE.DirectionalLight(0xfff4d8,0.85);
+sun.position.set(40,100,20);
+if(SHADOWS){
+  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+  const sc=sun.shadow.camera;
+  sc.left=-130;sc.right=130;sc.top=130;sc.bottom=-130;sc.far=360;
+  sc.updateProjectionMatrix();sun.shadow.bias=-0.0008;
+}
+scene.add(sun);
+
+/* ---------- terrain: Scottish lowlands ---------- */
+function terrainH(wx,wz){
+  const x=wx/0.2+500,y=wz/0.2+310;
+  let h=Math.sin(x*0.045)*0.38+Math.cos(y*0.05)*0.32+Math.sin((x+y)*0.022)*0.42;
+  if(y>420)h+=(y-420)*0.016; // Dryfield rises slightly to south
+  if(y<180)h-=(180-y)*0.008; // Carse flatter/lower to north
+  return h;
+}
+{
+  const g=new THREE.PlaneGeometry(220,145,130,95);
+  g.rotateX(-Math.PI/2);
+  const pos=g.attributes.position,colors=[];
+  const cGrass=new THREE.Color(0x5e7848),cBog=new THREE.Color(0x7a7a50),
+        cHeather=new THREE.Color(0x6a6a52),tmp=new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const wx=pos.getX(i),wz=pos.getZ(i);
+    pos.setY(i,terrainH(wx,wz));
+    const bog=Math.max(0,(180-(wz/0.2+310))*0.008);
+    tmp.copy(cGrass).lerp(cBog,bog+0.25*Math.sin(wx*0.13)*Math.sin(wz*0.15));
+    tmp.lerp(cHeather,0.18*Math.max(0,Math.sin(wx*0.06+1.2)));
+    tmp.offsetHSL(0,0,(Math.sin(wx*1.8)*Math.sin(wz*2.1))*0.025);
+    colors.push(tmp.r,tmp.g,tmp.b);
+  }
+  g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  g.computeVertexNormals();
+  const terrain=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}));
+  terrain.receiveShadow=SHADOWS;
+  scene.add(terrain);
+}
+/* Bannock Burn suggestion: a strip of slightly darker material */
+{
+  const burn=new THREE.Mesh(
+    new THREE.PlaneGeometry(120,4),
+    new THREE.MeshLambertMaterial({color:0x4a6a5a}));
+  burn.rotation.x=-Math.PI/2;
+  burn.position.set(0,0.08,sy2w(490));
+  scene.add(burn);
+}
+/* Scrub and heath */
+{
+  const sm=new THREE.MeshLambertMaterial({color:0x4a5e38});
+  for(let i=0;i<60;i++){
+    const x=rnd(30,970),y=rnd(30,590);
+    const t=new THREE.Mesh(new THREE.SphereGeometry(rnd(.4,.85),5,4),sm);
+    const wx=sx2w(x),wz=sy2w(y);
+    t.position.set(wx,terrainH(wx,wz)+0.25,wz);t.scale.y=0.55;
+    scene.add(t);
+  }
+}
+
+/* ---------- figure builders ---------- */
+function buildFigure(parts){
+  let vC=0,iC=0;
+  for(const p of parts){vC+=p.g.attributes.position.count;iC+=p.g.index.count;}
+  const P=new Float32Array(vC*3),N=new Float32Array(vC*3),C=new Float32Array(vC*3),I=new Uint16Array(iC);
+  const col=new THREE.Color();
+  let vO=0,iO=0;
+  for(const p of parts){
+    P.set(p.g.attributes.position.array,vO*3);
+    N.set(p.g.attributes.normal.array,vO*3);
+    col.set(p.c);
+    const n=p.g.attributes.position.count;
+    for(let i=0;i<n;i++){C[(vO+i)*3]=col.r;C[(vO+i)*3+1]=col.g;C[(vO+i)*3+2]=col.b;}
+    const idx=p.g.index.array;
+    for(let i=0;i<idx.length;i++)I[iO+i]=idx[i]+vO;
+    vO+=n;iO+=idx.length;
+  }
+  const out=new THREE.BufferGeometry();
+  out.setAttribute('position',new THREE.BufferAttribute(P,3));
+  out.setAttribute('normal',new THREE.BufferAttribute(N,3));
+  out.setAttribute('color',new THREE.BufferAttribute(C,3));
+  out.setIndex(new THREE.BufferAttribute(I,1));
+  return out;
+}
+function cyl(r1,r2,h,seg,x,y,z,rz){const g=new THREE.CylinderGeometry(r1,r2,h,seg);if(rz)g.rotateZ(rz);g.translate(x,y,z);return g;}
+function sph(r,x,y,z){const g=new THREE.SphereGeometry(r,6,5);g.translate(x,y,z);return g;}
+function box(w,h,d,x,y,z){const g=new THREE.BoxGeometry(w,h,d);g.translate(x,y,z);return g;}
+
+function buildPikeman(o){
+  const skin=0xc9a075;
+  return buildFigure([
+    {g:cyl(.07,.085,.62,5, 0,.31,-.1),c:0x4a3828},
+    {g:cyl(.07,.085,.62,5, 0,.31, .1),c:0x4a3828},
+    {g:cyl(.18,.21,.5,6, 0,.9,0),c:o.tunic},
+    {g:cyl(.055,.06,.44,5, 0,1.12,-.24),c:skin},
+    {g:cyl(.055,.06,.44,5, 0,1.12, .24),c:skin},
+    {g:sph(.15,0,1.65,0),c:skin},
+    {g:sph(.17,0,1.74,0),c:o.helm||0x828272},
+    {g:cyl(.02,.02,3.6,4, .1,2.2,.18,-0.05),c:0x6a5030},
+    {g:cyl(.22,.22,.04,8, -.02,1.1,-.4,Math.PI/2),c:o.shield||0x5c4838},
+  ]);
+}
+function buildRider(o){
+  const skin=0xc9a075;
+  const parts=[
+    {g:box(1.55,.58,.5, 0,1.0,0),c:o.horse},
+    {g:box(.42,.55,.34, .85,1.3,0),c:o.horse},
+    {g:box(.3,.24,.3, 1.1,1.52,0),c:o.horse},
+    {g:box(.14,.9,.32, -.55,.45,0),c:o.horse},
+    {g:box(.14,.9,.32, .55,.45,0),c:o.horse},
+    {g:cyl(.21,.26,.72,6, -.05,1.86,0),c:o.coat},
+    {g:sph(.17,-.05,2.42,0),c:skin},
+    {g:sph(.185,-.05,2.51,0),c:o.helm||0x828272},
+  ];
+  if(o.lance)parts.push({g:cyl(.024,.024,2.2,4, .3,2.28,.3,-0.88),c:0x5c452c});
+  if(o.axe){
+    parts.push({g:cyl(.025,.025,1.8,4, .28,2.15,.28,-0.92),c:0x5c3c1a});
+    parts.push({g:box(.05,.28,.14, .28,3.0,.28),c:0x909090});
+  }
+  if(o.shield)parts.push({g:cyl(.26,.26,.05,8, -.1,1.94,-.44,Math.PI/2),c:o.shield});
+  return buildFigure(parts);
+}
+function buildArcher(o){
+  const skin=0xc9a075;
+  return buildFigure([
+    {g:cyl(.07,.085,.6,5, 0,.3,-.1),c:0x4a3a28},
+    {g:cyl(.07,.085,.6,5, 0,.3, .1),c:0x4a3a28},
+    {g:cyl(.17,.2,.48,6, 0,.88,0),c:o.tunic},
+    {g:cyl(.055,.06,.44,5, 0,1.1,-.24),c:skin},
+    {g:cyl(.055,.06,.44,5, 0,1.1, .24),c:skin},
+    {g:sph(.15,0,1.64,0),c:skin},
+    {g:sph(.16,0,1.73,0),c:o.hair||0x3a2c1a},
+    {g:cyl(.018,.018,2.5,4, -.14,1.5,.16,0.07),c:0x3a2c1a},
+    {g:cyl(.013,.013,1.4,4, .07,1.58,.1,-0.09),c:0x4a3020},
+  ]);
+}
+function buildInfant(o){
+  const skin=0xc9a075;
+  return buildFigure([
+    {g:cyl(.07,.085,.6,5, 0,.3,-.1),c:0x4a3028},
+    {g:cyl(.07,.085,.6,5, 0,.3, .1),c:0x4a3028},
+    {g:cyl(.17,.2,.46,6, 0,.88,0),c:o.tunic},
+    {g:cyl(.055,.06,.46,5, 0,1.1,-.24),c:skin},
+    {g:cyl(.055,.06,.46,5, 0,1.1, .24),c:skin},
+    {g:sph(.15,0,1.66,0),c:skin},
+    {g:sph(.16,0,1.74,0),c:0x909098},
+    {g:cyl(.022,.022,1.7,4, .12,1.38,.22,-0.06),c:0x5a4228},
+    {g:box(.06,.88,.54, .02,1.08,-.35),c:o.shield},
+  ]);
+}
+
+const GEO={
+  sp: buildPikeman({tunic:0x3a5230,helm:0x828272,shield:0x5c4838}),
+  sc: buildRider({horse:0x4a3828,coat:0x2e4820,axe:true}),
+  bh: buildRider({horse:0x8a6a44,coat:0x7a2020,lance:true,shield:0x9c3028,helm:0x909098}),
+  ek: buildRider({horse:0x6a5a48,coat:0x707898,lance:true,shield:0x8c3028,helm:0x909098}),
+  ea: buildArcher({tunic:0x5c4a38,hair:0x3a2c1a}),
+  ei: buildInfant({tunic:0x7a6a50,shield:0x8c3028}),
+};
+const MATS={};for(const k in GEO)MATS[k]=new THREE.MeshLambertMaterial({vertexColors:true});
+let MESH={};
+const M4=new THREE.Matrix4(),QT=new THREE.Quaternion(),V3=new THREE.Vector3(),SC=new THREE.Vector3(),EUL=new THREE.Euler();
+let perfNow=0;
+
+function soldier(x,y,side,grp,kind){
+  return {x,y,tx:x,ty:y,hx:x,hy:y,side,grp,kind,alive:true,flee:false,prisoner:false,escaped:false,
+          jit:rnd(0,6.28),face:side==='s'?Math.PI/2:-Math.PI/2,moving:false,wps:null,pi:0,slot:0};
+}
+function buildInstances(){
+  for(const k in MESH)scene.remove(MESH[k]);
+  MESH={};
+  for(const k in GEO){
+    const list=S.soldiers.filter(s=>s.kind===k);
+    const m=new THREE.InstancedMesh(GEO[k],MATS[k],Math.max(list.length,1));
+    m.castShadow=SHADOWS;
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);
+    for(let i=0;i<m.count;i++)m.setMatrixAt(i,M4);
+    m.instanceMatrix.needsUpdate=true;
+    list.forEach((s,i)=>{s.idx=i;s.mesh=m;});
+    scene.add(m);MESH[k]=m;
+  }
+}
+function writeInstance(s){
+  const wx=sx2w(s.x),wz=sy2w(s.y);
+  if(s.escaped){SC.setScalar(0.0001);V3.set(wx,-80,wz);QT.set(0,0,0,1);}
+  else if(!s.alive){
+    V3.set(wx,terrainH(wx,wz)+0.22,wz);
+    EUL.set(Math.PI/2,s.jit,0);QT.setFromEuler(EUL);
+    SC.set(1,1,0.35);
+  }else{
+    const mounted=(s.kind==='sc'||s.kind==='bh'||s.kind==='ek');
+    const bob=s.moving?Math.abs(Math.sin(perfNow*(mounted?0.014:0.011)+s.jit))*(mounted?0.14:0.12):0;
+    V3.set(wx,terrainH(wx,wz)+bob,wz);
+    EUL.set(s.moving?0.1:0,s.face,s.moving?Math.sin(perfNow*0.012+s.jit)*0.05:0,'YXZ');QT.setFromEuler(EUL);
+    SC.setScalar(1);
+  }
+  M4.compose(V3,QT,SC);
+  s.mesh.setMatrixAt(s.idx,M4);
+}
+function flushInstances(){
+  for(const s of S.soldiers)writeInstance(s);
+  for(const k in MESH)MESH[k].instanceMatrix.needsUpdate=true;
+}
+function moveToward(s,speed,dt){
+  const dx=s.tx-s.x,dy=s.ty-s.y,d=Math.hypot(dx,dy);
+  if(d<1.5){s.moving=false;return true;}
+  s.moving=true;
+  s.x+=(dx/d)*speed*dt*60;s.y+=(dy/d)*speed*dt*60;
+  s.face=Math.atan2(-dy,dx);
+  return false;
+}
+function kill(s){
+  if(!s.alive)return;
+  s.alive=false;
+  if(s.side==='s')S.scDead++;else S.enDead++;
+  updateCounters();
+}
+function alive(side,grp){return S.soldiers.filter(s=>s.alive&&!s.escaped&&s.side===side&&(!grp||s.grp===grp));}
+function aliveAny(side){return S.soldiers.filter(s=>s.alive&&!s.escaped&&s.side===side);}
+function killRandom(list,n){
+  const pool=list.filter(s=>s.alive);
+  for(let i=0;i<n&&pool.length;i++){
+    const j=Math.floor(Math.random()*pool.length);
+    kill(pool[j]);pool.splice(j,1);
+  }
+}
+function updateCounters(){
+  document.getElementById('scCt').textContent='~'+(S.scDead*MEN_PER).toLocaleString();
+  document.getElementById('enCt').textContent='~'+(S.enDead*MEN_PER).toLocaleString();
+}
+function setDay(t){document.getElementById('daytag').textContent=t;}
+
+/* ---------- arrows ---------- */
+const ARROW_MAX=180;
+const arrowMesh=new THREE.InstancedMesh(new THREE.CylinderGeometry(0.045,0.045,1.4,4),
+  new THREE.MeshLambertMaterial({color:0x3a2e1e}),ARROW_MAX);
+arrowMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(arrowMesh);
+const UP=new THREE.Vector3(0,1,0),DIR=new THREE.Vector3();
+function volley(n,shooters,targets,hit){
+  if(!shooters.length||!targets.length)return;
+  for(let i=0;i<n;i++){
+    const from=shooters[Math.floor(Math.random()*shooters.length)];
+    const tgt=targets[Math.floor(Math.random()*targets.length)];
+    const fx=sx2w(from.x),fz=sy2w(from.y),tx=sx2w(tgt.x+rnd(-3,3)),tz=sy2w(tgt.y+rnd(-3,3));
+    S.arrows.push({fx,fy:terrainH(fx,fz)+2.0,fz,tx,ty:terrainH(tx,tz)+0.5,tz,
+      t:0,dur:rnd(0.5,0.85),arc:rnd(3,6),simx:tgt.x,simy:tgt.y,px:fx,py:2,pz:fz,vx:0,vy:1,vz:0,side:tgt.side,hit});
+  }
+}
+function updArrowFlight(dt){
+  for(let i=S.arrows.length-1;i>=0;i--){
+    const a=S.arrows[i];a.t+=dt;
+    const u=Math.min(a.t/a.dur,1);
+    const nx=a.fx+(a.tx-a.fx)*u,nz=a.fz+(a.tz-a.fz)*u;
+    const ny=a.fy+(a.ty-a.fy)*u+Math.sin(u*Math.PI)*a.arc;
+    a.vx=nx-a.px;a.vy=ny-a.py;a.vz=nz-a.pz;
+    a.px=nx;a.py=ny;a.pz=nz;
+    if(u>=1){
+      if(Math.random()<a.hit){
+        const near=S.soldiers.filter(s=>s.alive&&s.side===a.side&&Math.hypot(s.x-a.simx,s.y-a.simy)<9);
+        if(near.length)kill(near[0]);
+      }
+      S.arrows.splice(i,1);
+    }
+  }
+}
+function flushArrows(){
+  let i=0;
+  for(const a of S.arrows){
+    if(i>=ARROW_MAX)break;
+    V3.set(a.px,a.py,a.pz);
+    DIR.set(a.vx,a.vy,a.vz).normalize();
+    QT.setFromUnitVectors(UP,DIR);
+    SC.setScalar(1);M4.compose(V3,QT,SC);
+    arrowMesh.setMatrixAt(i++,M4);
+  }
+  for(;i<ARROW_MAX;i++){SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);arrowMesh.setMatrixAt(i,M4);}
+  arrowMesh.instanceMatrix.needsUpdate=true;
+}
+
+/* ---------- banners ---------- */
+const banners={};
+function makeBanner(color){
+  const g=new THREE.Group();
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,5.6,5),new THREE.MeshLambertMaterial({color:0x4a3b26}));
+  pole.position.y=2.8;
+  const flag=new THREE.Mesh(new THREE.PlaneGeometry(2.1,1.25),new THREE.MeshLambertMaterial({color,side:THREE.DoubleSide}));
+  flag.position.set(1.1,4.7,0);
+  g.add(pole,flag);g.userData.flag=flag;
+  scene.add(g);g.visible=false;
+  return g;
+}
+banners.sc=makeBanner(0x3a7c3a);
+banners.en=makeBanner(0xa03028);
+function updateBanners(){
+  const sel={
+    sc:s=>s.side==='s'&&s.kind!=='sc',
+    en:s=>s.side==='e'&&s.kind!=='ek'&&s.kind!=='bh'
+  };
+  for(const k in banners){
+    const list=S.soldiers.filter(s=>s.alive&&!s.escaped&&sel[k](s));
+    const b=banners[k];
+    if(list.length<4){b.visible=false;continue;}
+    let mx=0,my=0;for(const s of list){mx+=s.x;my+=s.y;}
+    mx/=list.length;my/=list.length;
+    const wx=sx2w(mx),wz=sy2w(my);
+    b.position.set(wx,terrainH(wx,wz),wz);
+    b.userData.flag.rotation.y=Math.sin(perfNow*0.0022)*0.4;
+    b.visible=true;
+  }
+}
+
+/* ================= camera ================= */
+const cam={yaw:Math.PI,pitch:0.92,dist:195,tx:0,ty:2,tz:0,auto:null};
+function applyCamera(dt){
+  if(cam.auto){
+    const a=cam.auto,k=1-Math.pow(0.001,dt);
+    cam.yaw+=(a.yaw-cam.yaw)*k;cam.pitch+=(a.pitch-cam.pitch)*k;cam.dist+=(a.dist-cam.dist)*k;
+    cam.tx+=(a.tx-cam.tx)*k;cam.ty+=(a.ty-cam.ty)*k;cam.tz+=(a.tz-cam.tz)*k;
+    if(Math.abs(a.dist-cam.dist)<0.5&&Math.abs(a.yaw-cam.yaw)<0.01)cam.auto=null;
+  }
+  cam.pitch=THREE.MathUtils.clamp(cam.pitch,0.14,1.42);
+  cam.dist=THREE.MathUtils.clamp(cam.dist,20,300);
+  const cp=Math.cos(cam.pitch);
+  camera.position.set(
+    cam.tx+Math.sin(cam.yaw)*cp*cam.dist,
+    cam.ty+Math.sin(cam.pitch)*cam.dist,
+    cam.tz+Math.cos(cam.yaw)*cp*cam.dist);
+  camera.lookAt(cam.tx,cam.ty,cam.tz);
+}
+const PRESETS={
+  over:{yaw:Math.PI,pitch:0.92,dist:195,tx:0,ty:2,tz:0},
+  schiltron:{yaw:Math.PI,pitch:0.48,dist:85,tx:0,ty:1,tz:sy2w(430)},
+  carse:{yaw:Math.PI,pitch:0.55,dist:110,tx:0,ty:1,tz:sy2w(180)},
+  english:{yaw:0.2,pitch:0.5,dist:95,tx:0,ty:1,tz:sy2w(220)},
+};
+document.querySelectorAll('.cambtn').forEach(b=>b.onclick=()=>{cam.auto={...PRESETS[b.dataset.cam]};});
+function cine(name){cam.auto={...PRESETS[name]};}
+
+let drag=null,formDrag=null;
+view.addEventListener('pointerdown',e=>{
+  view.setPointerCapture(e.pointerId);
+  if(S.stage==='deploy'&&e.button===0&&!e.shiftKey){
+    const hit=castAt(e,[formPlane]);
+    if(hit.length){formDrag={x0:e.clientX,d0:S.depth};return;}
+  }
+  drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,btn:e.button,shift:e.shiftKey};
+  view.classList.add('dragging');cam.auto=null;
+});
+view.addEventListener('pointermove',e=>{
+  if(formDrag){
+    const d=THREE.MathUtils.clamp(Math.round(formDrag.d0+(e.clientX-formDrag.x0)*0.07),1,6);
+    if(d!==S.depth){S.depth=d;placeSchiltrons();formHudText();}
+    return;
+  }
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  drag.x=e.clientX;drag.y=e.clientY;
+  if(drag.btn===2||drag.shift){
+    const cp=Math.cos(cam.yaw),sp=Math.sin(cam.yaw),k=cam.dist*0.0016;
+    cam.tx-=(dx*cp-dy*sp)*k;
+    cam.tz-=(-dx*sp-dy*cp)*k;
+    cam.tx=THREE.MathUtils.clamp(cam.tx,-105,105);
+    cam.tz=THREE.MathUtils.clamp(cam.tz,-66,66);
+  }else{cam.yaw-=dx*0.0055;cam.pitch+=dy*0.0045;}
+});
+const endDrag=()=>{drag=null;view.classList.remove('dragging');};
+view.addEventListener('pointerup',e=>{
+  if(formDrag){formDrag=null;return;}
+  if(drag&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<12)tryPick(e);
+  endDrag();
+});
+view.addEventListener('pointercancel',endDrag);
+view.addEventListener('wheel',e=>{e.preventDefault();cam.auto=null;cam.dist*=(1+Math.sign(e.deltaY)*0.09);},{passive:false});
+view.addEventListener('contextmenu',e=>e.preventDefault());
+let pinch=null;
+view.addEventListener('touchstart',e=>{if(e.touches.length===2)pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);});
+view.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&pinch){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    cam.dist*=pinch/d;pinch=d;cam.auto=null;
+  }
+},{passive:true});
+view.addEventListener('touchend',()=>pinch=null);
+
+/* ================= command layer ================= */
+const raycaster=new THREE.Raycaster();
+const ndc=new THREE.Vector2();
+function castAt(e,objects){
+  const r=renderer.domElement.getBoundingClientRect();
+  ndc.x=((e.clientX-r.left)/r.width)*2-1;
+  ndc.y=-((e.clientY-r.top)/r.height)*2+1;
+  raycaster.setFromCamera(ndc,camera);
+  return raycaster.intersectObjects(objects,false);
+}
+const formPlane=new THREE.Mesh(
+  new THREE.PlaneGeometry(115,38),
+  new THREE.MeshBasicMaterial({color:0xd9a441,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
+formPlane.rotation.x=-Math.PI/2;
+scene.add(formPlane);
+const formHud=document.getElementById('formHud');
+function formHudText(){
+  formHud.textContent=S.depth>=4
+    ?'Schiltrons deep · hedge of spears six ranks thick · cavalry cannot break this · drag to adjust'
+    :'Schiltrons thin · wider front, fewer ranks · flanks exposed to cavalry · drag to adjust';
+}
+function ringMesh(color){
+  const m=new THREE.Mesh(new THREE.TorusGeometry(9,0.45,8,32),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.85}));
+  m.rotation.x=-Math.PI/2;m.visible=false;
+  const fill=new THREE.Mesh(new THREE.CircleGeometry(8.2,24),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.13,depthWrite:false,side:THREE.DoubleSide}));
+  fill.position.z=0.02;
+  m.add(fill);
+  scene.add(m);
+  return m;
+}
+const ringA=ringMesh(0xd9a441);
+const ringB=ringMesh(0xc45540);
+const RINGS=[ringA,ringB];
+let ringT=0,pickMode=null;
+function updCommandFx(dt){
+  ringT+=dt;
+  formPlane.material.opacity=(S.stage==='deploy')?0.07+Math.sin(ringT*3)*0.03:0;
+  if(S.stage==='deploy'){
+    formPlane.position.set(0,terrainH(0,sy2w(430))+0.6,sy2w(430));
+  }
+  for(const r of RINGS){
+    if(!r.visible)continue;
+    const k=1+Math.sin(ringT*3.4)*0.08;
+    r.scale.setScalar(k);
+    r.material.opacity=0.55+Math.sin(ringT*3.4)*0.3;
+  }
+}
+function placeRing(r,sx,sy){
+  const wx=sx2w(sx),wz=sy2w(sy);
+  r.position.set(wx,terrainH(wx,wz)+0.7,wz);
+  r.visible=true;
+}
+function hideRings(){for(const r of RINGS)r.visible=false;pickMode=null;}
+function pickRing(e){
+  const rect=renderer.domElement.getBoundingClientRect();
+  let best=null,bestD=1e9;
+  for(const r of RINGS){
+    if(!r.visible)continue;
+    V3.copy(r.position).project(camera);
+    if(V3.z>1)continue;
+    const px=(V3.x*0.5+0.5)*rect.width+rect.left;
+    const py=(-V3.y*0.5+0.5)*rect.height+rect.top;
+    const d=Math.hypot(e.clientX-px,e.clientY-py);
+    if(d<bestD){bestD=d;best=r;}
+  }
+  return bestD<Math.max(56,rect.width*0.08)?best:null;
+}
+function tryPick(e){
+  if(!pickMode)return;
+  const r=pickRing(e);
+  if(!r)return;
+  const choice=r===ringA?'a':'b';
+  hideRings();
+  if(choice==='a')startAdvance();else startHoldCF();
+}
+function centroid(list){
+  let mx=0,my=0;
+  for(const s of list){mx+=s.x;my+=s.y;}
+  return list.length?[mx/list.length,my/list.length]:[500,310];
+}
+
+/* ================= dialogue layer ================= */
+const REL={};
+const FLAGSV={};
+function PT(o){
+ const hats={
+  crest:`<path d="M34 46 Q34 24 52 22 Q70 24 70 46 L64 42 Q52 34 40 42 Z" fill="${o.hatC}"/><rect x="47" y="5" width="10" height="20" rx="4" fill="${o.crestC||'#a03028'}"/>`,
+  band:`<path d="M36 44 Q52 30 68 44 Z" fill="${o.hairC||'#3a2c1a'}"/><rect x="34" y="43" width="36" height="6" rx="2" fill="${o.hatC}"/>`,
+  wrap:`<path d="M32 52 Q32 24 52 22 Q72 24 72 52 Q66 36 52 36 Q38 36 32 52 Z" fill="${o.hatC}"/><rect x="32" y="48" width="40" height="7" rx="3" fill="${o.hatC}"/>`,
+  none:`<path d="M34 48 Q34 28 52 26 Q70 28 70 48 Q64 38 52 39 Q40 38 34 48 Z" fill="${o.hairC||'#3a2c1a'}"/>`,
+ };
+ const beard=o.beard?`<path d="M40 84 Q52 96 64 84 L62 ${o.beard==='long'?102:94} Q52 ${o.beard==='long'?110:100} 42 ${o.beard==='long'?102:94} Z" fill="${o.beardC||o.hairC||'#3a2c1a'}"/>`:'';
+ const stache=o.stache?`<path d="M41 76 Q52 71 63 76" stroke="${o.beardC||o.hairC||'#3a2c1a'}" stroke-width="3" fill="none" stroke-linecap="round"/>`:'';
+ return `<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="${o.bg}"/>
+<ellipse cx="52" cy="122" rx="40" ry="26" fill="${o.robe}"/><path d="M14 122 Q52 86 90 122" fill="${o.robe2}"/>
+${o.extra||''}
+<ellipse cx="52" cy="64" rx="20" ry="23" fill="${o.skin||'#c9a075'}"/>
+${hats[o.hat||'none']||''}
+<path d="M40 58 L48 57 M56 57 L64 58" stroke="#2a2012" stroke-width="2.2" stroke-linecap="round"/>
+<circle cx="44" cy="63" r="1.9" fill="#20180e"/><circle cx="60" cy="63" r="1.9" fill="#20180e"/>
+${stache}${beard}
+<path d="M46 80 Q52 ${o.stern?79:84} 58 80" stroke="#8a5a3a" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>`;
+}
+const CAST={
+ bru:{name:'Robert the Bruce · King of Scots',svg:PT({bg:'#181c14',robe:'#2a4a20',robe2:'#3a5a28',hat:'crest',hatC:'#3a3028',crestC:'#d9a441',skin:'#b89060',hairC:'#4a3020',beard:'short',beardC:'#4a3020',stern:1})},
+ ned:{name:'Edward Bruce · Earl of Carrick',svg:PT({bg:'#1c1a14',robe:'#2e4422',robe2:'#3c5430',hat:'none',hairC:'#3a2c1a',beard:'short',beardC:'#3a2c1a'})},
+ ran:{name:'Thomas Randolph · Earl of Moray',svg:PT({bg:'#181a1c',robe:'#2a3030',robe2:'#363e3e',hat:'band',hatC:'#4a4040',skin:'#b09070',hairC:'#2c2016',stache:true})},
+ nar:{name:'',svg:null},
+};
+const vnEl=document.getElementById('vn');
+const vnPortrait=document.getElementById('vnportrait');
+const vnName=document.getElementById('vnname');
+const vnText=document.getElementById('vntext');
+const vnChoices=document.getElementById('vnchoices');
+const vnNextEl=document.getElementById('vnnext');
+const vnToast=document.getElementById('vntoast');
+let vnQueue=[],vnDone=null,vnBusy=false;
+function playScene(steps,done){
+  vnQueue=steps.slice();vnDone=done;
+  choiceArea.innerHTML='';
+  setControls([]);
+  vnEl.style.display='block';
+  vnAdvance();
+}
+function vnAdvance(){
+  while(vnQueue.length&&vnQueue[0].if&&!vnQueue[0].if()){vnQueue.shift();}
+  if(!vnQueue.length){
+    vnEl.style.display='none';
+    const d=vnDone;vnDone=null;
+    if(d)d();
+    return;
+  }
+  renderVn(vnQueue.shift());
+}
+function renderVn(st){
+  const who=CAST[st.who]||CAST.nar;
+  vnPortrait.innerHTML=who.svg||'';
+  vnPortrait.style.display=who.svg?'block':'none';
+  vnName.textContent=who.name;
+  document.getElementById('vnbox').classList.toggle('vn-narr',st.who==='nar');
+  vnText.innerHTML=typeof st.text==='function'?st.text():st.text||'';
+  vnChoices.innerHTML='';
+  if(st.choices){
+    vnNextEl.style.display='none';vnBusy=true;
+    for(const c of st.choices){
+      const b=document.createElement('button');
+      b.className='vn-choice';b.textContent=c.label;
+      b.onclick=(ev)=>{
+        ev.stopPropagation();
+        if(c.d)for(const k in c.d){REL[k]=(REL[k]||0)+c.d[k];}
+        if(c.flag)FLAGSV[c.flag]=true;
+        if(c.toast)vToast(c.toast);
+        if(c.reply)vnQueue=c.reply.concat(vnQueue);
+        vnBusy=false;
+        vnAdvance();
+      };
+      vnChoices.appendChild(b);
+    }
+  }else{vnNextEl.style.display='block';vnBusy=false;}
+}
+document.getElementById('vnbox').addEventListener('click',()=>{if(!vnBusy&&vnEl.style.display==='block')vnAdvance();});
+function vToast(t){
+  vnToast.textContent=t;vnToast.classList.add('show');
+  setTimeout(()=>vnToast.classList.remove('show'),1900);
+}
+
+/* ---- the scenes ---- */
+const SC_B_OPEN=[
+ {who:'nar',text:`Fourteen years ago you were a fugitive with a handful of men in the heather. The English crown has occupied Scotland, killed your brother, executed your closest ally, and placed your wife in a cage hung from a castle wall. The war you have fought since then has been carried out in rain and mud and ambush, one castle at a time, one English garrison at a time. You do not fight the English in the field. You never fight the English in the field. Until today, possibly, because your brother Edward made a promise you cannot undo.`},
+ {who:'ned',text:`I know what you are about to say, Robert. The agreement was necessary. Stirling would not have surrendered otherwise, and Stirling is the lock on the whole country. If the English cannot relieve the garrison by midsummer, the castle is ours. That is a clean enough bargain.`,choices:[
+  {label:'"And it brought twenty thousand Englishmen north. With Edward himself. Edward who has never won a battle and wants nothing more than to prove he can."',d:{ned:1},toast:'Bond · Edward Bruce',reply:[
+   {who:'ned',text:`I take that as a compliment to our position, brother. A king comes personally when he is afraid to send anyone else. The fear is doing half our work already.`}]},
+  {label:'"The bargain is made. Now tell me about the ground."',reply:[
+   {who:'ned',text:`The Entry narrows the road to Stirling between the forest and the burn. Their cavalry cannot deploy wide. And the Carse to the east is bog, Robert, bog fed by the Bannock and the Pelstream. An army that goes into the Carse with horses is not coming back out quickly.`}]},
+ ]},
+ {who:'ran',text:`Thomas Randolph, my lord. I have news from the English camp. They argue tonight. Their lords do not agree on the approach. And a knight has come over to us, a Scotsman in English service, who says the English morale is already broken before a blow is struck. They expected no resistance. They expected a march.`},
+ {who:'bru',text:`Then we will make a demonstration of our intentions before the sun sets on this day. The van will come to the Entry, and at the Entry we will meet them. This is not the engagement I planned. But the ground is right, and the moment is right, and a king who never fights has already lost half his kingdom to fear.`},
+];
+const SC_B_BOHUN_PRE=[
+ {who:'nar',text:`The English van comes down the Roman road toward the Entry, the narrow passage between Bannock Burn and the forest of the New Park. You are riding between your formations on a small palfrey, watching the line, when something breaks from the English van at the gallop. A single horse, a heavy destrier, a lance coming down. The man on it has seen the gold crown on your helmet and he has decided to make his name in a single charge. His name is Henry de Bohun, and he is coming at you now, and he will be here in four seconds.`},
+];
+function SC_B_AFTER(){
+ const steps=[];
+ if((REL.ned||0)>=1){
+   steps.push({who:'ned',text:`That is the kingdom, Robert. Not a bargain, not a promise, not the midsummer clause. It was always going to end on a day like this, in a field like this, with men who had nothing left to lose and so could not be stopped. I am glad I was here. I am glad it was us.`});
+ }else{
+   steps.push({who:'ned',text:`Three days hence the English cavalry will still be trying to cross the Pelstream. Edward himself fled to Dunbar by sea. We have the field, Robert. We have the country. What comes next is the argument about what a country is for.`});
+ }
+ steps.push({who:'ran',text:`The heralds counted perhaps eleven thousand English dead or taken. Our losses, they say, are few enough to name. The chronicle will not know what to do with a battle this lopsided. They will call it a miracle. It was not a miracle. It was ground, and patience, and the knowledge that a man on a horse cannot charge a wall of spears uphill into a bog.`});
+ steps.push({who:'nar',text:`Scotland's independence, however, would take another fourteen years of formal diplomacy. The Treaty of Edinburgh-Northampton in 1328 gave Robert his recognition, one year before he died. The war had lasted thirty-two years in total. The catalogue does not look away from what commands cost, or who pays them.`});
+ return steps;
+}
+
+/* ================= armies ================= */
+function placeSchiltrons(){
+  const d=S.depth; // 1=thin, 6=deep
+  const spacing=Math.max(7,14-d*1.4);
+  const depth=d*6;
+  // Five schiltron blocks: Randolph (center), Edward Bruce (right), Douglas (left), Bruce reserve (rear), Carrick (far right)
+  const divs=[
+    {grp:'ran',cx:400,cy:415,n:5},
+    {grp:'ned',cx:530,cy:410,n:5},
+    {grp:'dou',cx:270,cy:418,n:5},
+    {grp:'bru',cx:460,cy:468,n:4},
+  ];
+  for(const div of divs){
+    const units=S.soldiers.filter(s=>s.grp===div.grp&&s.kind==='sp');
+    units.forEach((s,i)=>{
+      const row=Math.floor(i/2),col=i%2;
+      s.x=div.cx+(col===0?-spacing:spacing);
+      s.y=div.cy+row*depth*0.4+rnd(-1,1);
+      s.tx=s.x;s.ty=s.y;s.hx=s.x;s.hy=s.y;
+    });
+  }
+}
+function spawnAll(){
+  S.soldiers=[];
+  // Randolph's schiltron
+  for(let i=0;i<5;i++){const s=soldier(0,0,'s','ran','sp');s.slot=i;S.soldiers.push(s);}
+  // Edward Bruce's schiltron
+  for(let i=0;i<5;i++){const s=soldier(0,0,'s','ned','sp');s.slot=i;S.soldiers.push(s);}
+  // Douglas schiltron
+  for(let i=0;i<5;i++){const s=soldier(0,0,'s','dou','sp');s.slot=i;S.soldiers.push(s);}
+  // Bruce reserve
+  for(let i=0;i<4;i++){const s=soldier(0,0,'s','bru','sp');s.slot=i;S.soldiers.push(s);}
+  // Keith cavalry: flanks
+  for(let i=0;i<3;i++)S.soldiers.push(soldier(190+i*22,445,'s','ket','sc'));
+  for(let i=0;i<3;i++)S.soldiers.push(soldier(760+i*22,442,'s','ket2','sc'));
+  // De Bohun (starts hidden)
+  S.soldiers.push(soldier(500,310,'e','boh','bh'));
+  // English knights
+  for(let i=0;i<8;i++)S.soldiers.push(soldier(310+(i%4)*90,170+Math.floor(i/4)*18,'e','ek','ek'));
+  // English archers
+  for(let i=0;i<8;i++)S.soldiers.push(soldier(290+(i%8)*54,245+Math.floor(i/4)*18,'e','ea','ea'));
+  // English infantry
+  for(let i=0;i<8;i++)S.soldiers.push(soldier(300+(i%8)*52,308+Math.floor(i/4)*14,'e','ei','ei'));
+  buildInstances();
+  // Hide de Bohun initially
+  const boh=S.soldiers.find(s=>s.grp==='boh');
+  if(boh){boh.escaped=true;}
+  placeSchiltrons();
+}
+
+/* ================= phases ================= */
+function enterPrologue(){
+  setPhase(0);setDay('Eve of battle · the Dryfield, Stirling');
+  S.scDead=0;S.enDead=0;updateCounters();
+  document.getElementById('counters').classList.remove('show');
+  S.arrows=[];S.depth=3;S.bohunDead=false;S.archersBroke=false;S.cavalryBroke=false;
+  S.folkShown=false;S.endCue=false;S.orderCue=false;
+  hideRings();formHud.style.display='none';formDrag=null;
+  S.stage='idle';
+  spawnAll();
+  cine('over');
+  narrate('Prologue',
+   `<p>You are Robert the Bruce, King of Scots, and the kingdom you claim has been mostly in English hands
+    for eighteen years. You have fought your way back from exile with guerrilla tactics: never a set-piece
+    battle, never a fair fight, always ground and patience and the knowledge that an occupying army
+    eventually exhausts its supply lines. Your brother Edward broke the pattern. He promised to lift the
+    siege of Stirling Castle if English relief did not arrive by midsummer, and now Edward II of England
+    is here with the largest army assembled since Falkirk, heavy cavalry, longbowmen, and the ambition
+    to end the war in a single afternoon.</p>
+    <p>Your army is smaller, perhaps eight thousand spearmen and a handful of horse. But the ground is
+    yours. The Dryfield is dry. The Carse is not.</p>`);
+  setControls([{label:'Ride the line', fn:()=>playScene(SC_B_OPEN,()=>{
+    setPhase(1);
+    setDay('23 June 1314 · the Entry');
+    playScene(SC_B_BOHUN_PRE,challengeChoice);
+  })}]);
+}
+function challengeChoice(){
+  narrate('The Challenge',
+   `<p>Henry de Bohun at the gallop. You on a palfrey meant for riding between formations, not fighting.
+    The men are watching. What you do in the next four seconds will be the first thing the chronicle
+    writes about this battle.</p>`);
+  setChoices([
+    {title:'Face him',
+     body:'Wheel the pony, wait for the moment, rise in the stirrups at the last instant. Barbour says the axe-blow broke the handle from the force of it. The English van pulled back. The schiltrons cheered.',
+     fn:()=>startBohunKill()},
+    {title:'Fall back behind the schiltrons',
+     body:'The sensible choice. No general risks the campaign on a single duel. Withdraw behind the pike wall and let the formation do its work.',
+     fn:()=>startBohunCF()},
+  ]);
+}
+function startBohunKill(){
+  S.stage='bohun';S.st=0;
+  document.getElementById('counters').classList.add('show');
+  const boh=S.soldiers.find(s=>s.grp==='boh');
+  if(boh){boh.escaped=false;boh.x=500;boh.y=300;boh.tx=490;boh.ty=430;boh.face=-Math.PI/2;}
+  cine('schiltron');
+  narrate('The Challenge',
+   `<p>Barbour, who interviewed men who were there, writes it plainly: the king turned his horse deftly
+    aside as the lance came down, rose in the stirrups, and with his axe struck de Bohun such a blow on
+    the helm that he cleft the head to the brain-pan, and the axe handle shivered in his hand from the
+    force of it. The English van halted. The schiltrons, who had watched it happen, began to cheer, and
+    the cheering traveled the whole Scottish line.</p>
+    <p>That evening, Robert's commanders told him he had taken a terrible risk. He told them he was only
+    sorry for his good axe.</p>`);
+  setControls([]);
+}
+function updBohun(dt){
+  const boh=S.soldiers.find(s=>s.grp==='boh'&&s.alive);
+  if(!boh){
+    if(!S.bohunDead){
+      S.bohunDead=true;
+      setTimeout(()=>{setPhase(2);enterDeployment();},1800);
+    }
+    return;
+  }
+  moveToward(boh,1.2,dt);
+  if(S.st>3&&!S.bohunDead){
+    kill(boh);S.enDead=Math.max(0,S.enDead-1);// de Bohun not counted in main tally
+    S.bohunDead=true;
+    setTimeout(()=>{setPhase(2);enterDeployment();},1800);
+  }
+}
+function startBohunCF(){
+  S.stage='cffrozen';
+  narrate('The Challenge · what if',
+   `<p>The sensible decision, the textbook decision, and here is what it costs: the English van, which
+    had hesitated at the sight of a Scottish king riding out to meet a lance charge, now steadies. The
+    story of a king who rode hard behind his own spears travels back down the English line before the
+    sun moves. An army learns what it is fighting from the first ten minutes. Bannockburn's first ten
+    minutes are already decided. The question is whether they will be decided in your favor.</p>
+    <p>Barbour is clear: the courage of that single moment changed what the Scottish army believed it
+    was capable of. Morale is not a soft thing. It is a force multiplier and a battle-winner, and you
+    cannot recover it from a ledger after the fact.</p>`);
+  setControls([{label:'Rewind · face him', fn:()=>{
+    S.stage='idle';enterPrologue();
+  }}]);
+}
+function enterDeployment(){
+  S.stage='deploy';
+  cine('schiltron');
+  formHud.style.display='block';S.depth=3;placeSchiltrons();formHudText();
+  narrate('Deployment',
+   `<p>The night between the 22nd and 23rd passes in council. A Scottish knight in English service
+    defects to Bruce with news that the English are demoralized, arguing, uncertain. The army you face
+    tomorrow is already half-beaten by its own expectations. This is the moment where every rational
+    calculation says: withdraw into the forest, let Edward march home having relieved Stirling, fight
+    another day.</p>
+    <p>You do not withdraw. You decide to advance, at dawn, on ground of your choosing, with schiltrons
+    that have never been used as an offensive weapon in the history of Scottish warfare.</p>
+    <p><em>Drag left or right on the golden ground to set the depth of your schiltrons. Deep formations
+    are cavalry-proof. Thin formations cover more ground but can be outflanked. Then give the order.</em></p>`);
+  setControls([{label:'Sound the advance', fn:confirmDepth}]);
+}
+function confirmDepth(){
+  formHud.style.display='none';
+  setPhase(3);
+  if(S.depth<3){
+    S.stage='cfthin';S.st=0;
+    for(const s of aliveAny('e').filter(s=>s.kind==='ek')){s.tx=s.x+rnd(-5,5);s.ty=360;}
+    narrate('Deployment · what if',
+     `<p>Your schiltrons are extended, two and three ranks deep, covering a broad front. The English
+      cavalry sees width where it expected depth and rides at the gaps. A schiltron that is two ranks
+      deep is not a wall. It is a line, and lines break. The first charge finds the seam between
+      Randolph and Douglas and drives through it, and by the time you can order a reform the formation
+      that was your one weapon has dissolved into individual stands of men.</p>`);
+    setControls([]);
+  }else{
+    orderRings();
+  }
+}
+function updCfThin(dt){
+  for(const s of aliveAny('e').filter(s=>s.kind==='ek'))moveToward(s,0.9,dt);
+  const front=aliveAny('s').filter(s=>s.kind==='sp');
+  for(const ek of aliveAny('e').filter(s=>s.kind==='ek')){
+    if(Math.random()<dt*1.8)killRandom(front.filter(t=>Math.hypot(t.x-ek.x,t.y-ek.y)<14),1);
+  }
+  if(S.st>6){
+    S.stage='cffrozen';
+    narrate('Deployment · what if',
+     `<p>The lesson of the schiltron is depth. A spear-hedge that is six ranks deep can absorb a cavalry
+      charge because the horse, which will not throw itself onto a wall of iron points, stops short, and
+      stopping short in front of six ranks of pikemen is a sentence. The depth was the weapon. What you
+      thought was your limit was actually your advantage, and you gave it away for width.</p>`);
+    setControls([{label:'Rewind · deepen the ranks', fn:()=>{enterDeployment();}}]);
+  }
+}
+function orderRings(){
+  narrate('The Advance · the order',
+   `<p>At dawn the English discover that the Scottish army has not fled into the night. It is standing,
+    facing them, in formation, in an open field. This has not happened in eighteen years of occupation.
+    This is not what Robert the Bruce does.</p>
+    <p><em>Tap the golden ring to advance the schiltrons toward the English, pressing them onto the
+    Carse. Tap the red ring to hold the forest line and wait for the English to come to you.</em></p>`);
+  const [gx,gy]=centroid(aliveAny('s').filter(s=>s.kind==='sp'));
+  placeRing(ringA,500,300);
+  placeRing(ringB,gx,gy-30);
+  pickMode='order';
+  setControls([]);
+}
+function startAdvance(){
+  S.stage='advance';S.st=0;
+  setDay('24 June 1314 · dawn · the Dryfield');
+  cine('over');
+  narrate('The Advance',
+   `<p>The Scottish army kneels, briefly, before the advance, and an English observer mistakes it for
+    surrender. Edward II is told the Scots are kneeling to beg mercy. They are kneeling to pray, and
+    then they stand up and walk toward his army. Abbot Maurice of Inchaffray blesses the host; the
+    schiltrons lock their spears and begin to march north, four divisions across the Dryfield, and
+    Edward II says: that is a sight I have not seen in all my wars.</p>`);
+  const scottish=aliveAny('s').filter(s=>s.kind==='sp');
+  scottish.forEach(s=>{s.tx=s.x+rnd(-4,4);s.ty=s.y-160;});
+  const keith=aliveAny('s').filter(s=>s.kind==='sc');
+  keith.forEach(s=>{s.tx=s.x;s.ty=s.y-80;});
+  setControls([]);
+}
+function updAdvance(dt){
+  for(const s of aliveAny('s'))moveToward(s,0.55,dt);
+  if(S.st>4&&!S.orderCue){
+    S.orderCue=true;
+    startCarse();
+  }
+}
+function startHoldCF(){
+  S.stage='cfhold';S.st=0;
+  narrate('The Advance · what if',
+   `<p>You hold the forest line. The English cavalry, which cannot charge into the trees, begins to work
+    around the flanks. The longbowmen, given time and space to deploy on the Dryfield, dress their lines
+    and begin to shoot into the forest at an angle where your men have no cover. The thing that makes the
+    schiltron unbeatable is also what makes standing still with one fatal: it presents a large, fixed,
+    crowded target, and the longbow was built to convert large fixed crowded targets into casualties.
+    An army that moves is harder to hit than an army that waits.</p>`);
+  setControls([{label:'Rewind · advance', fn:()=>{
+    hideRings();S.stage='idle';
+    for(const s of aliveAny('s')){s.x=s.hx;s.y=s.hy;s.tx=s.x;s.ty=s.y;}
+    orderRings();
+  }}]);
+}
+function startCarse(){
+  setPhase(4);S.stage='carse';S.st=0;
+  setDay('The Carse · English cavalry in the bog');
+  cine('carse');
+  narrate('The Carse',
+   `<p>The English cavalry charges to meet the advancing schiltrons, and the ground betrays them. The
+    Carse of Stirling, laced with the Bannock and the Pelstream, is bog and soft earth crossed by
+    narrow channels, and the heavy destriers that need firm ground to accelerate find neither. The
+    schiltrons, advancing in tight formation, do not break. The horses will not charge onto a wall of
+    spears. They wheel, they mill, they crowd each other in the narrow ground between the burns, and
+    the English cavalry, the finest arm in the English arsenal, becomes a press of men and horses going
+    nowhere at great cost.</p>`);
+  // Cavalry flee to the bog
+  for(const s of aliveAny('e').filter(s=>s.kind==='ek')){
+    s.flee=true;s.wps=[[s.x+rnd(-60,60),100+rnd(-30,30)]];s.pi=0;
+  }
+  // Archers try to shoot
+  setControls([{label:'Keith charges the archers', fn:startArcherRout}]);
+}
+function updCarse(dt){
+  for(const s of aliveAny('e').filter(s=>s.kind==='ek')){
+    if(s.wps&&s.pi<s.wps.length){
+      s.tx=s.wps[s.pi][0];s.ty=s.wps[s.pi][1];
+      if(moveToward(s,0.9,dt))s.pi++;
+    }else s.escaped=true;
+    if(Math.random()<dt*0.5)killRandom(aliveAny('e').filter(t=>t.kind==='ek'&&Math.hypot(t.x-s.x,t.y-s.y)<10),1);
+  }
+  if(Math.random()<dt*2)volley(5,aliveAny('e').filter(s=>s.kind==='ea'),aliveAny('s').filter(s=>s.kind==='sp'),0.22);
+  if(Math.random()<dt*0.5)killRandom(aliveAny('s').filter(s=>s.kind==='sp'),1);
+}
+function startArcherRout(){
+  S.stage='archers';S.st=0;
+  narrate('The Carse · Keith charges',
+   `<p>The English longbowmen, pulling clear of the cavalry confusion, begin to find range and angle on
+    the Scottish flank. Robert Keith leads the Scottish light horse, all five hundred of them, at the
+    gallop across the open ground between the armies, and the archers, who cannot form a hedgehog
+    against cavalry in the open without time to dress their lines, break and run. Without the longbow,
+    the English have nothing that can harm a deep schiltron except a cavalry charge, and the cavalry is
+    stuck in the bog. The battle becomes arithmetic.</p>`);
+  const keith=[...aliveAny('s').filter(s=>s.kind==='sc'),...aliveAny('s').filter(s=>s.kind==='sc'&&s.grp==='ket2')];
+  const archCentroid=centroid(aliveAny('e').filter(s=>s.kind==='ea'));
+  keith.forEach(s=>{s.tx=archCentroid[0]+rnd(-20,20);s.ty=archCentroid[1]+rnd(-10,10);});
+  S.archersBroke=true;
+  setControls([]);
+}
+function updArchers(dt){
+  for(const s of aliveAny('s').filter(s=>s.kind==='sc'))moveToward(s,1.3,dt);
+  if(Math.random()<dt*2.5)killRandom(aliveAny('e').filter(s=>s.kind==='ea'),1);
+  if(aliveAny('e').filter(s=>s.kind==='ea').length<4&&!S.folkShown){
+    S.folkShown=true;
+    startSmallFolk();
+  }
+}
+function startSmallFolk(){
+  S.stage='folk';S.st=0;
+  setDay('The Carse · the small folk');
+  narrate('The Carse · the small folk',
+   `<p>The camp followers, the grooms and servants and sutlers who have followed the Scottish army,
+    appear over the rise to the south. They carry poles with sheets, a noise, a suggestion of another
+    Scottish army arriving from behind. The effect on an English force already compressed into
+    hopeless ground is decisive. The English break. Edward II is pulled from the field by his bodyguard.
+    The Earls of Gloucester and Hereford, the commanders of the English van, are both dead in the crush
+    at the Bannock Burn ford. Edward II will reach Dunbar by sea and England by borrowed horse.</p>`);
+  for(const s of aliveAny('e')){
+    s.flee=true;
+    s.wps=[[rnd(200,800),60]];s.pi=0;
+  }
+  setControls([{label:'Evening', fn:()=>{
+    if(!S.endCue){S.endCue=true;playScene(SC_B_AFTER(),aftermath);}
+  }}]);
+}
+function updFolk(dt){
+  for(const s of aliveAny('e')){
+    if(s.wps&&s.pi<s.wps.length){
+      s.tx=s.wps[s.pi][0];s.ty=s.wps[s.pi][1];
+      if(moveToward(s,1.1,dt))s.pi++;
+    }else s.escaped=true;
+  }
+}
+function aftermath(){
+  setPhase(5);setDay('Evening · Scotland is not yet at peace, but it is Scotland');
+  S.stage='done';cine('over');
+  narrate('Aftermath',
+   `<p>The English dead numbered in the thousands. The figure of eleven thousand is recorded in some
+    chronicles, which historians consider too high; perhaps two to three thousand killed, with several
+    thousand more captured, including many earls. Scottish losses were light by any estimate, perhaps
+    a few hundred. The disproportion is explained by the ground: an army that cannot advance and cannot
+    retreat and cannot outflank is not fighting. It is being processed.</p>
+    <p>Stirling Castle surrendered on schedule. Robert the Bruce ruled Scotland for the remaining
+    fifteen years of his life. He died in 1329, probably of leprosy. The independence he won at arms
+    was formalized in the Declaration of Arbroath in 1320, as fine a statement of the relationship
+    between a king and a people as the medieval world produced, and confirmed by treaty in 1328.
+    His brother Edward led an invasion of Ireland in 1315, overextending the victory catastrophically,
+    and was killed at Faughart in 1318. The long arc of any victory includes what the winners do next.</p>
+    <p class="aside">The de Bohun family requested Henry's body. The chronicle records that Robert
+    regretted only the axe. The axe, unfortunately, has not survived.</p>`);
+  setControls([{label:'Fight the advance again', fn:enterPrologue, ghost:true}]);
+}
+
+/* ================= narration and UI ================= */
+const narrLabel=document.getElementById('narrLabel');
+const narrBody=document.getElementById('narrBody');
+const choiceArea=document.getElementById('choiceArea');
+const controls=document.getElementById('controls');
+function narrate(label,html){
+  narrLabel.textContent=label;
+  narrBody.innerHTML=html;
+  narrBody.classList.remove('fade-in');void narrBody.offsetWidth;
+  narrBody.classList.add('fade-in');
+  choiceArea.innerHTML='';
+}
+function setControls(btns){
+  controls.innerHTML='';
+  for(const b of btns){
+    const el=document.createElement('button');
+    el.className='btn'+(b.ghost?' ghost':'');el.textContent=b.label;el.onclick=b.fn;
+    controls.appendChild(el);
+  }
+}
+function setChoices(items){
+  choiceArea.innerHTML='';
+  const grid=document.createElement('div');grid.className='choices fade-in';
+  for(const it of items){
+    const c=document.createElement('button');c.className='choice';
+    c.innerHTML=`<h3>${it.title}</h3><p>${it.body}</p>`;
+    c.onclick=it.fn;grid.appendChild(c);
+  }
+  choiceArea.appendChild(grid);
+  controls.innerHTML='';
+}
+function setPhase(p){
+  S.phase=p;
+  document.querySelectorAll('.pill').forEach(el=>{
+    const n=+el.dataset.p;
+    el.classList.toggle('active',n===p);
+    el.classList.toggle('done',n<p);
+  });
+}
+
+/* ================= main loop ================= */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05);
+  last=now;perfNow=now;S.st+=dt;
+  switch(S.stage){
+    case 'bohun':updBohun(dt);break;
+    case 'deploy':break;
+    case 'cfthin':updCfThin(dt);break;
+    case 'advance':updAdvance(dt);break;
+    case 'carse':updCarse(dt);break;
+    case 'archers':updArchers(dt);break;
+    case 'folk':updFolk(dt);break;
+    case 'done':
+      for(const s of aliveAny('e')){if(!s.escaped){s.tx=s.x+rnd(-2,2);s.ty=60;moveToward(s,0.6,dt);}}
+      break;
+  }
+  updArrowFlight(dt);
+  updCommandFx(dt);
+  applyCamera(dt);
+  flushInstances();
+  flushArrows();
+  updateBanners();
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+
+/* ================= boot ================= */
+resize();
+enterPrologue();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

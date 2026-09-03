@@ -157,7 +157,8 @@
   lon: -3.91
   brief: The schiltrons advance for once, the carse and the burns pen the English host, and an axe splits a challenger's helm on day one.
   type: battle
-  status: pending
+  status: built
+  built: 2026-09-03
 - slug: battle-of-talas
   title: Talas
   year: "751"
