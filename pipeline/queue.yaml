@@ -167,7 +167,8 @@
   lon: 72.24
   brief: Tang and Abbasid armies meet once in all of history, a Karluk defection decides it, and papermaking walks west with the prisoners.
   type: battle
-  status: pending
+  status: built
+  built: 2026-09-04
 - slug: battle-of-fei-river
   title: Fei River
   year: "383"
