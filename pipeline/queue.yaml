@@ -177,7 +177,8 @@
   lon: 116.7
   brief: A requested step backward becomes a rout of a million, and the northern empire dissolves on a rumor of its own defeat.
   type: battle
-  status: pending
+  status: built
+  built: 2026-09-05
 - slug: battle-of-actium
   title: Actium
   year: "2 September 31 BC"
