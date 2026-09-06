@@ -187,7 +187,8 @@
   lon: 20.77
   brief: Antony and Cleopatra's breakout, the purple sail turning south, and the sea battle that ended the Republic's last civil war.
   type: battle
-  status: pending
+  status: built
+  built: 2026-09-06
 - slug: battle-of-baekgang
   title: Baekgang
   year: "663"

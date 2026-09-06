@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Actium, 31 BC · 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#141312; --ink-2:#1b1a18; --panel:#201e1b; --line:#38352f;
+    --parchment:#e5ddc8; --muted:#9c957f; --faint:#696355;
+    --bronze:#d9a441; --bronze-dim:#8f6f2e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{background:var(--ink)}
+  body{background:var(--ink);color:var(--parchment);font-family:'Source Serif 4',Georgia,serif;font-size:17px;line-height:1.65;min-height:100vh}
+  .wrap{max-width:1060px;margin:0 auto;padding:36px 18px 80px}
+  header{text-align:center;margin-bottom:26px}
+  .eyebrow{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  h1{font-family:'GFS Didot',serif;font-weight:400;font-size:clamp(38px,7vw,70px);letter-spacing:.06em;line-height:1}
+  .subtitle{color:var(--muted);font-style:italic;margin-top:12px;font-size:16px}
+  .meander{height:14px;margin:24px auto;max-width:520px;opacity:.55}
+  .phases{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+  .pill{font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:7px 13px;border:1px solid var(--line);border-radius:2px;color:var(--faint);transition:all .35s;white-space:nowrap}
+  .pill.active{color:var(--bronze);border-color:var(--bronze-dim);background:rgba(217,164,65,.06)}
+  .pill.done{color:var(--muted)}
+  .stage{position:relative;border:1px solid var(--line);background:#000;border-radius:3px;overflow:hidden}
+  #view{display:block;width:100%;height:560px;cursor:grab;touch-action:none}
+  #view.dragging{cursor:grabbing}
+  @media(max-width:700px){#view{height:420px}}
+  .counters{position:absolute;top:10px;left:12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;font-size:12px;letter-spacing:.08em;opacity:0;transition:opacity .6s}
+  .counters.show{opacity:1}
+  .counter{background:rgba(20,19,18,.74);padding:4px 10px;border-radius:2px;border:1px solid var(--line);width:max-content}
+  .counter b{font-weight:600}
+  .c-oc b{color:#7aaad4} .c-an b{color:#e0705c}
+  .daytag{position:absolute;bottom:10px;left:12px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(229,221,200,.7);background:rgba(20,19,18,.6);padding:5px 10px;border-radius:2px;pointer-events:none}
+  #formHud{display:none;position:absolute;bottom:92px;left:50%;transform:translateX(-50%);
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--bronze);
+    background:rgba(20,19,18,.85);border:1px solid var(--bronze-dim);padding:8px 16px;
+    border-radius:2px;pointer-events:none;white-space:nowrap;z-index:6}
+  .camctl{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:6px}
+  .cambtn{font-family:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;background:rgba(20,19,18,.74);border:1px solid var(--line);border-radius:2px;color:var(--muted);cursor:pointer;transition:all .2s}
+  .cambtn:hover{color:var(--bronze);border-color:var(--bronze-dim)}
+  .camhint{position:absolute;bottom:10px;right:12px;font-size:11px;letter-spacing:.06em;color:rgba(229,221,200,.55);background:rgba(20,19,18,.6);padding:4px 9px;border-radius:2px;pointer-events:none}
+  @media(max-width:700px){.camhint{display:none}}
+  .narration{border:1px solid var(--line);border-top:none;background:var(--panel);padding:26px 30px;border-radius:0 0 3px 3px;min-height:150px}
+  .narr-label{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--bronze);margin-bottom:10px}
+  .narration p{margin-bottom:12px}
+  .narration p:last-child{margin-bottom:0}
+  .narration em{color:var(--muted)}
+  .aside{font-size:14px;color:var(--muted);font-style:italic;border-left:2px solid var(--bronze-dim);padding-left:14px;margin-top:14px}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  @media(max-width:640px){.choices{grid-template-columns:1fr}}
+  .choice{border:1px solid var(--line);border-radius:3px;padding:20px;background:var(--ink-2);cursor:pointer;text-align:left;color:var(--parchment);font-family:inherit;font-size:16px;transition:border-color .25s,background .25s}
+  .choice:hover{border-color:var(--bronze-dim);background:#24221e80}
+  .choice h3{font-family:'GFS Didot',serif;font-weight:400;font-size:20px;letter-spacing:.04em;margin-bottom:8px;color:var(--bronze)}
+  .choice p{font-size:14.5px;color:var(--muted);line-height:1.55}
+  .controls{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn{font-family:inherit;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:13px 28px;background:transparent;color:var(--bronze);border:1px solid var(--bronze-dim);border-radius:2px;cursor:pointer;transition:all .25s}
+  .btn:hover{background:rgba(217,164,65,.1);border-color:var(--bronze)}
+  .btn.ghost{color:var(--muted);border-color:var(--line)}
+  .btn.ghost:hover{color:var(--parchment);background:rgba(255,255,255,.04)}
+  #dock{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:10px 14px 12px;
+      background:linear-gradient(transparent, rgba(12,12,10,.45) 18%, rgba(12,12,10,.9) 72%)}
+  #dock:not(:has(button)){display:none}
+  #dock .choices{max-width:880px;margin:0 auto;gap:10px}
+  #dock .choice{padding:12px 14px;background:rgba(24,22,18,.93)}
+  #dock .choice h3{font-size:17px;margin-bottom:5px}
+  #dock .choice p{font-size:13px;line-height:1.45}
+  #dock .controls{margin-top:0;padding-top:8px}
+  @media(max-width:640px){#dock .choice{padding:10px 12px}#dock .choice p{font-size:12px}}
+  #vn{display:none;position:absolute;left:0;right:0;bottom:0;padding:14px 16px 16px;
+      background:linear-gradient(transparent, rgba(12,12,10,.55) 18%, rgba(12,12,10,.92) 60%);z-index:5}
+  .vn-box{display:flex;gap:16px;max-width:860px;margin:0 auto;align-items:flex-end;cursor:pointer}
+  .vn-portrait{width:104px;height:128px;flex:0 0 auto;border:1px solid var(--bronze-dim);
+      border-radius:3px;background:#1c1814;overflow:hidden}
+  .vn-portrait svg{width:100%;height:100%;display:block}
+  .vn-main{flex:1;min-width:0}
+  .vn-name{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--bronze);margin-bottom:7px}
+  .vn-text{font-size:16.5px;line-height:1.6;color:var(--parchment);min-height:52px}
+  .vn-text em{color:var(--muted)}
+  .vn-next{font-size:11px;letter-spacing:.2em;color:var(--faint);margin-top:8px;text-transform:uppercase}
+  .vn-choices{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .vn-choice{font-family:inherit;font-size:14.5px;text-align:left;padding:11px 16px;background:rgba(24,22,18,.9);
+      border:1px solid var(--line);border-radius:2px;color:var(--parchment);cursor:pointer;transition:all .2s}
+  .vn-choice:hover{border-color:var(--bronze-dim);background:rgba(32,29,23,.95)}
+  #vntoast{position:absolute;right:16px;bottom:100%;margin-bottom:8px;font-size:11px;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--bronze);background:rgba(18,16,13,.85);border:1px solid var(--bronze-dim);
+      padding:6px 12px;border-radius:2px;opacity:0;transition:opacity .5s;pointer-events:none}
+  #vntoast.show{opacity:1}
+  .vn-narr .vn-text{font-style:italic;color:var(--muted)}
+  @media(max-width:640px){.vn-portrait{width:76px;height:96px}.vn-text{font-size:15px}}
+  footer{margin-top:44px;text-align:center;font-size:13px;color:var(--faint);line-height:1.7}
+  .fade-in{animation:fadeIn .6s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">2 September, 31 BC · the mouth of the Ambracian Gulf · the last war of the Republic</div>
+    <h1>ACTIUM</h1>
+    <p class="subtitle">The sea-fight that ended the civil wars, decided by a purple sail turning south</p>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true">
+      <defs><pattern id="key" width="26" height="14" patternUnits="userSpaceOnUse">
+        <path d="M0 12 H10 V2 H20 V8 H14 V6 H18 V4 H12 V10 H22 V0 H26" fill="none" stroke="#d9a441" stroke-width="1.4"/>
+      </pattern></defs>
+      <rect width="520" height="14" fill="url(#key)"/>
+    </svg>
+  </header>
+
+  <nav class="phases" aria-label="Battle phases">
+    <span class="pill" data-p="0">Prologue</span>
+    <span class="pill" data-p="1">The camp</span>
+    <span class="pill" data-p="2">The line</span>
+    <span class="pill" data-p="3">The breakout</span>
+    <span class="pill" data-p="4">The purple sail</span>
+    <span class="pill" data-p="5">Aftermath</span>
+  </nav>
+
+  <div class="stage">
+    <div id="view" role="img" aria-label="3D naval battle of Actium at the Ambracian Gulf"></div>
+    <div class="counters" id="counters">
+      <span class="counter c-an">Antony ships lost&nbsp; <b id="anCt">0</b></span>
+      <span class="counter c-oc">Octavian ships lost&nbsp; <b id="ocCt">0</b></span>
+    </div>
+    <div class="daytag" id="daytag">Dawn · the mouth of the Ambracian Gulf</div>
+    <div id="formHud"></div>
+    <div class="camctl">
+      <button class="cambtn" data-cam="over">Overview</button>
+      <button class="cambtn" data-cam="line">Octavian's line</button>
+      <button class="cambtn" data-cam="north">The gulf mouth</button>
+      <button class="cambtn" data-cam="wings">Eastern wing</button>
+    </div>
+    <div class="camhint">drag · rotate&ensp;|&ensp;scroll · zoom&ensp;|&ensp;right-drag · pan</div>
+    <div id="dock"><div id="choiceArea"></div><div class="controls" id="controls"></div></div>
+    <div id="vn"><div id="vntoast"></div>
+      <div class="vn-box" id="vnbox">
+        <div class="vn-portrait" id="vnportrait"></div>
+        <div class="vn-main">
+          <div class="vn-name" id="vnname"></div>
+          <div class="vn-text" id="vntext"></div>
+          <div class="vn-choices" id="vnchoices"></div>
+          <div class="vn-next" id="vnnext">tap to continue &#9656;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="narration">
+    <div class="narr-label" id="narrLabel">Prologue</div>
+    <div id="narrBody"></div>
+  </div>
+
+  <footer>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true"><rect width="520" height="14" fill="url(#key)"/></svg>
+    Grounded in Plutarch's Life of Antony, Cassius Dio, and Strabo's geographical account of the gulf.
+    Antony brought roughly 230 warships into action; Octavian perhaps 250 lighter vessels under Agrippa.
+    One figure represents roughly 15 ships.
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+
+/* ================= geography =================
+   Sim space 1000 x 620. Antony exits the gulf from the north,
+   Octavian's fleet blocks from the south. The sea between is the kill zone. */
+const sx2w=x=>(x-500)*0.2, sy2w=y=>(y-310)*0.2;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const MEN_PER=15;
+const S={
+  phase:0, stage:'idle', st:0,
+  soldiers:[], arrows:[],
+  anDead:0, ocDead:0,
+  wingSpread:6, orderCue:false,
+};
+
+/* ================= three.js ================= */
+const view=document.getElementById('view');
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x162830);
+scene.fog=new THREE.Fog(0x162830,180,460);
+const camera=new THREE.PerspectiveCamera(52,1,0.5,900);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const SHADOWS=window.innerWidth>700;
+if(SHADOWS){renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;}
+view.appendChild(renderer.domElement);
+function resize(){const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+scene.add(new THREE.HemisphereLight(0xd0e8f0,0x1a3040,0.85));
+const sun=new THREE.DirectionalLight(0xfff8e8,0.9);
+sun.position.set(-20,100,30);
+if(SHADOWS){
+  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+  const sc=sun.shadow.camera;
+  sc.left=-130;sc.right=130;sc.top=130;sc.bottom=-130;sc.far=360;
+  sc.updateProjectionMatrix();sun.shadow.bias=-0.0008;
+}
+scene.add(sun);
+
+/* ---------- terrain: the Ionian Sea ---------- */
+let perfNow=0;
+function terrainH(wx,wz){
+  return Math.sin(wx*0.09+perfNow*0.0008)*0.13+Math.cos(wz*0.07+perfNow*0.0006)*0.11;
+}
+{
+  const g=new THREE.PlaneGeometry(230,150,120,80);
+  g.rotateX(-Math.PI/2);
+  const pos=g.attributes.position,colors=[];
+  const cDeep=new THREE.Color(0x1a3a4e),cShallow=new THREE.Color(0x2a5870),
+        cFoam=new THREE.Color(0x3a7090),tmp=new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const wx=pos.getX(i),wz=pos.getZ(i);
+    pos.setY(i,0);
+    const d=Math.sin(wx*0.12)*Math.cos(wz*0.11);
+    tmp.copy(cDeep).lerp(cShallow,0.35+0.3*d);
+    tmp.lerp(cFoam,0.08*Math.max(0,Math.sin(wx*0.18+wz*0.14)));
+    tmp.offsetHSL(0,0,(Math.sin(wx*1.8)*Math.sin(wz*1.6))*0.015);
+    colors.push(tmp.r,tmp.g,tmp.b);
+  }
+  g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  g.computeVertexNormals();
+  const sea=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}));
+  sea.receiveShadow=SHADOWS;
+  scene.add(sea);
+}
+{
+  const cm=new THREE.MeshLambertMaterial({color:0x5a4e3a});
+  for(let i=0;i<16;i++){
+    const x=rnd(30,960),zt=rnd(5,55);
+    const h=rnd(1.4,3.8);
+    const wx=sx2w(x),wz=sy2w(zt);
+    const cliff=new THREE.Mesh(new THREE.BoxGeometry(rnd(3,8),h,rnd(2,5)),cm);
+    cliff.position.set(wx,h/2,wz);
+    scene.add(cliff);
+  }
+}
+
+/* ---------- figures ---------- */
+function buildFigure(parts){
+  let vC=0,iC=0;
+  for(const p of parts){vC+=p.g.attributes.position.count;iC+=p.g.index.count;}
+  const P=new Float32Array(vC*3),N=new Float32Array(vC*3),C=new Float32Array(vC*3),I=new Uint16Array(iC);
+  const col=new THREE.Color();
+  let vO=0,iO=0;
+  for(const p of parts){
+    P.set(p.g.attributes.position.array,vO*3);
+    N.set(p.g.attributes.normal.array,vO*3);
+    col.set(p.c);
+    const n=p.g.attributes.position.count;
+    for(let i=0;i<n;i++){C[(vO+i)*3]=col.r;C[(vO+i)*3+1]=col.g;C[(vO+i)*3+2]=col.b;}
+    const idx=p.g.index.array;
+    for(let i=0;i<idx.length;i++)I[iO+i]=idx[i]+vO;
+    vO+=n;iO+=idx.length;
+  }
+  const out=new THREE.BufferGeometry();
+  out.setAttribute('position',new THREE.BufferAttribute(P,3));
+  out.setAttribute('normal',new THREE.BufferAttribute(N,3));
+  out.setAttribute('color',new THREE.BufferAttribute(C,3));
+  out.setIndex(new THREE.BufferAttribute(I,1));
+  return out;
+}
+function cyl(r1,r2,h,seg,x,y,z,rz){const g=new THREE.CylinderGeometry(r1,r2,h,seg);if(rz)g.rotateZ(rz);g.translate(x,y,z);return g;}
+function box(w,h,d,x,y,z){const g=new THREE.BoxGeometry(w,h,d);g.translate(x,y,z);return g;}
+
+function buildGalley(o){
+  return buildFigure([
+    {g:box(3.8,0.55,1.0, 0,0.28,0),c:o.hull},
+    {g:box(2.4,0.28,0.78, 0.3,0.65,0),c:o.deck},
+    {g:box(0.85,0.38,0.52, 2.0,0.2,0),c:o.hull},
+    {g:cyl(0.08,0.08,3.0,4, 0.2,1.95,0),c:0x4a3826},
+    {g:box(0.06,1.5,1.2, 0.2,2.0,0),c:o.sail},
+    {g:box(1.0,0.72,0.68, -1.6,0.72,0),c:o.deck},
+  ]);
+}
+function buildHeavyGalley(o){
+  return buildFigure([
+    {g:box(5.0,0.7,1.4, 0,0.35,0),c:o.hull},
+    {g:box(3.6,0.34,1.1, 0.2,0.88,0),c:o.deck},
+    {g:box(1.1,0.5,0.7, 2.7,0.25,0),c:o.hull},
+    {g:cyl(0.1,0.1,3.5,4, 0.2,2.35,0),c:0x4a3826},
+    {g:box(0.06,1.8,1.5, 0.2,2.3,0),c:o.sail},
+    {g:box(1.5,1.0,1.0, -2.0,0.9,0),c:o.deck},
+    {g:box(0.44,0.44,0.44, 0.5,1.2,0),c:0x3a2e1e},
+  ]);
+}
+
+const GEO={
+  ro:buildGalley({hull:0x2a4060,deck:0x3a5478,sail:0xe0d8bc}),
+  rc:buildGalley({hull:0x1e2e4a,deck:0x2c4060,sail:0x8c2f2a}),
+  an:buildHeavyGalley({hull:0x5c2a22,deck:0x3a2018,sail:0x8c3028}),
+  eg:buildGalley({hull:0x2e1e3c,deck:0x3c2a52,sail:0x7a3a94}),
+};
+const MATS={};for(const k in GEO)MATS[k]=new THREE.MeshLambertMaterial({vertexColors:true});
+let MESH={};
+const M4=new THREE.Matrix4(),QT=new THREE.Quaternion(),V3=new THREE.Vector3(),SC=new THREE.Vector3(),EUL=new THREE.Euler();
+function soldier(x,y,side,grp,kind){
+  return {x,y,tx:x,ty:y,hx:x,hy:y,side,grp,kind,alive:true,flee:false,escaped:false,
+          jit:rnd(0,6.28),face:side==='o'?Math.PI/2:-Math.PI/2,moving:false,wps:null,pi:0,slot:0};
+}
+function buildInstances(){
+  for(const k in MESH)scene.remove(MESH[k]);
+  MESH={};
+  for(const k in GEO){
+    const list=S.soldiers.filter(s=>s.kind===k);
+    const m=new THREE.InstancedMesh(GEO[k],MATS[k],Math.max(list.length,1));
+    m.castShadow=SHADOWS;
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);
+    for(let i=0;i<m.count;i++)m.setMatrixAt(i,M4);
+    m.instanceMatrix.needsUpdate=true;
+    list.forEach((s,i)=>{s.idx=i;s.mesh=m;});
+    scene.add(m);MESH[k]=m;
+  }
+}
+function writeInstance(s){
+  const wx=sx2w(s.x),wz=sy2w(s.y);
+  if(s.escaped){SC.setScalar(0.0001);V3.set(wx,-80,wz);QT.set(0,0,0,1);}
+  else if(!s.alive){
+    V3.set(wx,terrainH(wx,wz)+0.1,wz);
+    EUL.set(Math.PI/2,s.jit,0);QT.setFromEuler(EUL);
+    SC.set(1,0.2,0.4);
+  }else{
+    const bob=s.moving?Math.abs(Math.sin(perfNow*0.009+s.jit))*0.17:0;
+    V3.set(wx,terrainH(wx,wz)+bob,wz);
+    EUL.set(0,s.face,s.moving?Math.sin(perfNow*0.01+s.jit)*0.04:0,'YXZ');
+    QT.setFromEuler(EUL);
+    SC.setScalar(1);
+  }
+  M4.compose(V3,QT,SC);
+  s.mesh.setMatrixAt(s.idx,M4);
+}
+function flushInstances(){
+  for(const s of S.soldiers)writeInstance(s);
+  for(const k in MESH)MESH[k].instanceMatrix.needsUpdate=true;
+}
+function moveToward(s,speed,dt){
+  const dx=s.tx-s.x,dy=s.ty-s.y,d=Math.hypot(dx,dy);
+  if(d<1.5){s.moving=false;return true;}
+  s.moving=true;
+  s.x+=(dx/d)*speed*dt*60;s.y+=(dy/d)*speed*dt*60;
+  s.face=Math.atan2(-dy,dx);
+  return false;
+}
+function kill(s){
+  if(!s.alive)return;s.alive=false;
+  if(s.side==='a')S.anDead++;else S.ocDead++;
+  updateCounters();
+}
+function alive(side,grp){return S.soldiers.filter(s=>s.alive&&!s.escaped&&s.side===side&&(!grp||s.grp===grp));}
+function killRandom(list,n){
+  const pool=list.filter(s=>s.alive);
+  for(let i=0;i<n&&pool.length;i++){
+    const j=Math.floor(Math.random()*pool.length);
+    kill(pool[j]);pool.splice(j,1);
+  }
+}
+function updateCounters(){
+  document.getElementById('anCt').textContent='~'+(S.anDead*MEN_PER).toLocaleString();
+  document.getElementById('ocCt').textContent='~'+(S.ocDead*MEN_PER).toLocaleString();
+}
+function setDay(t){document.getElementById('daytag').textContent=t;}
+
+/* ---------- fire bolts ---------- */
+const ARROW_MAX=120;
+const arrowMesh=new THREE.InstancedMesh(new THREE.CylinderGeometry(0.06,0.06,1.2,4),
+  new THREE.MeshLambertMaterial({color:0xe04020}),ARROW_MAX);
+arrowMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(arrowMesh);
+const UP=new THREE.Vector3(0,1,0),DIR=new THREE.Vector3();
+function volley(n,shooters,targets,hit){
+  if(!shooters.length||!targets.length)return;
+  for(let i=0;i<n;i++){
+    const from=shooters[Math.floor(Math.random()*shooters.length)];
+    const tgt=targets[Math.floor(Math.random()*targets.length)];
+    const fx=sx2w(from.x),fz=sy2w(from.y),tx=sx2w(tgt.x+rnd(-4,4)),tz=sy2w(tgt.y+rnd(-4,4));
+    S.arrows.push({fx,fy:terrainH(fx,fz)+1.5,fz,tx,ty:terrainH(tx,tz)+0.5,tz,
+      t:0,dur:rnd(0.4,0.7),arc:rnd(2,5),simx:tgt.x,simy:tgt.y,px:fx,py:1.5,pz:fz,vx:0,vy:1,vz:0,side:tgt.side,hit});
+  }
+}
+function updArrowFlight(dt){
+  for(let i=S.arrows.length-1;i>=0;i--){
+    const a=S.arrows[i];a.t+=dt;
+    const u=Math.min(a.t/a.dur,1);
+    const nx=a.fx+(a.tx-a.fx)*u,nz=a.fz+(a.tz-a.fz)*u;
+    const ny=a.fy+(a.ty-a.fy)*u+Math.sin(u*Math.PI)*a.arc;
+    a.vx=nx-a.px;a.vy=ny-a.py;a.vz=nz-a.pz;
+    a.px=nx;a.py=ny;a.pz=nz;
+    if(u>=1){
+      if(Math.random()<a.hit){
+        const near=S.soldiers.filter(s=>s.alive&&s.side===a.side&&Math.hypot(s.x-a.simx,s.y-a.simy)<9);
+        if(near.length)kill(near[0]);
+      }
+      S.arrows.splice(i,1);
+    }
+  }
+}
+function flushArrows(){
+  let i=0;
+  for(const a of S.arrows){
+    if(i>=ARROW_MAX)break;
+    V3.set(a.px,a.py,a.pz);
+    DIR.set(a.vx,a.vy,a.vz).normalize();
+    QT.setFromUnitVectors(UP,DIR);
+    SC.setScalar(1);M4.compose(V3,QT,SC);
+    arrowMesh.setMatrixAt(i++,M4);
+  }
+  for(;i<ARROW_MAX;i++){SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);arrowMesh.setMatrixAt(i,M4);}
+  arrowMesh.instanceMatrix.needsUpdate=true;
+}
+
+/* ---------- banners ---------- */
+const banners={};
+function makeBanner(color){
+  const g=new THREE.Group();
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,5.0,5),new THREE.MeshLambertMaterial({color:0x4a3b26}));
+  pole.position.y=2.5;
+  const flag=new THREE.Mesh(new THREE.PlaneGeometry(2.0,1.1),new THREE.MeshLambertMaterial({color,side:THREE.DoubleSide}));
+  flag.position.set(1.1,4.2,0);
+  g.add(pole,flag);g.userData.flag=flag;
+  scene.add(g);g.visible=false;
+  return g;
+}
+banners.oc=makeBanner(0x2a4080);
+banners.an=makeBanner(0x8c3028);
+function updateBanners(){
+  const sel={oc:s=>s.side==='o',an:s=>s.side==='a'&&s.kind!=='eg'&&!s.flee};
+  for(const k in banners){
+    const list=S.soldiers.filter(s=>s.alive&&!s.escaped&&sel[k](s));
+    const b=banners[k];
+    if(list.length<4){b.visible=false;continue;}
+    let mx=0,my=0;for(const s of list){mx+=s.x;my+=s.y;}
+    mx/=list.length;my/=list.length;
+    const wx=sx2w(mx),wz=sy2w(my);
+    b.position.set(wx,terrainH(wx,wz),wz);
+    b.userData.flag.rotation.y=Math.sin(perfNow*0.0022)*0.4;
+    b.visible=true;
+  }
+}
+
+/* ================= camera ================= */
+const cam={yaw:Math.PI,pitch:0.92,dist:215,tx:0,ty:2,tz:0,auto:null};
+function applyCamera(dt){
+  if(cam.auto){
+    const a=cam.auto,k=1-Math.pow(0.001,dt);
+    cam.yaw+=(a.yaw-cam.yaw)*k;cam.pitch+=(a.pitch-cam.pitch)*k;cam.dist+=(a.dist-cam.dist)*k;
+    cam.tx+=(a.tx-cam.tx)*k;cam.ty+=(a.ty-cam.ty)*k;cam.tz+=(a.tz-cam.tz)*k;
+    if(Math.abs(a.dist-cam.dist)<0.5&&Math.abs(a.yaw-cam.yaw)<0.01)cam.auto=null;
+  }
+  cam.pitch=THREE.MathUtils.clamp(cam.pitch,0.14,1.42);
+  cam.dist=THREE.MathUtils.clamp(cam.dist,20,300);
+  const cp=Math.cos(cam.pitch);
+  camera.position.set(
+    cam.tx+Math.sin(cam.yaw)*cp*cam.dist,
+    cam.ty+Math.sin(cam.pitch)*cam.dist,
+    cam.tz+Math.cos(cam.yaw)*cp*cam.dist);
+  camera.lookAt(cam.tx,cam.ty,cam.tz);
+}
+const PRESETS={
+  over:{yaw:Math.PI,pitch:0.92,dist:215,tx:0,ty:2,tz:0},
+  line:{yaw:Math.PI,pitch:0.48,dist:95,tx:0,ty:1,tz:sy2w(490)},
+  north:{yaw:Math.PI,pitch:0.42,dist:95,tx:0,ty:1,tz:sy2w(160)},
+  wings:{yaw:Math.PI-0.65,pitch:0.62,dist:140,tx:sx2w(740),ty:1,tz:sy2w(300)},
+};
+document.querySelectorAll('.cambtn').forEach(b=>b.onclick=()=>{cam.auto={...PRESETS[b.dataset.cam]};});
+function cine(name){cam.auto={...PRESETS[name]};}
+
+let drag=null,formDrag=null;
+view.addEventListener('pointerdown',e=>{
+  view.setPointerCapture(e.pointerId);
+  if(S.stage==='deploy'&&e.button===0&&!e.shiftKey){
+    const hit=castAt(e,[formPlane]);
+    if(hit.length){formDrag={x0:e.clientX,l0:S.wingSpread};return;}
+  }
+  drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,btn:e.button,shift:e.shiftKey};
+  view.classList.add('dragging');cam.auto=null;
+});
+view.addEventListener('pointermove',e=>{
+  if(formDrag){
+    const l=THREE.MathUtils.clamp(formDrag.l0+(e.clientX-formDrag.x0)*0.08,0,14);
+    const q=Math.round(l);
+    if(q!==S.wingSpread){S.wingSpread=q;placeOctavian();formHudText();}
+    return;
+  }
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  drag.x=e.clientX;drag.y=e.clientY;
+  if(drag.btn===2||drag.shift){
+    const cp=Math.cos(cam.yaw),sp=Math.sin(cam.yaw),k=cam.dist*0.0016;
+    cam.tx-=(dx*cp-dy*sp)*k;
+    cam.tz-=(-dx*sp-dy*cp)*k;
+    cam.tx=THREE.MathUtils.clamp(cam.tx,-105,105);
+    cam.tz=THREE.MathUtils.clamp(cam.tz,-66,66);
+  }else{cam.yaw-=dx*0.0055;cam.pitch+=dy*0.0045;}
+});
+const endDrag=()=>{drag=null;view.classList.remove('dragging');};
+view.addEventListener('pointerup',e=>{
+  if(formDrag){formDrag=null;return;}
+  if(drag&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<12)tryPick(e);
+  endDrag();
+});
+view.addEventListener('pointercancel',endDrag);
+view.addEventListener('wheel',e=>{e.preventDefault();cam.auto=null;cam.dist*=(1+Math.sign(e.deltaY)*0.09);},{passive:false});
+view.addEventListener('contextmenu',e=>e.preventDefault());
+let pinch=null;
+view.addEventListener('touchstart',e=>{if(e.touches.length===2)pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);});
+view.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&pinch){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    cam.dist*=pinch/d;pinch=d;cam.auto=null;
+  }
+},{passive:true});
+view.addEventListener('touchend',()=>pinch=null);
+
+/* ================= command layer ================= */
+const raycaster=new THREE.Raycaster();
+const ndc=new THREE.Vector2();
+function castAt(e,objects){
+  const r=renderer.domElement.getBoundingClientRect();
+  ndc.x=((e.clientX-r.left)/r.width)*2-1;
+  ndc.y=-((e.clientY-r.top)/r.height)*2+1;
+  raycaster.setFromCamera(ndc,camera);
+  return raycaster.intersectObjects(objects,false);
+}
+const formPlane=new THREE.Mesh(
+  new THREE.PlaneGeometry(110,26),
+  new THREE.MeshBasicMaterial({color:0xd9a441,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
+formPlane.rotation.x=-Math.PI/2;
+scene.add(formPlane);
+const formHud=document.getElementById('formHud');
+function formHudText(){
+  formHud.textContent=S.wingSpread>=8
+    ?'Flanks extended · the gulf exit is blocked · drag to adjust'
+    :'Line drawn in · Antony’s northern route is open · drag to extend';
+}
+function ringMesh(color){
+  const m=new THREE.Mesh(new THREE.TorusGeometry(9,0.45,8,32),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.85}));
+  m.rotation.x=-Math.PI/2;m.visible=false;
+  const fill=new THREE.Mesh(new THREE.CircleGeometry(8.2,24),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.13,depthWrite:false,side:THREE.DoubleSide}));
+  fill.position.z=0.02;
+  m.add(fill);
+  scene.add(m);
+  return m;
+}
+const ringA=ringMesh(0xd9a441);
+const ringB=ringMesh(0xc45540);
+const RINGS=[ringA,ringB];
+let ringT=0,pickMode=null;
+function updCommandFx(dt){
+  ringT+=dt;
+  formPlane.material.opacity=(S.stage==='deploy')?0.07+Math.sin(ringT*3)*0.03:0;
+  if(S.stage==='deploy'){
+    formPlane.position.set(0,terrainH(0,sy2w(490))+0.5,sy2w(490));
+  }
+  for(const r of RINGS){
+    if(!r.visible)continue;
+    const k=1+Math.sin(ringT*3.4)*0.08;
+    r.scale.setScalar(k);
+    r.material.opacity=0.55+Math.sin(ringT*3.4)*0.3;
+  }
+}
+function placeRing(r,sx,sy){
+  const wx=sx2w(sx),wz=sy2w(sy);
+  r.position.set(wx,terrainH(wx,wz)+0.7,wz);
+  r.visible=true;
+}
+function hideRings(){for(const r of RINGS)r.visible=false;pickMode=null;}
+function pickRing(e){
+  const rect=renderer.domElement.getBoundingClientRect();
+  let best=null,bestD=1e9;
+  for(const r of RINGS){
+    if(!r.visible)continue;
+    V3.copy(r.position).project(camera);
+    if(V3.z>1)continue;
+    const px=(V3.x*0.5+0.5)*rect.width+rect.left;
+    const py=(-V3.y*0.5+0.5)*rect.height+rect.top;
+    const d=Math.hypot(e.clientX-px,e.clientY-py);
+    if(d<bestD){bestD=d;best=r;}
+  }
+  return bestD<Math.max(56,rect.width*0.08)?best:null;
+}
+function tryPick(e){
+  if(!pickMode)return;
+  const r=pickRing(e);
+  if(!r)return;
+  const choice=r===ringA?'a':'b';
+  hideRings();
+  if(choice==='a')startHoldLine();else startPressCF();
+}
+function centroid(list){
+  let mx=0,my=0;
+  for(const s of list){mx+=s.x;my+=s.y;}
+  return list.length?[mx/list.length,my/list.length]:[500,310];
+}
+
+/* ================= dialogue layer ================= */
+const REL={};
+function PT(o){
+ const hats={
+  crest:`<path d="M34 46 Q34 24 52 22 Q70 24 70 46 L64 42 Q52 34 40 42 Z" fill="${o.hatC}"/><rect x="47" y="5" width="10" height="20" rx="4" fill="${o.crestC||'#a03028'}"/>`,
+  band:`<path d="M36 44 Q52 30 68 44 Z" fill="${o.hairC||'#3a2c1a'}"/><rect x="34" y="43" width="36" height="6" rx="2" fill="${o.hatC}"/>`,
+  wrap:`<path d="M32 52 Q32 24 52 22 Q72 24 72 52 Q66 36 52 36 Q38 36 32 52 Z" fill="${o.hatC}"/><rect x="32" y="48" width="40" height="7" rx="3" fill="${o.hatC}"/>`,
+  none:`<path d="M34 48 Q34 28 52 26 Q70 28 70 48 Q64 38 52 39 Q40 38 34 48 Z" fill="${o.hairC||'#3a2c1a'}"/>`,
+ };
+ const beard=o.beard?`<path d="M40 84 Q52 96 64 84 L62 ${o.beard==='long'?102:94} Q52 ${o.beard==='long'?110:100} 42 ${o.beard==='long'?102:94} Z" fill="${o.beardC||o.hairC||'#3a2c1a'}"/>`:'';
+ const stache=o.stache?`<path d="M41 76 Q52 71 63 76" stroke="${o.beardC||o.hairC||'#3a2c1a'}" stroke-width="3" fill="none" stroke-linecap="round"/>`:'';
+ return `<svg viewBox="0 0 104 128" xmlns="http://www.w3.org/2000/svg"><rect width="104" height="128" fill="${o.bg}"/>
+<ellipse cx="52" cy="122" rx="40" ry="26" fill="${o.robe}"/><path d="M14 122 Q52 86 90 122" fill="${o.robe2}"/>
+${o.extra||''}
+<ellipse cx="52" cy="64" rx="20" ry="23" fill="${o.skin||'#c9a075'}"/>
+${hats[o.hat||'none']||''}
+<path d="M40 58 L48 57 M56 57 L64 58" stroke="#2a2012" stroke-width="2.2" stroke-linecap="round"/>
+<circle cx="44" cy="63" r="1.9" fill="#20180e"/><circle cx="60" cy="63" r="1.9" fill="#20180e"/>
+${stache}${beard}
+<path d="M46 80 Q52 ${o.stern?79:84} 58 80" stroke="#8a5a3a" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>`;
+}
+const CAST={
+ agr:{name:'Marcus Agrippa · admiral of the fleet',svg:PT({bg:'#1a1c22',robe:'#2a3855',robe2:'#3a5070',hat:'crest',hatC:'#4a5e8a',crestC:'#d9a441',hairC:'#1e180e'})},
+ ant:{name:'Mark Antony · imperator of the east',svg:PT({bg:'#1e1618',robe:'#8c3030',robe2:'#a03838',hat:'crest',hatC:'#3a2020',crestC:'#8c3028',skin:'#b88a5a',hairC:'#1a1210',beard:'short',beardC:'#1a1210',stern:1})},
+ nar:{name:'',svg:null},
+};
+const vnEl=document.getElementById('vn');
+const vnPortrait=document.getElementById('vnportrait');
+const vnName=document.getElementById('vnname');
+const vnText=document.getElementById('vntext');
+const vnChoices=document.getElementById('vnchoices');
+const vnNextEl=document.getElementById('vnnext');
+const vnToast=document.getElementById('vntoast');
+let vnQueue=[],vnDone=null,vnBusy=false;
+function playScene(steps,done){
+  vnQueue=steps.slice();vnDone=done;
+  choiceArea.innerHTML='';
+  setControls([]);
+  vnEl.style.display='block';
+  vnAdvance();
+}
+function vnAdvance(){
+  while(vnQueue.length&&vnQueue[0].if&&!vnQueue[0].if()){vnQueue.shift();}
+  if(!vnQueue.length){
+    vnEl.style.display='none';
+    const d=vnDone;vnDone=null;
+    if(d)d();
+    return;
+  }
+  renderVn(vnQueue.shift());
+}
+function renderVn(st){
+  const who=CAST[st.who]||CAST.nar;
+  vnPortrait.innerHTML=who.svg||'';
+  vnPortrait.style.display=who.svg?'block':'none';
+  vnName.textContent=who.name;
+  document.getElementById('vnbox').classList.toggle('vn-narr',st.who==='nar');
+  vnText.innerHTML=typeof st.text==='function'?st.text():st.text||'';
+  vnChoices.innerHTML='';
+  if(st.choices){
+    vnNextEl.style.display='none';vnBusy=true;
+    for(const c of st.choices){
+      const b=document.createElement('button');
+      b.className='vn-choice';b.textContent=c.label;
+      b.onclick=(ev)=>{
+        ev.stopPropagation();
+        if(c.d)for(const k in c.d){REL[k]=(REL[k]||0)+c.d[k];}
+        if(c.toast)vToast(c.toast);
+        if(c.reply)vnQueue=c.reply.concat(vnQueue);
+        vnBusy=false;
+        vnAdvance();
+      };
+      vnChoices.appendChild(b);
+    }
+  }else{vnNextEl.style.display='block';vnBusy=false;}
+}
+document.getElementById('vnbox').addEventListener('click',()=>{if(!vnBusy&&vnEl.style.display==='block')vnAdvance();});
+function vToast(t){
+  vnToast.textContent=t;vnToast.classList.add('show');
+  setTimeout(()=>vnToast.classList.remove('show'),1900);
+}
+
+/* ---- the scenes ---- */
+const SC_A_OPEN=[
+ {who:'nar',text:`You are Gaius Julius Caesar Octavianus, thirty-one years old, heir to a murdered name and three civil wars. For a year you have held Antony in this gulf, cutting his supply lines while the summer burned his fleet apart from the inside. Disease. Desertion. Three hundred of his ships are shells of their crews. He has one move left: load the treasury onto the Egyptian squadron, break through your line with whatever fighting ships remain, and sail for the east, where he still holds armies. If he reaches Alexandria, the war begins again.`},
+ {who:'agr',text:`Agrippa, with the fleet dispositions. His northern contingent is weakest, imperator: the heat in that gulf, the sickness. I count some forty ships in his centre that could still give a decent accounting of themselves, and perhaps twenty more on the Egyptian wing. The rest are ballast. We have the line.`,choices:[
+  {label:'"Hold the line. No ship passes north."',d:{agr:1},toast:'Bond · Agrippa',reply:[
+   {who:'agr',text:`Not a ship passes north. I have not lost an engagement yet, imperator. I do not intend to begin today.`}]},
+  {label:'"I want the flanks extended past his broadside. If he rows north, I want a wall waiting."',reply:[
+   {who:'agr',text:`The flanks will be extended. All that remains is for him to try us, and we will learn what this last year has cost him.`}]},
+ ]},
+ {who:'ant',text:`(Antony to his captains, that dawn, as reported by Plutarch): I have been a soldier all my life. I know what this fleet will do to his, ship for ship, in open water. The question is only whether my men still remember that they know it. We sail at midday when the wind turns. Anyone who does not intend to fight with me today may say so now. There will be no shame. There will also be no share of what waits in Alexandria.`},
+ {who:'nar',text:`Several captains said so then, and walked away. Antony loaded the sails, the treasury, and the purple standard of his command aboard Cleopatra's ships. He did not have to say what that meant. If the fleet was lost, the standard went with whoever survived to continue the war. The crews who understood this drew their own conclusions about what the battle was actually for.`},
+];
+const SC_A_ORDER=[
+ {who:'nar',text:`His heavy quinqueremes are in the water and rowing, masts shipped for combat. Your lighter liburnae are faster and can choose their angles, but his veterans give no ground easily, and the centre has been locked for an hour with nothing decided. On the eastern wing, the Egyptian squadron has not yet engaged.</p><p><em>Tap the golden ring to hold your formation and let his oarsmen tire against your line: disease and desertion have already won this war, and a battle of attrition in open water favors the healthy fleet. Tap the red ring to close immediately, ship against ship, and end it by main force.</em>`},
+];
+function SC_A_AFTER(){
+  const steps=[];
+  steps.push({who:'nar',text:`The Egyptian squadron does not engage. It holds its position on the flank, and then, with the centre locked and smoke rising from the burning quinqueremes on the north wing, the sixty purple-sailed ships begin to move. South. Away from the battle, toward the open sea and Egypt.`});
+  if((REL.agr||0)>=1){
+    steps.push({who:'agr',text:`Imperator. Antony's flagship is turning. He is following the Egyptian ships. I need to know: pursue, or hold the line for the surrender.`});
+    steps.push({who:'nar',text:`You hold the line. Antony's remaining captains, watching their imperator row away from his own battle, make the decision the day has already made for them. The surrender signals go up ship by ship, by squadron, by fleet. The last civil war of the Republic ends not with a stroke but with a kind of quiet.`});
+  }else{
+    steps.push({who:'nar',text:`Antony's flagship turns south, following the Egyptian ships, following Cleopatra, following the last possible world in which he is not a defeated man. His remaining fleet watches him go. Then the surrender signals begin, ship by ship, because there is nothing else left to do.`});
+  }
+  return steps;
+}
+
+/* ================= armies ================= */
+const OC_LINE_Y=490;
+const AN_FORM_Y=155;
+
+function placeOctavian(){
+  const spread=S.wingSpread;
+  let i=0;
+  for(const s of S.soldiers){
+    if(s.side!=='o')continue;
+    if(s.kind==='ro'){
+      const col=i%4,row=Math.floor(i/4);
+      s.x=248+col*148+(spread>=8?(col-1.5)*22:0)+rnd(-3,3);
+      s.y=OC_LINE_Y+row*13;
+      i++;
+    }else if(s.kind==='rc'){
+      s.x=500;s.y=OC_LINE_Y-22;
+    }
+    s.tx=s.x;s.ty=s.y;s.hx=s.x;s.hy=s.y;
+  }
+}
+function spawnAll(){
+  S.soldiers=[];
+  for(let i=0;i<16;i++){const s=soldier(0,0,'o','ro','ro');s.slot=i;S.soldiers.push(s);}
+  S.soldiers.push(soldier(500,OC_LINE_Y-22,'o','rc','rc'));
+  for(let i=0;i<14;i++){const s=soldier(220+i*40,AN_FORM_Y,'a','an','an');s.slot=i;S.soldiers.push(s);}
+  for(let i=0;i<4;i++)S.soldiers.push(soldier(774+i*26,AN_FORM_Y+22,'a','eg','eg'));
+  buildInstances();
+  placeOctavian();
+}
+
+/* ================= phases ================= */
+function enterPrologue(){
+  setPhase(0);setDay('Dawn · the mouth of the Ambracian Gulf');
+  S.anDead=0;S.ocDead=0;updateCounters();
+  document.getElementById('counters').classList.remove('show');
+  S.arrows=[];S.wingSpread=6;S.orderCue=false;
+  hideRings();formHud.style.display='none';formDrag=null;
+  S.stage='idle';
+  spawnAll();
+  cine('over');
+  narrate('Prologue',
+   `<p>Antony came to this gulf with five hundred ships and a hundred thousand soldiers on land. He came
+    as the master of the eastern empire, the man who had beaten the Parthians and ruled everything from
+    the Adriatic to the Euphrates, backed by the wealth of Egypt and a queen who had given him children
+    and a throne to stand beside. He came, in short, as the man who had already won.</p>
+    <p>He has been here eight months. In that time Agrippa took his supply ports, the summer killed his
+    rowers with fever, his Senatorial allies crossed to your camp by the dozen, and his army on land has
+    begun to understand that its general is trapped. The question is not whether Antony can win the war
+    from here. The question is whether he can escape it, reach Egypt, and begin again.</p>`);
+  setControls([{label:'To the ships', fn:()=>playScene(SC_A_OPEN,()=>{
+    setPhase(1);blockadeChoice();
+  })}]);
+}
+function blockadeChoice(){
+  narrate('The camp',
+   `<p>The blockade is working. Antony's crews are at perhaps half strength, riddled with fever, watching
+    their captains walk across to your camp. But a half-strength Antony is still Antony, and his heavy
+    quinqueremes outweigh anything you have afloat. He will try the line today.</p>`);
+  setChoices([
+    {title:'Wait another week',
+     body:'The disease does your fighting for you. Every morning costs him fifty more rowers. Force him to come to you in the worst shape he will ever be in.',
+     fn:()=>{
+       narrate('The camp · what if',
+        `<p>Another week passes, and then another, and then the season closes. Antony does the only thing
+         left to him: he marches his land army north through country he no longer controls, into the arms
+         of your legions at his only overland route. He surrenders without a naval battle. This is the
+         cleaner outcome. It is also, arguably, the less decisive one: a man who surrenders without
+         fighting is harder to make into the figure that explains why the Republic needed one master.
+         History requires Actium. History gets what it requires.</p>`);
+       setControls([{label:'Rewind · the line must hold today', fn:()=>{setPhase(1);blockadeChoice();}}]);
+     }},
+    {title:'Hold the line today',
+     body:'He sails whether you choose it or not. Antony does not intend to die in a gulf. Let him come to your ships on his worst day.',
+     fn:()=>{setPhase(2);enterDeploy();}},
+  ]);
+}
+function enterDeploy(){
+  S.stage='deploy';
+  document.getElementById('counters').classList.add('show');
+  cine('line');
+  formHud.style.display='block';formHudText();
+  narrate('The line',
+   `<p>Agrippa has placed your fleet across the gulf exit: lighter, faster liburnae against his heavy
+    quinqueremes, with your command ship at the centre. The fleet's reach along the arc is everything.
+    Antony has enough ships to row around your northern flank, and if he gains open water to the north,
+    he can turn south with the wind and be beyond recall.</p>
+    <p><em>Drag left or right on the glowing water to extend your flanking wings and close the escape
+    route, or leave the centre massed. When you are ready, sound the advance.</em></p>`);
+  setControls([{label:'Sound the advance', fn:confirmDeploy}]);
+}
+function confirmDeploy(){
+  formHud.style.display='none';
+  setPhase(3);
+  if(S.wingSpread<8){
+    S.stage='cfnarrow';S.st=0;
+    narrate('The line · what if',
+     `<p>Your centre is massed and your wings are short. Three of Antony's northern squadrons find the
+      gap at your flank, turn north into clean water, and catch the wind that was waiting. Forty ships
+      make open sea. Antony's flagship is among them. The treasury is among them. The battle below is
+      a victory, but the war continues east.</p>`);
+    setControls([]);
+    return;
+  }
+  startBreakout();
+}
+function updCfNarrow(dt){
+  for(const s of alive('a','an')){
+    s.tx=s.x+rnd(-2,2);s.ty=Math.max(s.ty-dt*8,90);
+    moveToward(s,0.7,dt);
+  }
+  if(S.st>6){
+    S.stage='cffrozen';
+    narrate('The line · what if',
+     `<p>The wings are the whole idea. A battle line that does not reach past the enemy's broadside is
+      not a line: it is a fence with a gate in it. Agrippa's genius was that he understood Antony's
+      real objective was not to win the battle but to pass through it. You must block the passage,
+      not merely the centre.</p>`);
+    setControls([{label:'Rewind · extend the flanks', fn:enterPrologue}]);
+  }
+}
+function startBreakout(){
+  S.stage='breakout';S.st=0;
+  setDay('Midday · the line engages');
+  cine('over');
+  narrate('The breakout',
+   `<p>At midday the wind turns south, and Antony's fleet advances: the great quinqueremes rowing into
+    your lighter ships, grapples reaching, men fighting hand to hand across the railings. Your liburnae
+    are faster and can choose their angles, but his veterans give no ground easily, and the centre has
+    been locked an hour with nothing decided. On the flanks, Agrippa's extended wings begin to tell
+    against the weakest of his squadrons.</p>`);
+  for(const s of alive('a','an')){s.tx=s.x+rnd(-5,5);s.ty=430;}
+  setControls([]);
+}
+function updBreakout(dt){
+  for(const s of alive('a','an'))moveToward(s,0.55,dt);
+  if(Math.random()<dt*2.2)volley(6,alive('o','ro'),alive('a','an'),0.22);
+  if(Math.random()<dt*1.4)volley(4,alive('a','an'),alive('o','ro'),0.14);
+  if(Math.random()<dt*1.8)killRandom(alive('a','an'),1);
+  if(Math.random()<dt*0.45)killRandom(alive('o','ro'),1);
+  if(S.st>5&&!S.orderCue){
+    S.orderCue=true;
+    playScene(SC_A_ORDER,orderRings);
+  }
+}
+function orderRings(){
+  narrate('The breakout · the order',
+   `<p>His heavy ships are beginning to tire: a galley at full stroke in summer heat, crewed by sick men,
+    runs out of advantage faster than a lighter ship crewed by healthy ones. But the Egyptian wing has
+    not yet engaged, and something is moving there.</p>`);
+  const [gx,gy]=centroid(alive('a','an'));
+  placeRing(ringA,500,490);
+  placeRing(ringB,gx,gy+22);
+  pickMode='order';
+  setControls([]);
+}
+function startHoldLine(){
+  S.stage='hold';S.st=0;
+  narrate('The breakout · holding the line',
+   `<p>You hold your formation, let his oarsmen grind themselves against the line, and keep your faster
+    ships from committing to the melee until his crews are spent. It is the patience of a man who knows
+    he has already won by other means: the disease, the desertions, the eight months of sun on trapped
+    water. All he has to do now is not lose it.</p>`);
+  setControls([{label:'The sail turns', fn:sailTurns}]);
+}
+function startPressCF(){
+  S.stage='cfpress';S.st=0;
+  narrate('The breakout · what if',
+   `<p>You press into his heavy ships, ship for ship, and his veterans remember exactly what they are.
+    The Antonian quinquereme in a grinding melee is exactly where it belongs: its weight, its height,
+    its fighting soldiers. Your losses mount, and nothing decisive happens in the centre while the
+    Egyptian wing, still uncommitted, drifts south with the treasury.</p>`);
+  for(const s of alive('o','ro')){s.tx=s.x;s.ty=350;}
+  for(const s of alive('a','an')){s.tx=s.x;s.ty=385;}
+  setControls([]);
+}
+function updHold(dt){
+  if(Math.random()<dt*1.5)volley(5,alive('o','ro'),alive('a','an'),0.2);
+  if(Math.random()<dt*2.5)killRandom(alive('a','an'),1);
+  if(Math.random()<dt*0.28)killRandom(alive('o','ro'),1);
+}
+function updCfPress(dt){
+  for(const s of [...alive('o','ro'),...alive('a','an')])moveToward(s,0.5,dt);
+  if(Math.random()<dt*2.0)killRandom(alive('a','an'),1);
+  if(Math.random()<dt*1.5)killRandom(alive('o','ro'),1);
+  if(S.st>6){
+    S.stage='cffrozen';
+    narrate('The breakout · what if',
+     `<p>A naval engagement fought at clinch range is a land battle on platforms. On platforms, he has
+      more platforms and more soldiers. The lesson Agrippa had already drawn was not to give him that
+      engagement. Patience, again, wearing a different coat: hold the line, tire the oarsmen, and let
+      the sea do the work that swords would have done at three times the price.</p>`);
+    setControls([{label:'Rewind · hold the line', fn:()=>{
+      S.stage='breakout';S.st=5;S.orderCue=true;
+      for(const s of alive('o','ro')){s.x=s.hx;s.y=480;s.tx=s.x;s.ty=s.y;}
+      for(const s of alive('a','an')){s.x=s.hx;s.y=400;s.tx=s.x;s.ty=s.y;}
+      orderRings();
+    }}]);
+  }
+}
+function sailTurns(){
+  setPhase(4);S.stage='sail';S.st=0;
+  setDay('The fleet of Egypt turns south');
+  cine('wings');
+  narrate('The purple sail',
+   `<p>Sixty ships. The Egyptian squadron: Cleopatra's personal fleet, with the treasury of the
+    Ptolemies loaded in the holds, thirty years of accumulated eastern wealth, the war chest for
+    whatever came next. They have been holding on the flank, watching. Now they turn. Not into the
+    battle. South: into open water, into the wind that came up from Africa, running for Egypt.</p>
+    <p>And then the purple standard on Antony's flagship moves. He is turning his oars. He is following
+    her. He is leaving his fleet in the middle of his own battle.</p>`);
+  for(const s of alive('a','eg')){
+    s.flee=true;s.wps=[[s.x+rnd(-10,10),660]];s.pi=0;
+  }
+  sailChoice();
+}
+function sailChoice(){
+  narrate('The purple sail · the decision',
+   `<p>Antony is aboard his flagship, last seen rowing south after the Egyptian ships. His remaining
+    fleet, perhaps ninety warships, is still engaged with your line. Do you split your fastest ships
+    to pursue the treasury and end Antony today, or hold formation for the surrender that is already
+    happening ship by ship?</p>`);
+  setChoices([
+    {title:'Split the wing to pursue',
+     body:'Antony, the treasury, the continuation of the war: all in those sixty ships rowing south. Catch them now and there is nothing left to fight with.',
+     fn:()=>{
+       narrate('The purple sail · what if',
+        `<p>You detach your fastest ships, and they gain on the Egyptians, and then they do not gain,
+         because the wind is from the south now and the Egyptian ships are sailing and yours are rowing.
+         They reach Alexandria three days ahead of you, and Antony has a week to arrange what remains
+         before you arrive. He does not use it well, but he uses it. Two more months of war. The
+         catalogue notes this because it keeps happening: the pursuit of the secondary objective at
+         the cost of the primary one is what loses campaigns. The primary objective was the fleet.
+         The fleet is surrendering. Stay.</p>`);
+       setControls([{label:'Rewind · hold formation', fn:()=>{setPhase(4);sailTurns();}}]);
+     }},
+    {title:'Hold formation for the surrender',
+     body:'His fleet has no commander and no destination. Hold your line and accept the ships as they come over. The war is already won.',
+     fn:()=>{setPhase(5);playScene(SC_A_AFTER(),aftermath);}},
+  ]);
+}
+function updSail(dt){
+  for(const s of alive('a','eg')){
+    if(s.wps&&s.pi<s.wps.length){
+      s.tx=s.wps[s.pi][0];s.ty=s.wps[s.pi][1];
+      if(moveToward(s,1.1,dt))s.pi++;
+    }else s.escaped=true;
+  }
+  if(Math.random()<dt*1.5)killRandom(alive('a','an'),1);
+}
+function aftermath(){
+  setPhase(5);setDay('Evening · the last civil war of the Republic');
+  S.stage='done';cine('over');
+  narrate('Aftermath',
+   `<p>Antony's fleet: somewhere between 5,000 and 12,000 dead or drowned, the figures disputed across
+    every ancient source that bothered to count. His land army, encamped on the Epirote shore, held out
+    seven days after the fleet surrendered, then it too came over. Octavian's losses were modest,
+    probably under a thousand. Antony reached Alexandria to find Cleopatra already negotiating her own
+    position. He killed himself on a false report that she was dead. She killed herself ten days later,
+    in a room with her serving women and a disputed asp, rather than be displayed in Octavian's triumph.</p>
+    <p>Octavian became Augustus the following year: first emperor of Rome, governing it for forty-four
+    more years, the longest reign in the principate. The republic he replaced had governed Rome for
+    five centuries; the empire that replaced it governed for five more. Actium was not the battle that
+    ended a republic. It was the battle that made the ending feel, to everyone who lived through it,
+    like a relief.</p>
+    <p class="aside">The catalogue does not look away from what commands cost, or who pays them. Antony's
+    soldiers, who had followed him since Philippi and the Parthian disaster, received amnesty and were
+    absorbed into Augustus's legions. Cleopatra's children by Antony were taken to Rome, displayed in
+    the triumph, and then given to Octavia, Antony's Roman wife, to raise. One of them, Cleopatra
+    Selene, was married eventually to the king of Mauretania. The long transferable lesson from Actium
+    is the same lesson the catalogue finds in every fleet engagement, from Salamis to Myeongnyang to
+    here: hold the line, tire the enemy's strength against your patience, and refuse the secondary
+    objective. The side that mistakes the treasury ship for the battle loses both.</p>`);
+  setControls([{label:'Return to the line', fn:enterPrologue, ghost:true}]);
+}
+
+/* ================= narration & UI ================= */
+const narrLabel=document.getElementById('narrLabel');
+const narrBody=document.getElementById('narrBody');
+const choiceArea=document.getElementById('choiceArea');
+const controls=document.getElementById('controls');
+function narrate(label,html){
+  narrLabel.textContent=label;
+  narrBody.innerHTML=html;
+  narrBody.classList.remove('fade-in');void narrBody.offsetWidth;
+  narrBody.classList.add('fade-in');
+  choiceArea.innerHTML='';
+}
+function setControls(btns){
+  controls.innerHTML='';
+  for(const b of btns){
+    const el=document.createElement('button');
+    el.className='btn'+(b.ghost?' ghost':'');el.textContent=b.label;el.onclick=b.fn;
+    controls.appendChild(el);
+  }
+}
+function setChoices(items){
+  choiceArea.innerHTML='';
+  const grid=document.createElement('div');grid.className='choices fade-in';
+  for(const it of items){
+    const c=document.createElement('button');c.className='choice';
+    c.innerHTML=`<h3>${it.title}</h3><p>${it.body}</p>`;
+    c.onclick=it.fn;grid.appendChild(c);
+  }
+  choiceArea.appendChild(grid);
+  controls.innerHTML='';
+}
+function setPhase(p){
+  S.phase=p;
+  document.querySelectorAll('.pill').forEach(el=>{
+    const n=+el.dataset.p;
+    el.classList.toggle('active',n===p);
+    el.classList.toggle('done',n<p);
+  });
+}
+
+/* ================= main loop ================= */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05);
+  last=now;perfNow=now;S.st+=dt;
+  switch(S.stage){
+    case 'cfnarrow':updCfNarrow(dt);break;
+    case 'breakout':updBreakout(dt);break;
+    case 'hold':updHold(dt);break;
+    case 'cfpress':updCfPress(dt);break;
+    case 'sail':updSail(dt);break;
+    case 'done':
+      for(const s of S.soldiers){
+        if(s.alive&&s.side==='a'&&!s.escaped){s.tx=500;s.ty=40;moveToward(s,0.6,dt);}
+      }
+      break;
+  }
+  updArrowFlight(dt);
+  updCommandFx(dt);
+  applyCamera(dt);
+  flushInstances();
+  flushArrows();
+  updateBanners();
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+
+/* ================= boot ================= */
+resize();
+enterPrologue();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
