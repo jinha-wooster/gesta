@@ -197,4 +197,5 @@
   lon: 126.75
   brief: Tang and Silla fleets against Yamato Japan's armada at the Geum estuary, four battles in a day, and East Asia's order set for centuries.
   type: battle
-  status: pending
+  status: built
+  built: 2026-09-07
