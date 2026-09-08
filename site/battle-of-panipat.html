@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panipat, 1526 · 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#141312; --ink-2:#1b1a18; --panel:#201e1b; --line:#38352f;
+    --parchment:#e5ddc8; --muted:#9c957f; --faint:#696355;
+    --bronze:#d9a441; --bronze-dim:#8f6f2e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{background:var(--ink)}
+  body{background:var(--ink);color:var(--parchment);font-family:'Source Serif 4',Georgia,serif;font-size:17px;line-height:1.65;min-height:100vh}
+  .wrap{max-width:1060px;margin:0 auto;padding:36px 18px 80px}
+  header{text-align:center;margin-bottom:26px}
+  .eyebrow{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  h1{font-family:'GFS Didot',serif;font-weight:400;font-size:clamp(38px,7vw,70px);letter-spacing:.06em;line-height:1}
+  .subtitle{color:var(--muted);font-style:italic;margin-top:12px;font-size:16px}
+  .meander{height:14px;margin:24px auto;max-width:520px;opacity:.55}
+  .phases{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+  .pill{font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:7px 13px;border:1px solid var(--line);border-radius:2px;color:var(--faint);transition:all .35s;white-space:nowrap}
+  .pill.active{color:var(--bronze);border-color:var(--bronze-dim);background:rgba(217,164,65,.06)}
+  .pill.done{color:var(--muted)}
+  .stage{position:relative;border:1px solid var(--line);background:#000;border-radius:3px;overflow:hidden}
+  #view{display:block;width:100%;height:560px;cursor:grab;touch-action:none}
+  #view.dragging{cursor:grabbing}
+  @media(max-width:700px){#view{height:420px}}
+  .counters{position:absolute;top:10px;left:12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;font-size:12px;letter-spacing:.08em;opacity:0;transition:opacity .6s}
+  .counters.show{opacity:1}
+  .counter{background:rgba(20,19,18,.74);padding:4px 10px;border-radius:2px;border:1px solid var(--line);width:max-content}
+  .counter b{font-weight:600}
+  .c-lo b{color:#c87050} .c-mu b{color:#5a90c8}
+  .daytag{position:absolute;bottom:10px;left:12px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(229,221,200,.7);background:rgba(20,19,18,.6);padding:5px 10px;border-radius:2px;pointer-events:none}
+  #formHud{display:none;position:absolute;bottom:92px;left:50%;transform:translateX(-50%);
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--bronze);
+    background:rgba(20,19,18,.85);border:1px solid var(--bronze-dim);padding:8px 16px;
+    border-radius:2px;pointer-events:none;white-space:nowrap;z-index:6}
+  .camctl{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:6px}
+  .cambtn{font-family:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;background:rgba(20,19,18,.74);border:1px solid var(--line);border-radius:2px;color:var(--muted);cursor:pointer;transition:all .2s}
+  .cambtn:hover{color:var(--bronze);border-color:var(--bronze-dim)}
+  .camhint{position:absolute;bottom:10px;right:12px;font-size:11px;letter-spacing:.06em;color:rgba(229,221,200,.55);background:rgba(20,19,18,.6);padding:4px 9px;border-radius:2px;pointer-events:none}
+  @media(max-width:700px){.camhint{display:none}}
+  .narration{border:1px solid var(--line);border-top:none;background:var(--panel);padding:26px 30px;border-radius:0 0 3px 3px;min-height:150px}
+  .narr-label{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--bronze);margin-bottom:10px}
+  .narration p{margin-bottom:12px}
+  .narration p:last-child{margin-bottom:0}
+  .narration em{color:var(--muted)}
+  .aside{font-size:14px;color:var(--muted);font-style:italic;border-left:2px solid var(--bronze-dim);padding-left:14px;margin-top:14px}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  @media(max-width:640px){.choices{grid-template-columns:1fr}}
+  .choice{border:1px solid var(--line);border-radius:3px;padding:20px;background:var(--ink-2);cursor:pointer;text-align:left;color:var(--parchment);font-family:inherit;font-size:16px;transition:border-color .25s,background .25s}
+  .choice:hover{border-color:var(--bronze-dim);background:#24221e80}
+  .choice h3{font-family:'GFS Didot',serif;font-weight:400;font-size:20px;letter-spacing:.04em;margin-bottom:8px;color:var(--bronze)}
+  .choice p{font-size:14.5px;color:var(--muted);line-height:1.55}
+  .controls{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn{font-family:inherit;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:13px 28px;background:transparent;color:var(--bronze);border:1px solid var(--bronze-dim);border-radius:2px;cursor:pointer;transition:all .25s}
+  .btn:hover{background:rgba(217,164,65,.1);border-color:var(--bronze)}
+  .btn.ghost{color:var(--muted);border-color:var(--line)}
+  .btn.ghost:hover{color:var(--parchment);background:rgba(255,255,255,.04)}
+  #dock{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:10px 14px 12px;
+      background:linear-gradient(transparent, rgba(12,12,10,.45) 18%, rgba(12,12,10,.9) 72%)}
+  #dock:not(:has(button)){display:none}
+  #dock .choices{max-width:880px;margin:0 auto;gap:10px}
+  #dock .choice{padding:12px 14px;background:rgba(24,22,18,.93)}
+  #dock .choice h3{font-size:17px;margin-bottom:5px}
+  #dock .choice p{font-size:13px;line-height:1.45}
+  #dock .controls{margin-top:0;padding-top:8px}
+  @media(max-width:640px){#dock .choice{padding:10px 12px}#dock .choice p{font-size:12px}}
+  #vn{display:none;position:absolute;left:0;right:0;bottom:0;padding:14px 16px 16px;
+      background:linear-gradient(transparent, rgba(12,12,10,.55) 18%, rgba(12,12,10,.92) 60%);z-index:5}
+  .vn-box{display:flex;gap:16px;max-width:860px;margin:0 auto;align-items:flex-end;cursor:pointer}
+  .vn-portrait{width:104px;height:128px;flex:0 0 auto;border:1px solid var(--bronze-dim);
+      border-radius:3px;background:#1c1814;overflow:hidden}
+  .vn-portrait svg{width:100%;height:100%;display:block}
+  .vn-main{flex:1;min-width:0}
+  .vn-name{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--bronze);margin-bottom:7px}
+  .vn-text{font-size:16.5px;line-height:1.6;color:var(--parchment);min-height:52px}
+  .vn-text em{color:var(--muted)}
+  .vn-next{font-size:11px;letter-spacing:.2em;color:var(--faint);margin-top:8px;text-transform:uppercase}
+  .vn-choices{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .vn-choice{font-family:inherit;font-size:14.5px;text-align:left;padding:11px 16px;background:rgba(24,22,18,.9);
+      border:1px solid var(--line);border-radius:2px;color:var(--parchment);cursor:pointer;transition:all .2s}
+  .vn-choice:hover{border-color:var(--bronze-dim);background:rgba(32,29,23,.95)}
+  #vntoast{position:absolute;right:16px;bottom:100%;margin-bottom:8px;font-size:11px;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--bronze);background:rgba(18,16,13,.85);border:1px solid var(--bronze-dim);
+      padding:6px 12px;border-radius:2px;opacity:0;transition:opacity .5s;pointer-events:none}
+  #vntoast.show{opacity:1}
+  .vn-narr .vn-text{font-style:italic;color:var(--muted)}
+  @media(max-width:640px){.vn-portrait{width:76px;height:96px}.vn-text{font-size:15px}}
+  footer{margin-top:44px;text-align:center;font-size:13px;color:var(--faint);line-height:1.7}
+  .fade-in{animation:fadeIn .6s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">21 April, 1526 · the plain of Panipat · the Mughal age begins</div>
+    <h1>PANIPAT</h1>
+    <p class="subtitle">A hundred thousand men and their elephants, against twelve thousand and a new kind of fire</p>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true">
+      <defs><pattern id="key" width="26" height="14" patternUnits="userSpaceOnUse">
+        <path d="M0 12 H10 V2 H20 V8 H14 V6 H18 V4 H12 V10 H22 V0 H26" fill="none" stroke="#d9a441" stroke-width="1.4"/>
+      </pattern></defs>
+      <rect width="520" height="14" fill="url(#key)"/>
+    </svg>
+  </header>
+
+  <nav class="phases" aria-label="Battle phases">
+    <span class="pill" data-p="0">Prologue</span>
+    <span class="pill" data-p="1">The array</span>
+    <span class="pill" data-p="2">The guns</span>
+    <span class="pill" data-p="3">The route</span>
+    <span class="pill" data-p="4">Aftermath</span>
+  </nav>
+
+  <div class="stage">
+    <div id="view" role="img" aria-label="3D battlefield of Panipat on the North Indian plain"></div>
+    <div class="counters" id="counters">
+      <span class="counter c-lo">Lodi fallen&nbsp; <b id="loCt">0</b></span>
+      <span class="counter c-mu">Mughal fallen&nbsp; <b id="muCt">0</b></span>
+    </div>
+    <div class="daytag" id="daytag">Dawn · the plain north of Panipat</div>
+    <div id="formHud"></div>
+    <div class="camctl">
+      <button class="cambtn" data-cam="over">Overview</button>
+      <button class="cambtn" data-cam="array">The array</button>
+      <button class="cambtn" data-cam="north">The host</button>
+      <button class="cambtn" data-cam="wings">The wings</button>
+    </div>
+    <div class="camhint">drag · rotate&ensp;|&ensp;scroll · zoom&ensp;|&ensp;right-drag · pan</div>
+    <div id="dock"><div id="choiceArea"></div><div class="controls" id="controls"></div></div>
+    <div id="vn"><div id="vntoast"></div>
+      <div class="vn-box" id="vnbox">
+        <div class="vn-portrait" id="vnportrait"></div>
+        <div class="vn-main">
+          <div class="vn-name" id="vnname"></div>
+          <div class="vn-text" id="vntext"></div>
+          <div class="vn-choices" id="vnchoices"></div>
+          <div class="vn-next" id="vnnext">tap to continue &#9656;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="narration">
+    <div class="narr-label" id="narrLabel">Prologue</div>
+    <div id="narrBody"></div>
+  </div>
+
+  <footer>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true"><rect width="520" height="14" fill="url(#key)"/></svg>
+    Grounded in the Baburnama, Babur's own account written within weeks of the battle: the most
+    detailed first-person record of any pre-modern commander in the field. Ibrahim Lodi's host
+    numbered perhaps 100,000 with up to 1,000 war elephants; Babur brought roughly 12,000 to
+    15,000 veterans from Kabul. One figure represents approximately 1,000 men.
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+const clearInterval=window.clearInterval.bind(window);
+
+/* ================= geography =================
+   Sim space 1000x620. Mughals form in the south (y=400-500), Lodi army in the north (y=100-280).
+   The Panipat plain: flat, dry, an April morning before the monsoon. */
+const sx2w=x=>(x-500)*0.2, sy2w=y=>(y-310)*0.2;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const MEN_PER=1000;
+
+const S={
+  phase:0, stage:'idle', st:0,
+  soldiers:[], arrows:[],
+  loDead:0, muDead:0,
+  lineD:5,
+  elBroke:false, tulughmaDone:false,
+  orderCue:false, endCue:false,
+};
+
+/* ================= three.js ================= */
+const view=document.getElementById('view');
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0xc2a872);
+scene.fog=new THREE.Fog(0xc2a872,190,490);
+const camera=new THREE.PerspectiveCamera(52,1,0.5,900);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const SHADOWS=window.innerWidth>700;
+if(SHADOWS){renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;}
+view.appendChild(renderer.domElement);
+function resize(){const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+scene.add(new THREE.HemisphereLight(0xf5e8cc,0x6e5e3e,0.92));
+const sun=new THREE.DirectionalLight(0xfff4d4,0.88);
+sun.position.set(25,100,-30);
+if(SHADOWS){
+  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+  const sc=sun.shadow.camera;
+  sc.left=-130;sc.right=130;sc.top=130;sc.bottom=-130;sc.far=360;
+  sc.updateProjectionMatrix();sun.shadow.bias=-0.0008;
+}
+scene.add(sun);
+
+/* ---------- terrain: flat Panipat plain ---------- */
+function terrainH(wx,wz){
+  return Math.sin(wx*0.04)*0.22+Math.cos(wz*0.045)*0.18+Math.sin((wx+wz)*0.018)*0.28;
+}
+{
+  const g=new THREE.PlaneGeometry(230,150,120,80);
+  g.rotateX(-Math.PI/2);
+  const pos=g.attributes.position,colors=[];
+  const cDust=new THREE.Color(0xb09a6a),cField=new THREE.Color(0x9a8a52),tmp=new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const wx=pos.getX(i),wz=pos.getZ(i);
+    pos.setY(i,terrainH(wx,wz));
+    tmp.copy(cDust).lerp(cField,0.3+0.3*Math.sin(wx*0.09)*Math.sin(wz*0.11));
+    tmp.offsetHSL(0,0,(Math.sin(wx*1.4)*Math.sin(wz*1.7))*0.025);
+    colors.push(tmp.r,tmp.g,tmp.b);
+  }
+  g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  g.computeVertexNormals();
+  const terrain=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}));
+  terrain.receiveShadow=SHADOWS;
+  scene.add(terrain);
+}
+{
+  const sm=new THREE.MeshLambertMaterial({color:0x7a7248});
+  for(let i=0;i<40;i++){
+    const x=rnd(30,970),y=rnd(30,590);
+    const t=new THREE.Mesh(new THREE.SphereGeometry(rnd(.4,.8),6,5),sm);
+    const wx=sx2w(x),wz=sy2w(y);
+    t.position.set(wx,terrainH(wx,wz)+0.25,wz);t.scale.y=0.5;
+    scene.add(t);
+  }
+}
+
+/* ---------- figures ---------- */
+function buildFigure(parts){
+  let vC=0,iC=0;
+  for(const p of parts){vC+=p.g.attributes.position.count;iC+=p.g.index.count;}
+  const P=new Float32Array(vC*3),N=new Float32Array(vC*3),C=new Float32Array(vC*3),I=new Uint16Array(iC);
+  const col=new THREE.Color();
+  let vO=0,iO=0;
+  for(const p of parts){
+    P.set(p.g.attributes.position.array,vO*3);
+    N.set(p.g.attributes.normal.array,vO*3);
+    col.set(p.c);
+    const n=p.g.attributes.position.count;
+    for(let i=0;i<n;i++){C[(vO+i)*3]=col.r;C[(vO+i)*3+1]=col.g;C[(vO+i)*3+2]=col.b;}
+    const idx=p.g.index.array;
+    for(let i=0;i<idx.length;i++)I[iO+i]=idx[i]+vO;
+    vO+=n;iO+=idx.length;
+  }
+  const out=new THREE.BufferGeometry();
+  out.setAttribute('position',new THREE.BufferAttribute(P,3));
+  out.setAttribute('normal',new THREE.BufferAttribute(N,3));
+  out.setAttribute('color',new THREE.BufferAttribute(C,3));
+  out.setIndex(new THREE.BufferAttribute(I,1));
+  return out;
+}
+function cyl(r1,r2,h,seg,x,y,z,rz){const g=new THREE.CylinderGeometry(r1,r2,h,seg);if(rz)g.rotateZ(rz);g.translate(x,y,z);return g;}
+function sph(r,x,y,z){const g=new THREE.SphereGeometry(r,6,5);g.translate(x,y,z);return g;}
+function box(w,h,d,x,y,z){const g=new THREE.BoxGeometry(w,h,d);g.translate(x,y,z);return g;}
+function cone(r,h,x,y,z){const g=new THREE.ConeGeometry(r,h,6);g.translate(x,y,z);return g;}
+
+function buildMughal(o){
+  const skin=0xc9a075;
+  return buildFigure([
+    {g:cyl(.07,.085,.6,5,0,.3,-.1),c:0x3a3028},
+    {g:cyl(.07,.085,.6,5,0,.3,.1),c:0x3a3028},
+    {g:cyl(.17,.2,.46,6,0,.88,0),c:o.coat||0x1e3a6a},
+    {g:cyl(.16,.14,.28,6,0,1.22,0),c:o.tunic},
+    {g:cyl(.055,.06,.44,5,0,1.1,-.24),c:skin},
+    {g:cyl(.055,.06,.44,5,0,1.1,.24),c:skin},
+    {g:sph(.15,0,1.66,0),c:skin},
+    {g:cone(.13,.26,0,1.86,0),c:o.helm||0x4a6888},
+    {g:cyl(.022,.022,1.7,4,.12,1.38,.22,-0.06),c:0x6a5236},
+  ]);
+}
+function buildLodi(o){
+  const skin=0xc9a075;
+  return buildFigure([
+    {g:cyl(.07,.085,.6,5,0,.3,-.1),c:0x3a2e1e},
+    {g:cyl(.07,.085,.6,5,0,.3,.1),c:0x3a2e1e},
+    {g:cyl(.17,.2,.5,6,0,.9,0),c:o.tunic},
+    {g:cyl(.055,.06,.46,5,0,1.12,-.24),c:skin},
+    {g:cyl(.055,.06,.46,5,0,1.12,.24),c:skin},
+    {g:sph(.15,0,1.66,0),c:skin},
+    {g:sph(.155,0,1.76,0),c:o.turban||0x2a1e0e},
+    {g:cyl(.024,.024,1.9,4,.12,1.43,.22,-0.08),c:0x6a5236},
+    {g:cyl(.25,.25,.05,8,.02,1.88,-.38,Math.PI/2),c:o.shield},
+  ]);
+}
+function buildRider(o){
+  const skin=0xc9a075;
+  const parts=[
+    {g:box(1.55,.58,.5,0,1.0,0),c:o.horse},
+    {g:box(.42,.55,.34,.85,1.3,0),c:o.horse},
+    {g:box(.3,.24,.3,1.1,1.52,0),c:o.horse},
+    {g:box(.14,.9,.32,-.55,.45,0),c:o.horse},
+    {g:box(.14,.9,.32,.55,.45,0),c:o.horse},
+    {g:cyl(.21,.26,.72,6,-.05,1.86,0),c:o.coat},
+    {g:sph(.17,-.05,2.42,0),c:skin},
+  ];
+  if(o.helm)parts.push({g:cone(.14,.26,-.05,2.56,0),c:0x4a6888});
+  else parts.push({g:sph(.18,-.05,2.5,0),c:o.turban||0x2a1e0e});
+  if(o.lance)parts.push({g:cyl(.025,.025,2.2,4,.28,2.28,.28,-0.9),c:0x5c452c});
+  return buildFigure(parts);
+}
+function buildElephant(){
+  const hide=0x7a7268;
+  return buildFigure([
+    {g:box(3.1,1.9,1.7,0,1.9,0),c:hide},
+    {g:box(1.2,1.2,1.15,1.8,2.3,0),c:hide},
+    {g:box(.5,.5,1.9,1.8,2.7,0),c:hide},
+    {g:cyl(.17,.1,1.5,5,2.45,1.5,0),c:hide},
+    {g:cyl(.05,.02,.8,4,2.35,1.1,-.3,0.4),c:0xe8e0d0},
+    {g:cyl(.05,.02,.8,4,2.35,1.1,.3,-0.4),c:0xe8e0d0},
+    {g:box(.42,1.5,.42,-1.1,.75,-.5),c:hide},
+    {g:box(.42,1.5,.42,-1.1,.75,.5),c:hide},
+    {g:box(.42,1.5,.42,.9,.75,-.5),c:hide},
+    {g:box(.42,1.5,.42,.9,.75,.5),c:hide},
+    {g:box(1.4,.35,1.1,0,3.0,0),c:0x7a3028},
+  ]);
+}
+const GEO={
+  mu:buildMughal({tunic:0x2a4878,coat:0x1e3a6a,helm:0x4a6888}),
+  mc:buildRider({horse:0x4a3c2c,coat:0x2a4878,helm:true,lance:true}),
+  lo:buildLodi({tunic:0x3a5a28,turban:0x2a1e0e,shield:0x3a5220}),
+  lc:buildRider({horse:0x5c4e38,coat:0x3a5a28,helm:false,lance:true,turban:0x2a1e0e}),
+  el:buildElephant(),
+};
+const MATS={};for(const k in GEO)MATS[k]=new THREE.MeshLambertMaterial({vertexColors:true});
+let MESH={};
+const M4=new THREE.Matrix4(),QT=new THREE.Quaternion(),V3=new THREE.Vector3(),SC=new THREE.Vector3(),EUL=new THREE.Euler();
+let perfNow=0;
+function soldier(x,y,side,grp,kind){
+  return {x,y,tx:x,ty:y,hx:x,hy:y,side,grp,kind,alive:true,flee:false,prisoner:false,escaped:false,
+          jit:rnd(0,6.28),face:side==='m'?Math.PI/2:-Math.PI/2,moving:false,wps:null,pi:0,slot:0};
+}
+function buildInstances(){
+  for(const k in MESH)scene.remove(MESH[k]);
+  MESH={};
+  for(const k in GEO){
+    const list=S.soldiers.filter(s=>s.kind===k);
+    const m=new THREE.InstancedMesh(GEO[k],MATS[k],Math.max(list.length,1));
+    m.castShadow=SHADOWS;
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);
+    for(let i=0;i<m.count;i++)m.setMatrixAt(i,M4);
+    m.instanceMatrix.needsUpdate=true;
+    list.forEach((s,i)=>{s.idx=i;s.mesh=m;});
+    scene.add(m);MESH[k]=m;
+  }
+}
+function writeInstance(s){
+  const wx=sx2w(s.x),wz=sy2w(s.y);
+  if(s.escaped){SC.setScalar(0.0001);V3.set(wx,-80,wz);QT.set(0,0,0,1);}
+  else if(!s.alive){
+    V3.set(wx,terrainH(wx,wz)+(s.kind==='el'?0.9:0.22),wz);
+    EUL.set(Math.PI/2,s.jit,0);QT.setFromEuler(EUL);
+    SC.set(1,1,0.35);
+  }else{
+    const mounted=(s.kind==='mc'||s.kind==='lc'||s.kind==='el');
+    const bob=s.moving?Math.abs(Math.sin(perfNow*(mounted?0.014:0.011)+s.jit))*(s.kind==='el'?0.1:0.14):0;
+    V3.set(wx,terrainH(wx,wz)+bob,wz);
+    EUL.set(s.moving?0.1:0,s.face,s.moving?Math.sin(perfNow*0.012+s.jit)*0.05:0,'YXZ');QT.setFromEuler(EUL);
+    SC.setScalar(1);
+  }
+  M4.compose(V3,QT,SC);
+  s.mesh.setMatrixAt(s.idx,M4);
+}
+function flushInstances(){
+  for(const s of S.soldiers)writeInstance(s);
+  for(const k in MESH)MESH[k].instanceMatrix.needsUpdate=true;
+}
+function moveToward(s,speed,dt){
+  const dx=s.tx-s.x,dy=s.ty-s.y,d=Math.hypot(dx,dy);
+  if(d<1.5){s.moving=false;return true;}
+  s.moving=true;
+  s.x+=(dx/d)*speed*dt*60;s.y+=(dy/d)*speed*dt*60;
+  s.face=Math.atan2(-dy,dx);
+  return false;
+}
+function kill(s){if(!s.alive)return;s.alive=false;if(s.side==='l')S.loDead++;else S.muDead++;updateCounters();}
+function alive(side,grp){return S.soldiers.filter(s=>s.alive&&!s.escaped&&s.side===side&&(!grp||s.grp===grp));}
+function killRandom(list,n){
+  const pool=list.filter(s=>s.alive);
+  for(let i=0;i<n&&pool.length;i++){const j=Math.floor(Math.random()*pool.length);kill(pool[j]);pool.splice(j,1);}
+}
+function updateCounters(){
+  document.getElementById('loCt').textContent='~'+(S.loDead*MEN_PER).toLocaleString();
+  document.getElementById('muCt').textContent='~'+(S.muDead*MEN_PER).toLocaleString();
+}
+function setDay(t){document.getElementById('daytag').textContent=t;}
+
+/* ---------- projectiles ---------- */
+const ARROW_MAX=160;
+const arrowMesh=new THREE.InstancedMesh(new THREE.CylinderGeometry(0.042,0.042,1.3,4),
+  new THREE.MeshLambertMaterial({color:0x3a2e1e}),ARROW_MAX);
+arrowMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(arrowMesh);
+const UP=new THREE.Vector3(0,1,0),DIR=new THREE.Vector3();
+function volley(n,shooters,targets,hit){
+  if(!shooters.length||!targets.length)return;
+  for(let i=0;i<n;i++){
+    const from=shooters[Math.floor(Math.random()*shooters.length)];
+    const tgt=targets[Math.floor(Math.random()*targets.length)];
+    const fx=sx2w(from.x),fz=sy2w(from.y),tx=sx2w(tgt.x+rnd(-4,4)),tz=sy2w(tgt.y+rnd(-4,4));
+    S.arrows.push({fx,fy:terrainH(fx,fz)+2.0,fz,tx,ty:terrainH(tx,tz)+0.5,tz,
+      t:0,dur:rnd(0.45,0.75),arc:rnd(4,8),simx:tgt.x,simy:tgt.y,px:fx,py:2,pz:fz,vx:0,vy:1,vz:0,side:tgt.side,hit});
+  }
+}
+function updArrowFlight(dt){
+  for(let i=S.arrows.length-1;i>=0;i--){
+    const a=S.arrows[i];a.t+=dt;
+    const u=Math.min(a.t/a.dur,1);
+    const nx=a.fx+(a.tx-a.fx)*u,nz=a.fz+(a.tz-a.fz)*u;
+    const ny=a.fy+(a.ty-a.fy)*u+Math.sin(u*Math.PI)*a.arc;
+    a.vx=nx-a.px;a.vy=ny-a.py;a.vz=nz-a.pz;
+    a.px=nx;a.py=ny;a.pz=nz;
+    if(u>=1){
+      if(Math.random()<a.hit){
+        const near=S.soldiers.filter(s=>s.alive&&s.side===a.side&&Math.hypot(s.x-a.simx,s.y-a.simy)<9);
+        if(near.length)kill(near[0]);
+      }
+      S.arrows.splice(i,1);
+    }
+  }
+}
+function flushArrows(){
+  let i=0;
+  for(const a of S.arrows){
+    if(i>=ARROW_MAX)break;
+    V3.set(a.px,a.py,a.pz);
+    DIR.set(a.vx,a.vy,a.vz).normalize();
+    QT.setFromUnitVectors(UP,DIR);
+    SC.setScalar(1);M4.compose(V3,QT,SC);
+    arrowMesh.setMatrixAt(i++,M4);
+  }
+  for(;i<ARROW_MAX;i++){SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);arrowMesh.setMatrixAt(i,M4);}
+  arrowMesh.instanceMatrix.needsUpdate=true;
+}
+
+/* ---------- banners ---------- */
+const banners={};
+function makeBanner(color){
+  const g=new THREE.Group();
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,5.6,5),new THREE.MeshLambertMaterial({color:0x4a3b26}));
+  pole.position.y=2.8;
+  const flag=new THREE.Mesh(new THREE.PlaneGeometry(2.1,1.25),new THREE.MeshLambertMaterial({color,side:THREE.DoubleSide}));
+  flag.position.set(1.1,4.7,0);
+  g.add(pole,flag);g.userData.flag=flag;
+  scene.add(g);g.visible=false;
+  return g;
+}
+banners.mu=makeBanner(0x2a4878);
+banners.lo=makeBanner(0x3a5a28);
+function updateBanners(){
+  const sel={mu:s=>s.side==='m'&&s.kind!=='mc',lo:s=>s.side==='l'&&s.kind!=='lc'&&s.kind!=='el'};
+  for(const k in banners){
+    const list=S.soldiers.filter(s=>s.alive&&!s.escaped&&sel[k](s));
+    const b=banners[k];
+    if(list.length<4){b.visible=false;continue;}
+    let mx=0,my=0;for(const s of list){mx+=s.x;my+=s.y;}
+    mx/=list.length;my/=list.length;
+    const wx=sx2w(mx),wz=sy2w(my);
+    b.position.set(wx,terrainH(wx,wz),wz);
+    b.userData.flag.rotation.y=Math.sin(perfNow*0.002)*0.35;
+    b.visible=true;
+  }
+}
+
+/* ================= camera ================= */
+const cam={yaw:Math.PI,pitch:0.95,dist:205,tx:0,ty:2,tz:0,auto:null};
+function applyCamera(dt){
+  if(cam.auto){
+    const a=cam.auto,k=1-Math.pow(0.001,dt);
+    cam.yaw+=(a.yaw-cam.yaw)*k;cam.pitch+=(a.pitch-cam.pitch)*k;cam.dist+=(a.dist-cam.dist)*k;
+    cam.tx+=(a.tx-cam.tx)*k;cam.ty+=(a.ty-cam.ty)*k;cam.tz+=(a.tz-cam.tz)*k;
+    if(Math.abs(a.dist-cam.dist)<0.5&&Math.abs(a.yaw-cam.yaw)<0.01)cam.auto=null;
+  }
+  cam.pitch=THREE.MathUtils.clamp(cam.pitch,0.14,1.42);
+  cam.dist=THREE.MathUtils.clamp(cam.dist,20,300);
+  const cp=Math.cos(cam.pitch);
+  camera.position.set(
+    cam.tx+Math.sin(cam.yaw)*cp*cam.dist,
+    cam.ty+Math.sin(cam.pitch)*cam.dist,
+    cam.tz+Math.cos(cam.yaw)*cp*cam.dist);
+  camera.lookAt(cam.tx,cam.ty,cam.tz);
+}
+const PRESETS={
+  over:{yaw:Math.PI,pitch:0.95,dist:205,tx:0,ty:2,tz:0},
+  array:{yaw:Math.PI,pitch:0.52,dist:88,tx:0,ty:1,tz:sy2w(460)},
+  north:{yaw:0,pitch:0.42,dist:95,tx:0,ty:1,tz:sy2w(170)},
+  wings:{yaw:Math.PI-0.5,pitch:0.65,dist:150,tx:sx2w(760),ty:1,tz:sy2w(310)},
+};
+document.querySelectorAll('.cambtn').forEach(b=>b.onclick=()=>{cam.auto={...PRESETS[b.dataset.cam]};});
+function cine(name){cam.auto={...PRESETS[name]};}
+
+let drag=null,formDrag=null;
+view.addEventListener('pointerdown',e=>{
+  view.setPointerCapture(e.pointerId);
+  if(S.stage==='deploy'&&e.button===0&&!e.shiftKey){
+    const hit=castAt(e,[formPlane]);
+    if(hit.length){formDrag={x0:e.clientX,l0:S.lineD};return;}
+  }
+  drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,btn:e.button,shift:e.shiftKey};
+  view.classList.add('dragging');cam.auto=null;
+});
+view.addEventListener('pointermove',e=>{
+  if(formDrag){
+    const l=THREE.MathUtils.clamp(formDrag.l0+(e.clientX-formDrag.x0)*0.06,0,10);
+    const q=Math.round(l);
+    if(q!==S.lineD){S.lineD=q;placeMughals();formHudText();}
+    return;
+  }
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  drag.x=e.clientX;drag.y=e.clientY;
+  if(drag.btn===2||drag.shift){
+    const cp=Math.cos(cam.yaw),sp=Math.sin(cam.yaw),k=cam.dist*0.0016;
+    cam.tx-=(dx*cp-dy*sp)*k;cam.tz-=(-dx*sp-dy*cp)*k;
+    cam.tx=THREE.MathUtils.clamp(cam.tx,-105,105);
+    cam.tz=THREE.MathUtils.clamp(cam.tz,-66,66);
+  }else{cam.yaw-=dx*0.0055;cam.pitch+=dy*0.0045;}
+});
+const endDrag=()=>{drag=null;view.classList.remove('dragging');};
+view.addEventListener('pointerup',e=>{
+  if(formDrag){formDrag=null;return;}
+  if(drag&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<12)tryPick(e);
+  endDrag();
+});
+view.addEventListener('pointercancel',endDrag);
+view.addEventListener('wheel',e=>{e.preventDefault();cam.auto=null;cam.dist*=(1+Math.sign(e.deltaY)*0.09);},{passive:false});
+view.addEventListener('contextmenu',e=>e.preventDefault());
+let pinch=null;
+view.addEventListener('touchstart',e=>{if(e.touches.length===2)pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);});
+view.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&pinch){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    cam.dist*=pinch/d;pinch=d;cam.auto=null;
+  }
+},{passive:true});
+view.addEventListener('touchend',()=>pinch=null);
+
+/* ================= command layer ================= */
+const raycaster=new THREE.Raycaster();
+const ndc=new THREE.Vector2();
+function castAt(e,objects){
+  const r=renderer.domElement.getBoundingClientRect();
+  ndc.x=((e.clientX-r.left)/r.width)*2-1;
+  ndc.y=-((e.clientY-r.top)/r.height)*2+1;
+  raycaster.setFromCamera(ndc,camera);
+  return raycaster.intersectObjects(objects,false);
+}
+const formPlane=new THREE.Mesh(
+  new THREE.PlaneGeometry(100,30),
+  new THREE.MeshBasicMaterial({color:0xd9a441,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
+formPlane.rotation.x=-Math.PI/2;
+scene.add(formPlane);
+const formHud=document.getElementById('formHud');
+function formHudText(){
+  if(S.lineD<=3)formHud.textContent='Formation tight · wagon gaps closed · cavalry cannot exit · drag to adjust';
+  else if(S.lineD>=7)formHud.textContent='Lanes open · cavalry will exit at speed · guns exposed · drag to adjust';
+  else formHud.textContent='Four lanes through the wagons · guns and cavalry both ready · drag to adjust';
+}
+function ringMesh(color){
+  const m=new THREE.Mesh(new THREE.TorusGeometry(9,0.45,8,32),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.85}));
+  m.rotation.x=-Math.PI/2;m.visible=false;
+  const fill=new THREE.Mesh(new THREE.CircleGeometry(8.2,24),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.13,depthWrite:false,side:THREE.DoubleSide}));
+  fill.position.z=0.02;m.add(fill);
+  scene.add(m);return m;
+}
+const ringA=ringMesh(0xd9a441);
+const ringB=ringMesh(0xc45540);
+const RINGS=[ringA,ringB];
+let ringT=0,pickMode=null;
+function updCommandFx(dt){
+  ringT+=dt;
+  formPlane.material.opacity=(S.stage==='deploy')?0.07+Math.sin(ringT*3)*0.03:0;
+  if(S.stage==='deploy'){
+    formPlane.position.set(0,terrainH(0,sy2w(450))+0.6,sy2w(450));
+  }
+  for(const r of RINGS){
+    if(!r.visible)continue;
+    const k=1+Math.sin(ringT*3.4)*0.08;
+    r.scale.setScalar(k);
+    r.material.opacity=0.55+Math.sin(ringT*3.4)*0.3;
+  }
+}
+function placeRing(r,sx,sy){
+  const wx=sx2w(sx),wz=sy2w(sy);
+  r.position.set(wx,terrainH(wx,wz)+0.7,wz);
+  r.visible=true;
+}
+function hideRings(){for(const r of RINGS)r.visible=false;pickMode=null;}
+function pickRing(e){
+  const rect=renderer.domElement.getBoundingClientRect();
+  let best=null,bestD=1e9;
+  for(const r of RINGS){
+    if(!r.visible)continue;
+    V3.copy(r.position).project(camera);
+    if(V3.z>1)continue;
+    const px=(V3.x*0.5+0.5)*rect.width+rect.left;
+    const py=(-V3.y*0.5+0.5)*rect.height+rect.top;
+    const d=Math.hypot(e.clientX-px,e.clientY-py);
+    if(d<bestD){bestD=d;best=r;}
+  }
+  return bestD<Math.max(56,rect.width*0.08)?best:null;
+}
+function tryPick(e){
+  if(!pickMode)return;
+  const r=pickRing(e);
+  if(!r)return;
+  const choice=r===ringA?'a':'b';
+  hideRings();
+  if(choice==='a')startBombardment();else startCFCharge();
+}
+function centroid(list){
+  let mx=0,my=0;
+  for(const s of list){mx+=s.x;my+=s.y;}
+  return list.length?[mx/list.length,my/list.length]:[500,310];
+}
+
+/* ================= portrait / VN layer ================= */
+function PT(id){return document.getElementById(id);}
+const vnBox=document.getElementById('vn');
+const vnPortrait=document.getElementById('vnportrait');
+const vnName=document.getElementById('vnname');
+const vnText=document.getElementById('vntext');
+const vnBtn=document.getElementById('vnnext');
+function mkPortrait(opts){
+  const c=document.createElement('canvas');
+  c.width=56;c.height=56;
+  const ctx=c.getContext('2d');
+  ctx.fillStyle=opts.bg||'#2a3e1e';
+  ctx.beginPath();ctx.arc(28,28,28,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=opts.skin||'#c9a075';
+  ctx.beginPath();ctx.ellipse(28,26,10,12,0,0,Math.PI*2);ctx.fill();
+  if(opts.helm){
+    ctx.fillStyle=opts.helm;
+    ctx.beginPath();ctx.arc(28,16,11,Math.PI,0);ctx.fill();
+    ctx.beginPath();ctx.moveTo(28,4);ctx.lineTo(31,14);ctx.lineTo(25,14);ctx.closePath();ctx.fill();
+  }else{
+    ctx.fillStyle=opts.turban||'#2a1e0e';
+    ctx.beginPath();ctx.ellipse(28,16,13,9,0,Math.PI,0);ctx.fill();
+    ctx.beginPath();ctx.arc(28,17,5,0,Math.PI*2);ctx.fill();
+  }
+  ctx.fillStyle=opts.coat||'#1e3a6a';
+  ctx.fillRect(14,37,28,20);
+  ctx.fillStyle=opts.skin||'#c9a075';
+  ctx.fillRect(11,38,6,14);ctx.fillRect(39,38,6,14);
+  ctx.fillStyle='#000';ctx.globalAlpha=0.2;
+  ctx.beginPath();ctx.arc(28,28,28,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+  return c.toDataURL();
+}
+const PORTRAITS={
+  babur:mkPortrait({bg:'#1e3050',coat:'#1e3a6a',helm:'#4a6888',skin:'#c9a875'}),
+  mir:mkPortrait({bg:'#1a2a40',coat:'#2a5a78',turban:'#2a3e5a',skin:'#c9a875'}),
+  ibrahim:mkPortrait({bg:'#1e3a12',coat:'#3a5a28',turban:'#1a2a0e',skin:'#c9a875'}),
+  narrator:mkPortrait({bg:'#3a2e1e',coat:'#4a3820',turban:'#2a2018',skin:'#c9a075'}),
+};
+const REL={mir:0};
+function adjustRel(key,d){REL[key]=Math.max(-3,Math.min(3,REL[key]+d));}
+const CAST={
+  babur:{name:'Babur',img:PORTRAITS.babur},
+  mir:{name:'Mir Beg',img:PORTRAITS.mir},
+  ibrahim:{name:'Ibrahim Lodi',img:PORTRAITS.ibrahim},
+  narrator:{name:'Narrator',img:PORTRAITS.narrator},
+};
+let vnQueue=[],vnResolve=null;
+function say(speaker,line){
+  return new Promise(res=>{
+    vnBox.style.display='block';
+    vnPortrait.innerHTML='<img src="'+speaker.img+'" style="width:100%;height:100%;display:block;">';
+    vnName.textContent=speaker.name;
+    vnText.textContent='';
+    let i=0;
+    const tick=setInterval(()=>{
+      vnText.textContent+=line[i++]||'';
+      if(i>=line.length)clearInterval(tick);
+    },22);
+    vnBtn.onclick=()=>{clearInterval(tick);vnText.textContent=line;vnResolve=res;};
+    vnResolve=res;
+  });
+}
+function hideSay(){vnBox.style.display='none';vnResolve=null;}
+vnBtn.onclick=()=>{if(vnResolve){const r=vnResolve;vnResolve=null;hideSay();r();}};
+
+async function SC_P_OPEN(){
+  await say(CAST.narrator,'April, 1526. The plains north of Delhi bake under a dry-season sun. Babur, ruler of Kabul, has crossed the Indus for the fifth time. Before him: Ibrahim Lodi, Sultan of Delhi, with a hundred thousand men and a hundred war elephants.');
+  await say(CAST.babur,'We are twelve thousand. But we have something Ibrahim has never faced: the wheeled araba, and guns behind it.');
+  await say(CAST.mir,'The sultan will not wait. He comes with his full strength, elephants in front. Our flanks must not break, lord.');
+  await say(CAST.babur,'Then we will not give him flanks to break. The tulughma will find his flanks instead.');
+}
+async function SC_P_AFTER(won){
+  if(won){
+    await say(CAST.babur,'The elephant line has broken. Their flanks are turned. Twelve thousand have done what a hundred thousand could not hold.');
+    await say(CAST.narrator,'Ibrahim Lodi fell on the field. His body was found among the dead. Babur rode to Agra, unlocked the treasury of Delhi, and sat down to write the Baburnama. The Mughal Empire had begun.');
+    await say(CAST.mir,'The guns, lord. Every sultan from the Nile to the Ganges will want them now.');
+    await say(CAST.babur,'Let them want. We will have moved on.');
+  }else{
+    await say(CAST.narrator,'The formation gaps are wrong. The cavalry cannot exit cleanly; the elephants come through before the guns can silence them. The araba line breaks. The host of Kabul is swept from the field.');
+    await say(CAST.babur,'Regroup at the Indus. We will come again.');
+    await say(CAST.mir,'The guns, at least, are salvaged.');
+  }
+}
+
+/* ================= armies ================= */
+function spawnAll(){
+  S.soldiers=[];
+  /* Mughal infantry (araba line, south) */
+  for(let i=0;i<7;i++)S.soldiers.push(soldier(240+i*70,470,'m','inf','mu'));
+  /* Mughal centre infantry */
+  for(let i=0;i<5;i++)S.soldiers.push(soldier(300+i*80,500,'m','cinf','mu'));
+  /* Mughal cavalry left (tulughma) */
+  for(let i=0;i<4;i++)S.soldiers.push(soldier(170+i*22,400,'m','lcav','mc'));
+  /* Mughal cavalry right (tulughma) */
+  for(let i=0;i<4;i++)S.soldiers.push(soldier(630+i*22,400,'m','rcav','mc'));
+  /* Mughal commander */
+  S.soldiers.push(soldier(490,505,'m','cmd','mc'));
+
+  /* Lodi vanguard elephants */
+  for(let i=0;i<5;i++)S.soldiers.push(soldier(280+i*90,170,'l','el','el'));
+  /* Lodi infantry centre */
+  for(let i=0;i<9;i++)S.soldiers.push(soldier(200+i*68,220,'l','linf','lo'));
+  /* Lodi infantry depth */
+  for(let i=0;i<8;i++)S.soldiers.push(soldier(230+i*66,260,'l','ldep','lo'));
+  /* Lodi left cavalry */
+  for(let i=0;i<5;i++)S.soldiers.push(soldier(130+i*18,190,'l','llcav','lc'));
+  /* Lodi right cavalry */
+  for(let i=0;i<5;i++)S.soldiers.push(soldier(640+i*18,190,'l','lrcav','lc'));
+  /* Lodi reserve */
+  for(let i=0;i<6;i++)S.soldiers.push(soldier(250+i*72,130,'l','lres','lo'));
+
+  buildInstances();
+  updateCounters();
+}
+function placeMughals(){
+  const lane=S.lineD;
+  const arabaY=465,cinY=502;
+  let bi=0;
+  S.soldiers.filter(s=>s.side==='m'&&s.grp==='inf').forEach((s,i)=>{
+    s.tx=240+i*70;s.ty=arabaY+(Math.sin(bi++*0.9))*2;
+  });
+  S.soldiers.filter(s=>s.side==='m'&&s.grp==='cinf').forEach((s,i)=>{
+    s.tx=300+i*80+lane*1.5;s.ty=cinY;
+  });
+  S.soldiers.filter(s=>s.side==='m'&&s.grp==='lcav').forEach((s,i)=>{
+    s.tx=155+i*(20+lane*0.8);s.ty=400+i*6;
+  });
+  S.soldiers.filter(s=>s.side==='m'&&s.grp==='rcav').forEach((s,i)=>{
+    s.tx=640+i*(20+lane*0.8);s.ty=400+i*6;
+  });
+  const cmd=S.soldiers.find(s=>s.grp==='cmd');
+  if(cmd){cmd.tx=490+lane*2;cmd.ty=510;}
+  /* Update form plane to track araba y */
+  formPlane.position.set(0,terrainH(0,sy2w(arabaY))+0.6,sy2w(arabaY));
+}
+
+/* ================= phase functions ================= */
+async function enterPrologue(){
+  setPhase('prologue');
+  cine('over');
+  await SC_P_OPEN();
+  setControls(false);
+  offerDeploy();
+}
+function offerDeploy(){
+  setPhase('deployment');
+  S.stage='deploy';
+  formHud.style.display='block';
+  formHudText();
+  cine('array');
+  setControls(false);
+  setChoices([
+    {label:'Advance to battle',action:()=>{
+      formHud.style.display='none';
+      S.stage='idle';
+      enterDeployment();
+    }}
+  ]);
+}
+async function enterDeployment(){
+  setPhase('array');
+  cine('array');
+  narrate('The araba wagon-fort is set. Guns loaded. Ibrahim advances.');
+  setControls(false);
+  /* Lodi army begins slow march */
+  S.soldiers.filter(s=>s.side==='l'&&(s.grp==='el'||s.grp==='linf'||s.grp==='ldep')).forEach(s=>{
+    s.tx=s.x;s.ty=s.y+60;
+  });
+  await delay(2000);
+  /* DRAG beat: show the formation ring */
+  narrate('Choose where to concentrate the artillery fire.');
+  S.stage='ring';
+  placeRing(ringA,490,210);
+  placeRing(ringB,310,195);
+  pickMode='ring';
+  setChoices([]);
+}
+function startBombardment(){
+  setPhase('guns');
+  S.stage='bombard';
+  document.getElementById('counters').classList.add('show');
+  narrate('Guns open on the elephant line. The plain fills with smoke and sound.');
+  cine('array');
+  let ticks=0;
+  const bInt=setInterval(()=>{
+    ticks++;
+    const targets=alive('l','el');
+    const shooters=alive('m','inf').slice(0,5);
+    if(shooters.length&&targets.length)volley(6,shooters,targets,0.38);
+    killRandom(alive('l','el'),1);
+    killRandom(alive('l','linf'),1);
+    if(ticks>=5||!alive('l','el').length){
+      clearInterval(bInt);
+      elephantDecision();
+    }
+  },900);
+}
+function startCFCharge(){
+  /* counterfactual: Lodi elephants break through unshaken */
+  setPhase('guns');
+  S.stage='cfcharge';
+  document.getElementById('counters').classList.add('show');
+  narrate('The line spacing is wrong. The elephants find a gap before the guns can stop them.');
+  S.soldiers.filter(s=>s.grp==='el').forEach(s=>{s.tx=490+rnd(-80,80);s.ty=490;});
+  let ticks=0;
+  const cfInt=setInterval(()=>{
+    ticks++;
+    const els=alive('l','el');
+    const muCen=alive('m','cinf');
+    if(muCen.length&&els.length)killRandom(muCen,2);
+    if(ticks>=5){
+      clearInterval(cfInt);
+      S.soldiers.filter(s=>s.side==='l').forEach(s=>{s.tx+=rnd(-15,15);s.ty+=rnd(30,70);});
+      setTimeout(()=>{
+        narrate('The centre collapses. The army of Kabul is swept from the field.');
+        setTimeout(()=>aftermath(false),2200);
+      },2000);
+    }
+  },800);
+}
+async function elephantDecision(){
+  setPhase('guns');
+  narrate('The elephant line wavers. Your cavalry waits on the wings.');
+  await delay(700);
+  setChoices([
+    {label:'Launch the tulughma now',action:()=>{setChoices([]);startTulughma();}},
+    {label:'Hold the flanks, keep bombarding',action:()=>{
+      setChoices([]);
+      narrate('Holding... the Lodi mass presses the centre, buying time but costing men.');
+      killRandom(alive('m','cinf'),2);
+      killRandom(alive('l','linf'),3);
+      setTimeout(startTulughma,2800);
+    }},
+  ]);
+}
+function startTulughma(){
+  setPhase('route');
+  S.stage='tulughma';
+  narrate('The tulughma wheels out. Left and right cavalry swing behind the Lodi flanks.');
+  cine('wings');
+  const lcav=alive('m','lcav');
+  const rcav=alive('m','rcav');
+  lcav.forEach((s,i)=>{s.tx=140+i*18;s.ty=180;});
+  rcav.forEach((s,i)=>{s.tx=660+i*18;s.ty=180;});
+  /* flanking volleys */
+  let phase=0;
+  const tInt=setInterval(()=>{
+    phase++;
+    const lFl=alive('l','llcav');const rFl=alive('l','lrcav');
+    if(lcav.filter(s=>s.alive).length&&lFl.length)volley(4,lcav.filter(s=>s.alive),lFl,0.32);
+    if(rcav.filter(s=>s.alive).length&&rFl.length)volley(4,rcav.filter(s=>s.alive),rFl,0.32);
+    killRandom(lFl,1);killRandom(rFl,1);
+    killRandom(alive('l','lres'),1);
+    killRandom(alive('l','ldep'),1);
+    if(phase>=4){
+      clearInterval(tInt);
+      S.tulughmaDone=true;
+      startRoute();
+    }
+  },900);
+}
+function startRoute(){
+  setPhase('route');
+  S.stage='route';
+  narrate('The Lodi flanks collapse. The army breaks. Ten thousand flee north.');
+  cine('north');
+  S.soldiers.filter(s=>s.side==='l'&&s.alive).forEach(s=>{
+    s.tx=s.x+rnd(-40,40);s.ty=rnd(-50,-130);
+    s.flee=true;
+    setTimeout(()=>{if(!s.alive)return;kill(s);s.escaped=true;s.alive=false;},rnd(1200,3200));
+  });
+  killRandom(alive('l','linf'),4);
+  killRandom(alive('l','ldep'),3);
+  killRandom(alive('l','lres'),2);
+  setTimeout(()=>aftermath(true),5000);
+}
+async function aftermath(won){
+  setPhase('aftermath');
+  S.stage='done';
+  cine('over');
+  await delay(800);
+  await SC_P_AFTER(won);
+  narrate(won?'Babur enters Delhi. The Mughal dynasty begins.':'Regroup. The fifth crossing was not the last.');
+  setControls(false);
+  setChoices([{label:'Read historical note',action:()=>{
+    document.querySelector('.card-panel').scrollIntoView({behavior:'smooth'});
+  }}]);
+}
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+/* ================= narration / UI helpers ================= */
+const narBox=document.getElementById('narrBody');
+function narrate(t){narBox.textContent=t;}
+function setControls(show){
+  document.getElementById('controls').style.display=show?'flex':'none';
+}
+const choiceBar=document.getElementById('choiceArea');
+function setChoices(list){
+  choiceBar.innerHTML='';
+  if(!list||!list.length)return;
+  list.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='btn';b.textContent=c.label;
+    b.onclick=()=>{b.disabled=true;c.action();};
+    choiceBar.appendChild(b);
+  });
+}
+const PHASE_MAP={prologue:'0',deployment:'1',array:'1',guns:'2',route:'3',aftermath:'4'};
+function setPhase(name){
+  const p=PHASE_MAP[name]||'0';
+  document.querySelectorAll('.pill').forEach(el=>{
+    el.classList.toggle('active',el.dataset.p===p);
+  });
+  document.getElementById('narrLabel').textContent=name.charAt(0).toUpperCase()+name.slice(1);
+}
+
+/* ================= main loop ================= */
+let last=0;
+function loop(ts){
+  requestAnimationFrame(loop);
+  const dt=Math.min((ts-last)/1000,0.08);last=ts;
+  perfNow=ts;
+  let anyMove=false;
+  for(const s of S.soldiers){
+    if(!s.alive||s.escaped)continue;
+    const sp=(s.kind==='mc'||s.kind==='lc')?1.9:(s.kind==='el'?0.9:1.1);
+    if(moveToward(s,sp,dt)){}else anyMove=true;
+  }
+  updArrowFlight(dt);
+  updCommandFx(dt);
+  applyCamera(dt);
+  flushInstances();
+  flushArrows();
+  updateBanners();
+  renderer.render(scene,camera);
+}
+
+/* ================= boot ================= */
+(function boot(){
+  resize();
+  spawnAll();
+  placeMughals();
+  setDay('21 April 1526, dawn');
+  setControls(false);
+  setChoices([]);
+  narrate('Panipat, 1526. Babur faces Ibrahim Lodi.');
+  requestAnimationFrame(loop);
+  enterPrologue();
+})();
+</script>
+</body>
+</html>
