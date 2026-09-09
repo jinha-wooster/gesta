@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Breitenfeld, 1631 · 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#141312; --ink-2:#1b1a18; --panel:#201e1b; --line:#38352f;
+    --parchment:#e5ddc8; --muted:#9c957f; --faint:#696355;
+    --bronze:#d9a441; --bronze-dim:#8f6f2e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{background:var(--ink)}
+  body{background:var(--ink);color:var(--parchment);font-family:'Source Serif 4',Georgia,serif;font-size:17px;line-height:1.65;min-height:100vh}
+  .wrap{max-width:1060px;margin:0 auto;padding:36px 18px 80px}
+  header{text-align:center;margin-bottom:26px}
+  .eyebrow{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  h1{font-family:'GFS Didot',serif;font-weight:400;font-size:clamp(38px,7vw,70px);letter-spacing:.06em;line-height:1}
+  .subtitle{color:var(--muted);font-style:italic;margin-top:12px;font-size:16px}
+  .meander{height:14px;margin:24px auto;max-width:520px;opacity:.55}
+  .phases{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+  .pill{font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:7px 13px;border:1px solid var(--line);border-radius:2px;color:var(--faint);transition:all .35s;white-space:nowrap}
+  .pill.active{color:var(--bronze);border-color:var(--bronze-dim);background:rgba(217,164,65,.06)}
+  .pill.done{color:var(--muted)}
+  .stage{position:relative;border:1px solid var(--line);background:#000;border-radius:3px;overflow:hidden}
+  #view{display:block;width:100%;height:560px;cursor:grab;touch-action:none}
+  #view.dragging{cursor:grabbing}
+  @media(max-width:700px){#view{height:420px}}
+  .counters{position:absolute;top:10px;left:12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;font-size:12px;letter-spacing:.08em;opacity:0;transition:opacity .6s}
+  .counters.show{opacity:1}
+  .counter{background:rgba(20,19,18,.74);padding:4px 10px;border-radius:2px;border:1px solid var(--line);width:max-content}
+  .counter b{font-weight:600}
+  .c-sw b{color:#5a90c8} .c-im b{color:#c87050}
+  .daytag{position:absolute;bottom:10px;left:12px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(229,221,200,.7);background:rgba(20,19,18,.6);padding:5px 10px;border-radius:2px;pointer-events:none}
+  #formHud{display:none;position:absolute;bottom:92px;left:50%;transform:translateX(-50%);
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--bronze);
+    background:rgba(20,19,18,.85);border:1px solid var(--bronze-dim);padding:8px 16px;
+    border-radius:2px;pointer-events:none;white-space:nowrap;z-index:6}
+  .camctl{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:6px}
+  .cambtn{font-family:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;background:rgba(20,19,18,.74);border:1px solid var(--line);border-radius:2px;color:var(--muted);cursor:pointer;transition:all .2s}
+  .cambtn:hover{color:var(--bronze);border-color:var(--bronze-dim)}
+  .camhint{position:absolute;bottom:10px;right:12px;font-size:11px;letter-spacing:.06em;color:rgba(229,221,200,.55);background:rgba(20,19,18,.6);padding:4px 9px;border-radius:2px;pointer-events:none}
+  @media(max-width:700px){.camhint{display:none}}
+  .narration{border:1px solid var(--line);border-top:none;background:var(--panel);padding:26px 30px;border-radius:0 0 3px 3px;min-height:150px}
+  .narr-label{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--bronze);margin-bottom:10px}
+  .narration p{margin-bottom:12px}
+  .narration p:last-child{margin-bottom:0}
+  .narration em{color:var(--muted)}
+  .aside{font-size:14px;color:var(--muted);font-style:italic;border-left:2px solid var(--bronze-dim);padding-left:14px;margin-top:14px}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  @media(max-width:640px){.choices{grid-template-columns:1fr}}
+  .choice{border:1px solid var(--line);border-radius:3px;padding:20px;background:var(--ink-2);cursor:pointer;text-align:left;color:var(--parchment);font-family:inherit;font-size:16px;transition:border-color .25s,background .25s}
+  .choice:hover{border-color:var(--bronze-dim);background:#24221e80}
+  .choice h3{font-family:'GFS Didot',serif;font-weight:400;font-size:20px;letter-spacing:.04em;margin-bottom:8px;color:var(--bronze)}
+  .choice p{font-size:14.5px;color:var(--muted);line-height:1.55}
+  .controls{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn{font-family:inherit;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:13px 28px;background:transparent;color:var(--bronze);border:1px solid var(--bronze-dim);border-radius:2px;cursor:pointer;transition:all .25s}
+  .btn:hover{background:rgba(217,164,65,.1);border-color:var(--bronze)}
+  .btn.ghost{color:var(--muted);border-color:var(--line)}
+  .btn.ghost:hover{color:var(--parchment);background:rgba(255,255,255,.04)}
+  #dock{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:10px 14px 12px;
+      background:linear-gradient(transparent, rgba(12,12,10,.45) 18%, rgba(12,12,10,.9) 72%)}
+  #dock:not(:has(button)){display:none}
+  #dock .choices{max-width:880px;margin:0 auto;gap:10px}
+  #dock .choice{padding:12px 14px;background:rgba(24,22,18,.93)}
+  #dock .choice h3{font-size:17px;margin-bottom:5px}
+  #dock .choice p{font-size:13px;line-height:1.45}
+  #dock .controls{margin-top:0;padding-top:8px}
+  @media(max-width:640px){#dock .choice{padding:10px 12px}#dock .choice p{font-size:12px}}
+  #vn{display:none;position:absolute;left:0;right:0;bottom:0;padding:14px 16px 16px;
+      background:linear-gradient(transparent, rgba(12,12,10,.55) 18%, rgba(12,12,10,.92) 60%);z-index:5}
+  .vn-box{display:flex;gap:16px;max-width:860px;margin:0 auto;align-items:flex-end;cursor:pointer}
+  .vn-portrait{width:104px;height:128px;flex:0 0 auto;border:1px solid var(--bronze-dim);
+      border-radius:3px;background:#1c1814;overflow:hidden}
+  .vn-portrait svg{width:100%;height:100%;display:block}
+  .vn-main{flex:1;min-width:0}
+  .vn-name{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--bronze);margin-bottom:7px}
+  .vn-text{font-size:16.5px;line-height:1.6;color:var(--parchment);min-height:52px}
+  .vn-text em{color:var(--muted)}
+  .vn-next{font-size:11px;letter-spacing:.2em;color:var(--faint);margin-top:8px;text-transform:uppercase}
+  .vn-choices{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .vn-choice{font-family:inherit;font-size:14.5px;text-align:left;padding:11px 16px;background:rgba(24,22,18,.9);
+      border:1px solid var(--line);border-radius:2px;color:var(--parchment);cursor:pointer;transition:all .2s}
+  .vn-choice:hover{border-color:var(--bronze-dim);background:rgba(32,29,23,.95)}
+  #vntoast{position:absolute;right:16px;bottom:100%;margin-bottom:8px;font-size:11px;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--bronze);background:rgba(18,16,13,.85);border:1px solid var(--bronze-dim);
+      padding:6px 12px;border-radius:2px;opacity:0;transition:opacity .5s;pointer-events:none}
+  #vntoast.show{opacity:1}
+  .vn-narr .vn-text{font-style:italic;color:var(--muted)}
+  @media(max-width:640px){.vn-portrait{width:76px;height:96px}.vn-text{font-size:15px}}
+  footer{margin-top:44px;text-align:center;font-size:13px;color:var(--faint);line-height:1.7}
+  .fade-in{animation:fadeIn .6s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">17 September 1631 · north of Leipzig · the Thirty Years War turns</div>
+    <h1>BREITENFELD</h1>
+    <p class="subtitle">Three ranks, rolling salvo, then the next three. By the time they answer, you are reloading.</p>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true">
+      <defs><pattern id="key" width="26" height="14" patternUnits="userSpaceOnUse">
+        <path d="M0 12 H10 V2 H20 V8 H14 V6 H18 V4 H12 V10 H22 V0 H26" fill="none" stroke="#d9a441" stroke-width="1.4"/>
+      </pattern></defs>
+      <rect width="520" height="14" fill="url(#key)"/>
+    </svg>
+  </header>
+
+  <nav class="phases" aria-label="Battle phases">
+    <span class="pill" data-p="0">Prologue</span>
+    <span class="pill" data-p="1">The array</span>
+    <span class="pill" data-p="2">The volleys</span>
+    <span class="pill" data-p="3">The flank</span>
+    <span class="pill" data-p="4">Aftermath</span>
+  </nav>
+
+  <div class="stage">
+    <div id="view" role="img" aria-label="3D battlefield of Breitenfeld on the North German plain"></div>
+    <div class="counters" id="counters">
+      <span class="counter c-im">Imperial fallen&nbsp; <b id="imCt">0</b></span>
+      <span class="counter c-sw">Swedish fallen&nbsp; <b id="swCt">0</b></span>
+    </div>
+    <div class="daytag" id="daytag">Dawn · the plain north of Leipzig</div>
+    <div id="formHud"></div>
+    <div class="camctl">
+      <button class="cambtn" data-cam="over">Overview</button>
+      <button class="cambtn" data-cam="array">The array</button>
+      <button class="cambtn" data-cam="right">Pappenheim</button>
+      <button class="cambtn" data-cam="center">The tercio</button>
+    </div>
+    <div class="camhint">drag · rotate&ensp;|&ensp;scroll · zoom&ensp;|&ensp;right-drag · pan</div>
+    <div id="dock"><div id="choiceArea"></div><div class="controls" id="controls"></div></div>
+    <div id="vn"><div id="vntoast"></div>
+      <div class="vn-box" id="vnbox">
+        <div class="vn-portrait" id="vnportrait"></div>
+        <div class="vn-main">
+          <div class="vn-name" id="vnname"></div>
+          <div class="vn-text" id="vntext"></div>
+          <div class="vn-choices" id="vnchoices"></div>
+          <div class="vn-next" id="vnnext">tap to continue &#9656;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="narration">
+    <div class="narr-label" id="narrLabel">Prologue</div>
+    <div id="narrBody"></div>
+  </div>
+
+  <footer>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true"><rect width="520" height="14" fill="url(#key)"/></svg>
+    Grounded in the Swedish military journal, Theatrum Europaeum, and Tilly's own dispatches. The
+    Imperial-Catholic League army numbered approximately 35,000 under Field Marshal Tilly; the
+    Swedish-Saxon force totalled roughly 42,000, of whom the Saxons (c.18,000) broke early. Swedish
+    salvo casualties at Breitenfeld have been estimated at 7,000 Imperial dead and 6,000 captured.
+    Swedish losses: approximately 2,100 killed and wounded. One figure represents approximately 1,000 men.
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+const clearInterval=window.clearInterval.bind(window);
+
+/* ===== geography =====
+   Sim space 1000x620. Swedish-Saxon south (y=380-530). Imperial north (y=100-280).
+   North German plain near Leipzig: flat harvest fields, September 1631. */
+const sx2w=x=>(x-500)*0.2, sy2w=y=>(y-310)*0.2;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const MEN_PER=1000;
+
+const S={
+  phase:0, stage:'idle', st:0,
+  soldiers:[], arrows:[],
+  imDead:0, swDead:0,
+  salvoD:3,
+  banHeld:false,
+  saxFled:false,
+  orderCue:false,
+};
+
+/* ===== three.js ===== */
+const view=document.getElementById('view');
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x8ea8b8);
+scene.fog=new THREE.Fog(0x8ea8b8,220,520);
+const camera=new THREE.PerspectiveCamera(52,1,0.5,900);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const SHADOWS=window.innerWidth>700;
+if(SHADOWS){renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;}
+view.appendChild(renderer.domElement);
+function resize(){const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+scene.add(new THREE.HemisphereLight(0xd8e8f0,0x6e6850,0.80));
+const sun=new THREE.DirectionalLight(0xfff8e8,0.72);
+sun.position.set(-20,90,40);
+if(SHADOWS){
+  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+  const sc=sun.shadow.camera;
+  sc.left=-140;sc.right=140;sc.top=140;sc.bottom=-140;sc.far=380;
+  sc.updateProjectionMatrix();sun.shadow.bias=-0.0008;
+}
+scene.add(sun);
+
+/* ----- terrain: flat North German plain ----- */
+function terrainH(wx,wz){
+  return Math.sin(wx*0.032)*0.28+Math.cos(wz*0.038)*0.22+Math.sin((wx+wz)*0.016)*0.18;
+}
+{
+  const g=new THREE.PlaneGeometry(240,160,130,90);
+  g.rotateX(-Math.PI/2);
+  const pos=g.attributes.position,colors=[];
+  const cStub=new THREE.Color(0xaa9060),cField=new THREE.Color(0x8a7840),tmp=new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const wx=pos.getX(i),wz=pos.getZ(i);
+    pos.setY(i,terrainH(wx,wz));
+    tmp.copy(cStub).lerp(cField,0.4+0.35*Math.sin(wx*0.08+0.5)*Math.cos(wz*0.10));
+    tmp.offsetHSL(0,0,(Math.sin(wx*1.3)*Math.sin(wz*1.6))*0.02);
+    colors.push(tmp.r,tmp.g,tmp.b);
+  }
+  g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  g.computeVertexNormals();
+  const terrain=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}));
+  terrain.receiveShadow=SHADOWS;
+  scene.add(terrain);
+}
+/* scattered stubble clumps */
+{
+  const sm=new THREE.MeshLambertMaterial({color:0x8a7840});
+  for(let i=0;i<30;i++){
+    const x=rnd(50,950),y=rnd(50,570);
+    const t=new THREE.Mesh(new THREE.SphereGeometry(rnd(.3,.6),5,4),sm);
+    const wx=sx2w(x),wz=sy2w(y);
+    t.position.set(wx,terrainH(wx,wz)+0.18,wz);t.scale.y=0.35;
+    scene.add(t);
+  }
+}
+
+/* ----- figure geometry builders ----- */
+function buildFigure(parts){
+  let vC=0,iC=0;
+  for(const p of parts){vC+=p.g.attributes.position.count;iC+=p.g.index.count;}
+  const P=new Float32Array(vC*3),N=new Float32Array(vC*3),C=new Float32Array(vC*3),I=new Uint16Array(iC);
+  const col=new THREE.Color();
+  let vO=0,iO=0;
+  for(const p of parts){
+    P.set(p.g.attributes.position.array,vO*3);
+    N.set(p.g.attributes.normal.array,vO*3);
+    col.set(p.c);
+    const n=p.g.attributes.position.count;
+    for(let i=0;i<n;i++){C[(vO+i)*3]=col.r;C[(vO+i)*3+1]=col.g;C[(vO+i)*3+2]=col.b;}
+    const idx=p.g.index.array;
+    for(let i=0;i<idx.length;i++)I[iO+i]=idx[i]+vO;
+    vO+=n;iO+=idx.length;
+  }
+  const out=new THREE.BufferGeometry();
+  out.setAttribute('position',new THREE.BufferAttribute(P,3));
+  out.setAttribute('normal',new THREE.BufferAttribute(N,3));
+  out.setAttribute('color',new THREE.BufferAttribute(C,3));
+  out.setIndex(new THREE.BufferAttribute(I,1));
+  return out;
+}
+function cyl(r1,r2,h,seg,x,y,z,rz){const g=new THREE.CylinderGeometry(r1,r2,h,seg);if(rz)g.rotateZ(rz);g.translate(x,y,z);return g;}
+function sph(r,x,y,z){const g=new THREE.SphereGeometry(r,6,5);g.translate(x,y,z);return g;}
+function box(w,h,d,x,y,z){const g=new THREE.BoxGeometry(w,h,d);g.translate(x,y,z);return g;}
+function cone(r,h,x,y,z){const g=new THREE.ConeGeometry(r,h,6);g.translate(x,y,z);return g;}
+
+function buildSwede(o){
+  const skin=0xd4aa80;
+  return buildFigure([
+    {g:cyl(.07,.085,.6,5,0,.3,-.1),c:0x3a3028},
+    {g:cyl(.07,.085,.6,5,0,.3,.1),c:0x3a3028},
+    {g:cyl(.17,.2,.46,6,0,.88,0),c:o.coat||0x1e3a6a},
+    {g:cyl(.16,.14,.26,6,0,1.21,0),c:0x2a2e38},
+    {g:cyl(.055,.06,.44,5,0,1.1,-.24),c:skin},
+    {g:cyl(.055,.06,.44,5,0,1.1,.24),c:skin},
+    {g:sph(.15,0,1.66,0),c:skin},
+    {g:cyl(.165,.14,.10,7,0,1.76,0),c:0x5a5a5a},
+    {g:cyl(.022,.022,1.8,4,.14,1.32,.22,-0.12),c:0x5c452c},
+  ]);
+}
+function buildImperial(o){
+  const skin=0xd4aa80;
+  return buildFigure([
+    {g:cyl(.07,.085,.6,5,0,.3,-.1),c:0x4a2818},
+    {g:cyl(.07,.085,.6,5,0,.3,.1),c:0x4a2818},
+    {g:cyl(.17,.2,.50,6,0,.9,0),c:o.coat||0x6a2820},
+    {g:cyl(.055,.06,.46,5,0,1.12,-.24),c:skin},
+    {g:cyl(.055,.06,.46,5,0,1.12,.24),c:skin},
+    {g:sph(.15,0,1.66,0),c:skin},
+    {g:sph(.155,0,1.74,0),c:o.hat||0x2a2010},
+    {g:cyl(.018,.018,2.4,4,.1,1.6,.18,-0.05),c:0x5c452c},
+  ]);
+}
+function buildCuirassier(o){
+  const skin=0xd4aa80;
+  return buildFigure([
+    {g:box(1.55,.58,.5,0,1.0,0),c:o.horse||0x3a3028},
+    {g:box(.42,.55,.34,.85,1.3,0),c:o.horse||0x3a3028},
+    {g:box(.3,.24,.3,1.1,1.52,0),c:o.horse||0x3a3028},
+    {g:box(.14,.9,.32,-.55,.45,0),c:o.horse||0x3a3028},
+    {g:box(.14,.9,.32,.55,.45,0),c:o.horse||0x3a3028},
+    {g:cyl(.21,.26,.72,6,-.05,1.86,0),c:o.armor||0x4a4a4a},
+    {g:sph(.17,-.05,2.42,0),c:skin},
+    {g:cone(.14,.26,-.05,2.56,0),c:o.helm||0x3a3a3a},
+    {g:cyl(.025,.025,1.5,4,.28,2.18,.28,-0.7),c:0x3a2a1e},
+  ]);
+}
+function buildSaxon(o){
+  const skin=0xd4aa80;
+  return buildFigure([
+    {g:cyl(.07,.085,.6,5,0,.3,-.1),c:0x3a2e20},
+    {g:cyl(.07,.085,.6,5,0,.3,.1),c:0x3a2e20},
+    {g:cyl(.17,.2,.46,6,0,.88,0),c:o.coat||0x2e5a30},
+    {g:cyl(.055,.06,.44,5,0,1.1,-.24),c:skin},
+    {g:cyl(.055,.06,.44,5,0,1.1,.24),c:skin},
+    {g:sph(.15,0,1.66,0),c:skin},
+    {g:cyl(.165,.14,.10,7,0,1.76,0),c:0x4a4a3a},
+    {g:cyl(.022,.022,1.7,4,.14,1.32,.22,-0.10),c:0x5c452c},
+  ]);
+}
+
+const GEO={
+  sw:buildSwede({coat:0x1e3a6a}),
+  sc:buildCuirassier({horse:0x4a3c2c,armor:0x3a5a8a,helm:0x3a4a6a}),
+  sx:buildSaxon({coat:0x2e5a30}),
+  im:buildImperial({coat:0x6a2820,hat:0x2a1e10}),
+  pa:buildCuirassier({horse:0x2e2a22,armor:0x3a3a3a,helm:0x2a2a2a}),
+  fu:buildCuirassier({horse:0x4a3820,armor:0x5a3820,helm:0x4a3018}),
+};
+const MATS={};for(const k in GEO)MATS[k]=new THREE.MeshLambertMaterial({vertexColors:true});
+let MESH={};
+const M4=new THREE.Matrix4(),QT=new THREE.Quaternion(),V3=new THREE.Vector3(),SC=new THREE.Vector3(),EUL=new THREE.Euler();
+let perfNow=0;
+
+function soldier(x,y,side,grp,kind){
+  return {x,y,tx:x,ty:y,hx:x,hy:y,side,grp,kind,alive:true,flee:false,prisoner:false,escaped:false,
+          jit:rnd(0,6.28),face:side==='s'||side==='x'?Math.PI/2:-Math.PI/2,moving:false,wps:null,pi:0,slot:0};
+}
+function buildInstances(){
+  for(const k in MESH)scene.remove(MESH[k]);
+  MESH={};
+  for(const k in GEO){
+    const list=S.soldiers.filter(s=>s.kind===k);
+    const m=new THREE.InstancedMesh(GEO[k],MATS[k],Math.max(list.length,1));
+    m.castShadow=SHADOWS;
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);
+    for(let i=0;i<m.count;i++)m.setMatrixAt(i,M4);
+    m.instanceMatrix.needsUpdate=true;
+    list.forEach((s,i)=>{s.idx=i;s.mesh=m;});
+    scene.add(m);MESH[k]=m;
+  }
+}
+function writeInstance(s){
+  const wx=sx2w(s.x),wz=sy2w(s.y);
+  if(s.escaped){SC.setScalar(0.0001);V3.set(wx,-80,wz);QT.set(0,0,0,1);}
+  else if(!s.alive){
+    V3.set(wx,terrainH(wx,wz)+0.22,wz);
+    EUL.set(Math.PI/2,s.jit,0);QT.setFromEuler(EUL);
+    SC.set(1,1,0.35);
+  }else{
+    const mounted=(s.kind==='sc'||s.kind==='pa'||s.kind==='fu');
+    const bob=s.moving?Math.abs(Math.sin(perfNow*(mounted?0.014:0.011)+s.jit))*(mounted?0.14:0.12):0;
+    V3.set(wx,terrainH(wx,wz)+bob,wz);
+    EUL.set(s.moving?0.1:0,s.face,s.moving?Math.sin(perfNow*0.012+s.jit)*0.05:0,'YXZ');QT.setFromEuler(EUL);
+    SC.setScalar(1);
+  }
+  M4.compose(V3,QT,SC);
+  s.mesh.setMatrixAt(s.idx,M4);
+}
+function flushInstances(){
+  for(const s of S.soldiers)writeInstance(s);
+  for(const k in MESH)MESH[k].instanceMatrix.needsUpdate=true;
+}
+function moveToward(s,speed,dt){
+  const dx=s.tx-s.x,dy=s.ty-s.y,d=Math.hypot(dx,dy);
+  if(d<1.5){s.moving=false;return true;}
+  s.moving=true;
+  s.x+=(dx/d)*speed*dt*60;s.y+=(dy/d)*speed*dt*60;
+  s.face=Math.atan2(-dy,dx);
+  return false;
+}
+function kill(s){if(!s.alive)return;s.alive=false;if(s.side==='i'||s.side==='p'||s.side==='f')S.imDead++;else S.swDead++;updateCounters();}
+function alive(side,grp){return S.soldiers.filter(s=>s.alive&&!s.escaped&&s.side===side&&(!grp||s.grp===grp));}
+function killRandom(list,n){
+  const pool=list.filter(s=>s.alive);
+  for(let i=0;i<n&&pool.length;i++){const j=Math.floor(Math.random()*pool.length);kill(pool[j]);pool.splice(j,1);}
+}
+function updateCounters(){
+  document.getElementById('imCt').textContent='~'+(S.imDead*MEN_PER).toLocaleString();
+  document.getElementById('swCt').textContent='~'+(S.swDead*MEN_PER).toLocaleString();
+}
+function setDay(t){document.getElementById('daytag').textContent=t;}
+
+/* ----- projectiles ----- */
+const ARROW_MAX=160;
+const arrowMesh=new THREE.InstancedMesh(new THREE.CylinderGeometry(0.042,0.042,1.3,4),
+  new THREE.MeshLambertMaterial({color:0x3a2e1e}),ARROW_MAX);
+arrowMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(arrowMesh);
+const UP=new THREE.Vector3(0,1,0),DIR=new THREE.Vector3();
+function volley(n,shooters,targets,hit){
+  if(!shooters.length||!targets.length)return;
+  for(let i=0;i<n;i++){
+    const from=shooters[Math.floor(Math.random()*shooters.length)];
+    const tgt=targets[Math.floor(Math.random()*targets.length)];
+    const fx=sx2w(from.x),fz=sy2w(from.y),tx=sx2w(tgt.x+rnd(-4,4)),tz=sy2w(tgt.y+rnd(-4,4));
+    S.arrows.push({fx,fy:terrainH(fx,fz)+2.0,fz,tx,ty:terrainH(tx,tz)+0.5,tz,
+      t:0,dur:rnd(0.42,0.70),arc:rnd(3,7),simx:tgt.x,simy:tgt.y,px:fx,py:2,pz:fz,vx:0,vy:1,vz:0,side:tgt.side,hit});
+  }
+}
+function updArrowFlight(dt){
+  for(let i=S.arrows.length-1;i>=0;i--){
+    const a=S.arrows[i];a.t+=dt;
+    const u=Math.min(a.t/a.dur,1);
+    const nx=a.fx+(a.tx-a.fx)*u,nz=a.fz+(a.tz-a.fz)*u;
+    const ny=a.fy+(a.ty-a.fy)*u+Math.sin(u*Math.PI)*a.arc;
+    a.vx=nx-a.px;a.vy=ny-a.py;a.vz=nz-a.pz;
+    a.px=nx;a.py=ny;a.pz=nz;
+    if(u>=1){
+      if(Math.random()<a.hit){
+        const near=S.soldiers.filter(s=>s.alive&&s.side===a.side&&Math.hypot(s.x-a.simx,s.y-a.simy)<9);
+        if(near.length)kill(near[0]);
+      }
+      S.arrows.splice(i,1);
+    }
+  }
+}
+function flushArrows(){
+  let i=0;
+  for(const a of S.arrows){
+    if(i>=ARROW_MAX)break;
+    V3.set(a.px,a.py,a.pz);
+    DIR.set(a.vx,a.vy,a.vz).normalize();
+    QT.setFromUnitVectors(UP,DIR);
+    SC.setScalar(1);M4.compose(V3,QT,SC);
+    arrowMesh.setMatrixAt(i++,M4);
+  }
+  for(;i<ARROW_MAX;i++){SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);arrowMesh.setMatrixAt(i,M4);}
+  arrowMesh.instanceMatrix.needsUpdate=true;
+}
+
+/* ----- banners ----- */
+const banners={};
+function makeBanner(color){
+  const g=new THREE.Group();
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,5.6,5),new THREE.MeshLambertMaterial({color:0x4a3b26}));
+  pole.position.y=2.8;
+  const flag=new THREE.Mesh(new THREE.PlaneGeometry(2.1,1.25),new THREE.MeshLambertMaterial({color,side:THREE.DoubleSide}));
+  flag.position.set(1.1,4.7,0);
+  g.add(pole,flag);g.userData.flag=flag;
+  scene.add(g);g.visible=false;
+  return g;
+}
+banners.sw=makeBanner(0x1e3a6a);
+banners.im=makeBanner(0x6a2820);
+banners.sx=makeBanner(0x2e5a30);
+function updateBanners(){
+  const sel={
+    sw:s=>s.side==='s'&&s.kind!=='sc',
+    im:s=>s.side==='i',
+    sx:s=>s.side==='x',
+  };
+  for(const k in banners){
+    const list=S.soldiers.filter(s=>s.alive&&!s.escaped&&sel[k](s));
+    const b=banners[k];
+    if(list.length<3){b.visible=false;continue;}
+    let mx=0,my=0;for(const s of list){mx+=s.x;my+=s.y;}
+    mx/=list.length;my/=list.length;
+    const wx=sx2w(mx),wz=sy2w(my);
+    b.position.set(wx,terrainH(wx,wz),wz);
+    b.userData.flag.rotation.y=Math.sin(perfNow*0.002)*0.4;
+    b.visible=true;
+  }
+}
+
+/* ===== camera ===== */
+const cam={yaw:Math.PI,pitch:0.92,dist:210,tx:0,ty:2,tz:0,auto:null};
+function applyCamera(dt){
+  if(cam.auto){
+    const a=cam.auto,k=1-Math.pow(0.001,dt);
+    cam.yaw+=(a.yaw-cam.yaw)*k;cam.pitch+=(a.pitch-cam.pitch)*k;cam.dist+=(a.dist-cam.dist)*k;
+    cam.tx+=(a.tx-cam.tx)*k;cam.ty+=(a.ty-cam.ty)*k;cam.tz+=(a.tz-cam.tz)*k;
+    if(Math.abs(a.dist-cam.dist)<0.5&&Math.abs(a.yaw-cam.yaw)<0.01)cam.auto=null;
+  }
+  cam.pitch=THREE.MathUtils.clamp(cam.pitch,0.14,1.42);
+  cam.dist=THREE.MathUtils.clamp(cam.dist,20,310);
+  const cp=Math.cos(cam.pitch);
+  camera.position.set(
+    cam.tx+Math.sin(cam.yaw)*cp*cam.dist,
+    cam.ty+Math.sin(cam.pitch)*cam.dist,
+    cam.tz+Math.cos(cam.yaw)*cp*cam.dist);
+  camera.lookAt(cam.tx,cam.ty,cam.tz);
+}
+const PRESETS={
+  over:{yaw:Math.PI,pitch:0.92,dist:210,tx:0,ty:2,tz:0},
+  array:{yaw:Math.PI,pitch:0.52,dist:96,tx:0,ty:1,tz:sy2w(470)},
+  right:{yaw:Math.PI+0.6,pitch:0.62,dist:140,tx:sx2w(720),ty:1,tz:sy2w(290)},
+  center:{yaw:Math.PI,pitch:0.58,dist:130,tx:0,ty:1,tz:sy2w(310)},
+};
+document.querySelectorAll('.cambtn').forEach(b=>b.onclick=()=>{cam.auto={...PRESETS[b.dataset.cam]};});
+function cine(name){cam.auto={...PRESETS[name]};}
+
+let drag=null,formDrag=null;
+view.addEventListener('pointerdown',e=>{
+  view.setPointerCapture(e.pointerId);
+  if(S.stage==='deploy'&&e.button===0&&!e.shiftKey){
+    const hit=castAt(e,[formPlane]);
+    if(hit.length){formDrag={x0:e.clientX,l0:S.salvoD};return;}
+  }
+  drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,btn:e.button,shift:e.shiftKey};
+  view.classList.add('dragging');cam.auto=null;
+});
+view.addEventListener('pointermove',e=>{
+  if(formDrag){
+    const l=THREE.MathUtils.clamp(formDrag.l0+(e.clientX-formDrag.x0)*0.05,2,6);
+    const q=Math.round(l);
+    if(q!==S.salvoD){S.salvoD=q;placeSwedes();formHudText();}
+    return;
+  }
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  drag.x=e.clientX;drag.y=e.clientY;
+  if(drag.btn===2||drag.shift){
+    const cp=Math.cos(cam.yaw),sp=Math.sin(cam.yaw),k=cam.dist*0.0016;
+    cam.tx-=(dx*cp-dy*sp)*k;cam.tz-=(-dx*sp-dy*cp)*k;
+    cam.tx=THREE.MathUtils.clamp(cam.tx,-115,115);
+    cam.tz=THREE.MathUtils.clamp(cam.tz,-72,72);
+  }else{cam.yaw-=dx*0.0055;cam.pitch+=dy*0.0045;}
+});
+const endDrag=()=>{drag=null;view.classList.remove('dragging');};
+view.addEventListener('pointerup',e=>{
+  if(formDrag){formDrag=null;return;}
+  if(drag&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<12)tryPick(e);
+  endDrag();
+});
+view.addEventListener('pointercancel',endDrag);
+view.addEventListener('wheel',e=>{e.preventDefault();cam.auto=null;cam.dist*=(1+Math.sign(e.deltaY)*0.09);},{passive:false});
+view.addEventListener('contextmenu',e=>e.preventDefault());
+let pinch=null;
+view.addEventListener('touchstart',e=>{if(e.touches.length===2)pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);});
+view.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&pinch){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    cam.dist*=pinch/d;pinch=d;cam.auto=null;
+  }
+},{passive:true});
+view.addEventListener('touchend',()=>pinch=null);
+
+/* ===== command layer ===== */
+const raycaster=new THREE.Raycaster();
+const ndc=new THREE.Vector2();
+function castAt(e,objects){
+  const r=renderer.domElement.getBoundingClientRect();
+  ndc.x=((e.clientX-r.left)/r.width)*2-1;
+  ndc.y=-((e.clientY-r.top)/r.height)*2+1;
+  raycaster.setFromCamera(ndc,camera);
+  return raycaster.intersectObjects(objects,false);
+}
+const formPlane=new THREE.Mesh(
+  new THREE.PlaneGeometry(110,35),
+  new THREE.MeshBasicMaterial({color:0xd9a441,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
+formPlane.rotation.x=-Math.PI/2;
+scene.add(formPlane);
+const formHud=document.getElementById('formHud');
+function formHudText(){
+  if(S.salvoD<=2)formHud.textContent='Two ranks: rapid fire, shallow push, vulnerable to cavalry · drag to adjust';
+  else if(S.salvoD>=5)formHud.textContent='Five ranks: deep but slow; fire-rate suffers · drag to adjust';
+  else formHud.textContent='Three ranks: rolling salvo at full rate, historical Swedish choice · drag to adjust';
+}
+function ringMesh(color){
+  const m=new THREE.Mesh(new THREE.TorusGeometry(9,0.45,8,32),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.85}));
+  m.rotation.x=-Math.PI/2;m.visible=false;
+  const fill=new THREE.Mesh(new THREE.CircleGeometry(8.2,24),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.13,depthWrite:false,side:THREE.DoubleSide}));
+  fill.position.z=0.02;m.add(fill);
+  scene.add(m);return m;
+}
+const ringA=ringMesh(0xd9a441);
+const ringB=ringMesh(0xc45540);
+const RINGS=[ringA,ringB];
+let ringT=0,pickMode=null;
+function updCommandFx(dt){
+  ringT+=dt;
+  formPlane.material.opacity=(S.stage==='deploy')?0.07+Math.sin(ringT*3)*0.03:0;
+  if(S.stage==='deploy'){
+    formPlane.position.set(0,terrainH(0,sy2w(475))+0.6,sy2w(475));
+  }
+  for(const r of RINGS){
+    if(!r.visible)continue;
+    const k=1+Math.sin(ringT*3.4)*0.08;
+    r.scale.setScalar(k);
+    r.material.opacity=0.55+Math.sin(ringT*3.4)*0.3;
+  }
+}
+function placeRing(r,sx,sy){
+  const wx=sx2w(sx),wz=sy2w(sy);
+  r.position.set(wx,terrainH(wx,wz)+0.7,wz);
+  r.visible=true;
+}
+function hideRings(){for(const r of RINGS)r.visible=false;pickMode=null;}
+function pickRing(e){
+  const rect=renderer.domElement.getBoundingClientRect();
+  let best=null,bestD=1e9;
+  for(const r of RINGS){
+    if(!r.visible)continue;
+    V3.copy(r.position).project(camera);
+    if(V3.z>1)continue;
+    const px=(V3.x*0.5+0.5)*rect.width+rect.left;
+    const py=(-V3.y*0.5+0.5)*rect.height+rect.top;
+    const d=Math.hypot(e.clientX-px,e.clientY-py);
+    if(d<bestD){bestD=d;best=r;}
+  }
+  return bestD<Math.max(56,rect.width*0.08)?best:null;
+}
+function tryPick(e){
+  if(!pickMode)return;
+  const r=pickRing(e);
+  if(!r)return;
+  const choice=r===ringA?'a':'b';
+  hideRings();
+  if(choice==='a')startSalvoCavRight();else startCFCavRight();
+}
+function centroid(list){
+  let mx=0,my=0;
+  for(const s of list){mx+=s.x;my+=s.y;}
+  return list.length?[mx/list.length,my/list.length]:[500,310];
+}
+
+/* ===== portrait / VN layer ===== */
+const vnBox=document.getElementById('vn');
+const vnPortrait=document.getElementById('vnportrait');
+const vnName=document.getElementById('vnname');
+const vnText=document.getElementById('vntext');
+const vnBtn=document.getElementById('vnnext');
+function mkPortrait(opts){
+  const c=document.createElement('canvas');
+  c.width=56;c.height=56;
+  const ctx=c.getContext('2d');
+  ctx.fillStyle=opts.bg||'#1e3050';
+  ctx.beginPath();ctx.arc(28,28,28,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=opts.skin||'#d4aa80';
+  ctx.beginPath();ctx.ellipse(28,26,10,12,0,0,Math.PI*2);ctx.fill();
+  if(opts.helm){
+    ctx.fillStyle=opts.helm;
+    ctx.beginPath();ctx.arc(28,16,11,Math.PI,0);ctx.fill();
+    ctx.beginPath();ctx.moveTo(28,4);ctx.lineTo(31,14);ctx.lineTo(25,14);ctx.closePath();ctx.fill();
+  }else if(opts.hat){
+    ctx.fillStyle=opts.hat;
+    ctx.beginPath();ctx.ellipse(28,15,14,7,0,Math.PI,0);ctx.fill();
+    ctx.fillRect(14,15,28,5);
+  }else{
+    ctx.fillStyle=opts.hair||'#3a2e1e';
+    ctx.beginPath();ctx.ellipse(28,16,13,9,0,Math.PI,0);ctx.fill();
+  }
+  ctx.fillStyle=opts.coat||'#1e3a6a';
+  ctx.fillRect(14,37,28,20);
+  ctx.fillStyle=opts.skin||'#d4aa80';
+  ctx.fillRect(11,38,6,14);ctx.fillRect(39,38,6,14);
+  ctx.fillStyle='#000';ctx.globalAlpha=0.18;
+  ctx.beginPath();ctx.arc(28,28,28,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+  return c.toDataURL();
+}
+const PORTRAITS={
+  gustavus:mkPortrait({bg:'#1a2e50',coat:'#1e3a6a',helm:'#4a6080',skin:'#d4aa80'}),
+  baner:mkPortrait({bg:'#1a2840',coat:'#2a4878',helm:'#3a5060',skin:'#d4aa80'}),
+  tilly:mkPortrait({bg:'#3a1a10',coat:'#6a2820',hat:'#2a1e10',skin:'#d4aa80'}),
+  narrator:mkPortrait({bg:'#2e2a1e',coat:'#3a2e1a',hair:'#2a2016',skin:'#c9a075'}),
+};
+const REL={baner:0};
+function adjustRel(key,d){REL[key]=Math.max(-3,Math.min(3,REL[key]+d));}
+const CAST={
+  gustavus:{name:'Gustavus Adolphus · King of Sweden'},
+  baner:{name:'Johan Banér · cavalry, right wing'},
+  tilly:{name:'Tilly · Imperial field marshal'},
+  narrator:{name:'Narrator'},
+};
+let vnResolve=null;
+function say(speakerKey,line){
+  const spk=CAST[speakerKey];
+  const img=PORTRAITS[speakerKey];
+  return new Promise(res=>{
+    vnBox.style.display='block';
+    vnPortrait.innerHTML='<img src="'+img+'" style="width:100%;height:100%;display:block;">';
+    vnName.textContent=spk.name;
+    vnText.textContent='';
+    document.getElementById('vnchoices').innerHTML='';
+    document.getElementById('vnnext').style.display='block';
+    let i=0;
+    const tick=setInterval(()=>{
+      vnText.textContent+=line[i++]||'';
+      if(i>=line.length)clearInterval(tick);
+    },22);
+    vnBtn.onclick=()=>{clearInterval(tick);vnText.textContent=line;vnResolve=res;};
+    vnResolve=res;
+  });
+}
+function vnChoice(speakerKey,line,choices){
+  const spk=CAST[speakerKey];
+  const img=PORTRAITS[speakerKey];
+  return new Promise(res=>{
+    vnBox.style.display='block';
+    vnPortrait.innerHTML='<img src="'+img+'" style="width:100%;height:100%;display:block;">';
+    vnName.textContent=spk.name;
+    vnText.textContent=line;
+    document.getElementById('vnnext').style.display='none';
+    const cc=document.getElementById('vnchoices');
+    cc.innerHTML='';
+    choices.forEach(ch=>{
+      const b=document.createElement('button');
+      b.className='vn-choice';b.textContent=ch.label;
+      b.onclick=()=>{cc.innerHTML='';hideSay();res(ch.value);};
+      cc.appendChild(b);
+    });
+    vnResolve=null;
+  });
+}
+function hideSay(){vnBox.style.display='none';vnResolve=null;}
+vnBtn.onclick=()=>{if(vnResolve){const r=vnResolve;vnResolve=null;hideSay();r();}};
+
+/* ===== opening and aftermath scenes ===== */
+async function SC_OPEN(){
+  await say('narrator','September 1631. The Protestant cause is desperate. Magdeburg has burned. Tilly\'s army has swept north Germany. Now, north of Leipzig, the Imperial tercio blocks the road south.');
+  await say('gustavus','We do not break a tercio by marching into it. We break it with fire. Three ranks, rolling salvo, then the next three. By the time they answer, we are already reloading.');
+  const rel=await vnChoice('baner','Pappenheim is on our right, lord. He has not sat still in six months. Your order for the cavalry if he charges?',[
+    {label:'Hold the line, do not pursue. Let him break himself on your formation.',value:'hold'},
+    {label:'Advance to meet him, drive him from the field before the main battle opens.',value:'charge'},
+  ]);
+  if(rel==='hold'){
+    adjustRel('baner',1);
+    await say('baner','Hold and receive. Then we become the anvil. Understood.');
+  }else{
+    adjustRel('baner',-1);
+    await say('baner','An advance into Pappenheim\'s pistols before we know his numbers. Bold, but I will carry the order.');
+    await say('gustavus','Bold, or wrong. We will know within the hour.');
+  }
+}
+async function SC_AFTER(won){
+  if(won){
+    if(REL.baner>=1){
+      await say('baner','Seven charges. Each one we received and repaid. The right held, lord, because you told us to hold.');
+    }else{
+      await say('baner','We hit Pappenheim early. He never found his footing. It cost us, but the right did not break.');
+    }
+    await say('gustavus','Now let us thank God, who has given us the victory.');
+    await say('narrator','Tilly\'s army was destroyed. Seven thousand Imperial dead, six thousand captured. Tilly himself was wounded and carried from the field. For the first time in the Thirty Years War, the tercio had been broken in open battle by fire-discipline alone.');
+    await say('narrator','The Swedish model: three-rank salvo, rotating lines, artillery forward. Every Protestant army in Europe would study this field. The war would continue another seventeen years, but it would never again be one-sided.');
+  }else{
+    await say('narrator','The formation gaps were wrong. Pappenheim found the seam, the Swedish right bent, and the fire-rate of the new model could not compensate for the collapse in cohesion. Tilly\'s tercio pressed the centre and did not break.');
+    await say('gustavus','Regroup south of the Elster. The model is right. The execution failed us today.');
+    await say('baner','The salvo system still works, lord. We only need one more chance to prove it.');
+  }
+}
+
+/* ===== armies ===== */
+function spawnAll(){
+  S.soldiers=[];
+  /* Swedish right cavalry (Banér) */
+  for(let i=0;i<5;i++)S.soldiers.push(soldier(640+i*22,420,'s','scav','sc'));
+  /* Swedish center infantry brigades */
+  for(let i=0;i<8;i++)S.soldiers.push(soldier(290+i*54,468,'s','sinf','sw'));
+  for(let i=0;i<6;i++)S.soldiers.push(soldier(310+i*54,498,'s','sinf2','sw'));
+  /* Swedish left cavalry (Horn) */
+  for(let i=0;i<4;i++)S.soldiers.push(soldier(185+i*22,420,'s','slcav','sc'));
+  /* Saxon contingent (left of Swedish) */
+  for(let i=0;i<6;i++)S.soldiers.push(soldier(90+i*30,430,'x','sx','sx'));
+  for(let i=0;i<4;i++)S.soldiers.push(soldier(105+i*30,465,'x','sx2','sx'));
+
+  /* Pappenheim cavalry (Imperial left) */
+  for(let i=0;i<6;i++)S.soldiers.push(soldier(640+i*22,165,'p','pap','pa'));
+  /* Imperial tercio center */
+  for(let i=0;i<9;i++)S.soldiers.push(soldier(240+i*54,195,'i','icen','im'));
+  for(let i=0;i<8;i++)S.soldiers.push(soldier(255+i*54,235,'i','idep','im'));
+  for(let i=0;i<6;i++)S.soldiers.push(soldier(270+i*54,268,'i','ires','im'));
+  /* Furstenberg cavalry (Imperial right, facing Saxons) */
+  for(let i=0;i<5;i++)S.soldiers.push(soldier(120+i*22,162,'f','fur','fu'));
+
+  buildInstances();
+  updateCounters();
+}
+function placeSwedes(){
+  const d=S.salvoD;
+  S.soldiers.filter(s=>s.side==='s'&&s.grp==='sinf').forEach((s,i)=>{
+    s.tx=290+i*54;s.ty=468+(d-3)*4;
+  });
+  S.soldiers.filter(s=>s.side==='s'&&s.grp==='sinf2').forEach((s,i)=>{
+    s.tx=310+i*54;s.ty=498+(d-3)*5;
+  });
+  formPlane.position.set(0,terrainH(0,sy2w(480))+0.6,sy2w(480));
+}
+
+/* ===== phase functions ===== */
+async function enterPrologue(){
+  setPhase('prologue');
+  cine('over');
+  await SC_OPEN();
+  setControls(false);
+  offerDeploy();
+}
+function offerDeploy(){
+  setPhase('deployment');
+  S.stage='deploy';
+  formHud.style.display='block';
+  formHudText();
+  cine('array');
+  setControls(false);
+  setChoices([
+    {label:'Advance to battle',action:()=>{
+      formHud.style.display='none';
+      S.stage='idle';
+      enterBattle();
+    }}
+  ]);
+}
+async function enterBattle(){
+  setPhase('array');
+  cine('array');
+  narrate('The Swedish brigades advance. Tilly holds the tercio steady. Pappenheim\'s cavalry stirs on the Imperial left.');
+  setDay('17 September 1631, mid-morning');
+  setControls(false);
+  /* Saxons begin move */
+  S.soldiers.filter(s=>s.side==='x').forEach(s=>{s.tx=s.x;s.ty=s.y-20;});
+  await delay(1800);
+  /* Ring beat: artillery target */
+  narrate('Choose where to concentrate your artillery. The gold ring: Pappenheim\'s cavalry. The red ring: the Imperial tercio center.');
+  S.stage='ring';
+  placeRing(ringA,680,240);
+  placeRing(ringB,450,320);
+  pickMode='ring';
+  setChoices([]);
+}
+function startSalvoCavRight(){
+  /* Historical: guns on Pappenheim */
+  setPhase('volleys');
+  S.stage='salvo';
+  document.getElementById('counters').classList.add('show');
+  narrate('Artillery concentrates on Pappenheim. His cavalry charges anyway, absorbing punishment. Banér holds.');
+  cine('right');
+  const shooters=alive('s','sinf').slice(0,3);
+  const pap=alive('p','pap');
+  let ticks=0;
+  const vInt=setInterval(()=>{
+    ticks++;
+    if(shooters.length&&pap.length)volley(5,shooters,pap,0.30);
+    killRandom(pap,1);
+    if(ticks>=5||!pap.length){clearInterval(vInt);saxonFlight();}
+  },900);
+}
+function startCFCavRight(){
+  /* Counterfactual: guns on tercio center instead */
+  setPhase('volleys');
+  S.stage='salvo';
+  document.getElementById('counters').classList.add('show');
+  narrate('Artillery hammers the Imperial center. But Pappenheim\'s cavalry finds the Swedish right unshaken by cannon. He charges at full strength.');
+  cine('right');
+  const pap=alive('p','pap');
+  const swR=alive('s','scav');
+  let ticks=0;
+  const cfInt=setInterval(()=>{
+    ticks++;
+    if(pap.length&&swR.length)killRandom(swR,1);
+    if(ticks>=4){
+      clearInterval(cfInt);
+      narrate('The right cavalry is broken. Pappenheim wheels behind the Swedish center. The battle is now a crisis.');
+      setTimeout(()=>saxonFlight(true),2000);
+    }
+  },900);
+}
+async function saxonFlight(crisis){
+  S.saxFled=true;
+  setPhase('flank');
+  await delay(600);
+  cine('over');
+  narrate('The Saxon contingent breaks. Furstenberg\'s cavalry sweeps them from the field. The Imperial left flank is now entirely open.');
+  S.soldiers.filter(s=>s.side==='x'&&s.alive).forEach(s=>{
+    s.tx=s.x+rnd(-30,30);s.ty=rnd(560,700);
+    s.flee=true;
+    setTimeout(()=>{if(!s.alive)return;kill(s);s.escaped=true;s.alive=false;},rnd(1000,2500));
+  });
+  await delay(1800);
+  if(crisis){
+    /* No decision: just collapse */
+    narrate('With the right broken and the Saxons gone, the Swedish center is enveloped. Tilly does not let the chance pass.');
+    killRandom(alive('s','sinf'),3);killRandom(alive('s','sinf2'),2);
+    setTimeout(()=>aftermath(false),3500);
+    return;
+  }
+  /* Historical decision: what to do about the Saxon gap */
+  setChoices([]);
+  narrate('');
+  setChoiceDock([
+    {h:'Hold the line, exploit the gap',p:'The Saxon flight has exposed Tilly\'s entire left. Wheel the Swedish center-left and take the tercio in flank. The gap is opportunity, not crisis.',action:()=>{setChoiceDock([]);doFlankWheel();}},
+    {h:'Send reserves to cover the Saxon gap',p:'Plug the hole before Furstenberg can wheel inward. Sacrifice the flank exploitation to secure the formation.',action:()=>{setChoiceDock([]);doCFPlugGap();}},
+  ]);
+}
+function doFlankWheel(){
+  /* Historical: wheel and crush tercio */
+  setPhase('flank');
+  S.stage='wheel';
+  narrate('The Swedish center-left wheels left. The tercio, turning to face a new threat, loses cohesion. Salvo fire breaks the blocks apart.');
+  cine('center');
+  const lCav=alive('s','slcav');
+  const sinf=alive('s','sinf');
+  lCav.forEach((s,i)=>{s.tx=160+i*22;s.ty=220;});
+  sinf.slice(0,4).forEach((s,i)=>{s.tx=240+i*54;s.ty=330;});
+  let ticks=0;
+  const wInt=setInterval(()=>{
+    ticks++;
+    const ic=alive('i','icen');const id=alive('i','idep');
+    const sw=alive('s','sinf');
+    if(sw.length&&ic.length)volley(5,sw,ic,0.32);
+    killRandom(ic,2);killRandom(id,1);
+    if(ticks>=5){clearInterval(wInt);startRoute();}
+  },900);
+}
+function doCFPlugGap(){
+  /* Counterfactual: plug gap but lose opportunity */
+  setPhase('flank');
+  narrate('The reserves move to cover the Saxon gap. Furstenberg is held. But Tilly reorganises. The tercio firms. The battle becomes an attritional grind.');
+  killRandom(alive('s','sinf2'),2);
+  killRandom(alive('i','icen'),1);
+  let ticks=0;
+  const cfW=setInterval(()=>{
+    ticks++;
+    const ic=alive('i','icen');const sw=alive('s','sinf');
+    if(sw.length&&ic.length){volley(3,sw,ic,0.22);killRandom(ic,1);}
+    killRandom(sw,1);
+    if(ticks>=6){
+      clearInterval(cfW);
+      const survived=alive('i','icen').length+alive('i','idep').length;
+      narrate(survived>4?'The tercio holds. Nightfall separates the armies. A narrow Imperial retreat, not a rout. The lesson is unlearned.':'The tercio eventually breaks, but the cost is double. The exploitation is half what it could have been.');
+      setTimeout(()=>aftermathLesson(),3500);
+    }
+  },1000);
+}
+async function aftermathLesson(){
+  setPhase('aftermath');
+  S.stage='done';
+  cine('over');
+  narrate('The battle is decided, but the lesson is incomplete. The gap was a gift. It was not taken.');
+  await delay(800);
+  await SC_AFTER(false);
+  narrate('The catalogue does not look away from what commands cost, or who pays them.');
+}
+function startRoute(){
+  setPhase('flank');
+  S.stage='route';
+  narrate('The Imperial center collapses. Ten thousand run. Tilly is wounded escaping through the press. His army ceases to exist as a formation.');
+  cine('over');
+  S.soldiers.filter(s=>(s.side==='i'||s.side==='p'||s.side==='f')&&s.alive).forEach(s=>{
+    s.tx=s.x+rnd(-40,40);s.ty=rnd(-80,-180);
+    s.flee=true;
+    setTimeout(()=>{if(!s.alive)return;kill(s);s.escaped=true;s.alive=false;},rnd(1200,3500));
+  });
+  killRandom(alive('i','icen'),3);killRandom(alive('i','idep'),3);killRandom(alive('i','ires'),2);
+  setTimeout(()=>aftermath(true),5500);
+}
+async function aftermath(won){
+  setPhase('aftermath');
+  S.stage='done';
+  cine('over');
+  await delay(800);
+  await SC_AFTER(won);
+  if(won){
+    narrate(won?
+      'Breitenfeld, 17 September 1631. Seven thousand Imperial dead. The Thirty Years War has a new model of war.':
+      'The field is Tilly\'s. The Protestant cause survives, but barely.');
+  }
+}
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+/* ===== narration / UI helpers ===== */
+const narBox=document.getElementById('narrBody');
+function narrate(t){narBox.textContent=t;}
+function setControls(show){
+  document.getElementById('controls').style.display=show?'flex':'none';
+}
+const choiceBar=document.getElementById('choiceArea');
+function setChoices(list){
+  choiceBar.innerHTML='';
+  if(!list||!list.length)return;
+  list.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='btn';b.textContent=c.label;
+    b.onclick=()=>{b.disabled=true;c.action();};
+    choiceBar.appendChild(b);
+  });
+}
+function setChoiceDock(list){
+  choiceBar.innerHTML='';
+  if(!list||!list.length)return;
+  const grid=document.createElement('div');
+  grid.className='choices';
+  list.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='choice';
+    b.innerHTML='<h3>'+c.h+'</h3><p>'+c.p+'</p>';
+    b.onclick=()=>{b.disabled=true;c.action();};
+    grid.appendChild(b);
+  });
+  choiceBar.appendChild(grid);
+}
+const PHASE_MAP={prologue:'0',deployment:'1',array:'1',volleys:'2',flank:'3',aftermath:'4'};
+function setPhase(name){
+  const p=PHASE_MAP[name]||'0';
+  document.querySelectorAll('.pill').forEach(el=>{
+    el.classList.toggle('active',el.dataset.p===p);
+  });
+  document.getElementById('narrLabel').textContent=name.charAt(0).toUpperCase()+name.slice(1);
+}
+
+/* ===== main loop ===== */
+let last=0;
+function loop(ts){
+  requestAnimationFrame(loop);
+  const dt=Math.min((ts-last)/1000,0.08);last=ts;
+  perfNow=ts;
+  for(const s of S.soldiers){
+    if(!s.alive||s.escaped)continue;
+    const sp=(s.kind==='sc'||s.kind==='pa'||s.kind==='fu')?1.9:1.1;
+    moveToward(s,sp,dt);
+  }
+  updArrowFlight(dt);
+  updCommandFx(dt);
+  applyCamera(dt);
+  flushInstances();
+  flushArrows();
+  updateBanners();
+  renderer.render(scene,camera);
+}
+
+/* ===== boot ===== */
+(function boot(){
+  resize();
+  spawnAll();
+  placeSwedes();
+  setDay('17 September 1631, dawn');
+  setControls(false);
+  setChoices([]);
+  narrate('Breitenfeld, 1631. Gustavus Adolphus faces Tilly\'s tercio.');
+  requestAnimationFrame(loop);
+  enterPrologue();
+})();
+</script>
+</body>
+</html>

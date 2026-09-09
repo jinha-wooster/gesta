@@ -209,3 +209,13 @@
   type: battle
   status: built
   built: 2026-09-08
+- slug: battle-of-breitenfeld
+  title: Breitenfeld
+  year: "17 September 1631"
+  player: Gustavus Adolphus
+  lat: 51.44
+  lon: 12.31
+  brief: The Swedish brigade salvo against the Imperial tercio north of Leipzig. The Saxons flee, the Imperial left flank opens, and what saves the Protestant cause is fire-discipline and the decision to wheel rather than plug the gap.
+  type: battle
+  status: built
+  built: 2026-09-09
