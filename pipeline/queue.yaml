@@ -219,3 +219,13 @@
   type: battle
   status: built
   built: 2026-09-09
+- slug: battle-of-kulikovo
+  title: Kulikovo
+  year: "8 September 1380"
+  player: Dmitry Donskoy
+  lat: 53.66
+  lon: 38.68
+  brief: The Don confluence, the hidden regiment in the oak grove, and the morning that cost Moscow half its men but cracked the myth of Tatar invincibility. Russia's first step back toward sovereignty.
+  type: battle
+  status: built
+  built: 2026-09-10
