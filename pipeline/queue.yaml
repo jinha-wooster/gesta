@@ -229,3 +229,13 @@
   type: battle
   status: built
   built: 2026-09-10
+- slug: battle-of-hattin
+  title: Hattin
+  year: "4 July 1187"
+  player: Saladin
+  lat: 32.72
+  lon: 35.47
+  brief: Saladin takes Tiberias to bait the Crusader host onto waterless hills, seals every spring, lights the brushfire on the Horns at dawn, and captures the True Cross and the kingdom's last field army in a single morning.
+  type: battle
+  status: built
+  built: 2026-09-11
