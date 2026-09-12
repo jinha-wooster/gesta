@@ -239,3 +239,13 @@
   type: battle
   status: built
   built: 2026-09-11
+- slug: battle-of-mohacs
+  title: Mohacs
+  year: "29 August 1526"
+  player: Suleiman the Magnificent
+  lat: 45.99
+  lon: 18.70
+  brief: The Ottoman guns and janissaries break Hungary's cavalry in ninety minutes on the Danube plain, the young king dies in the rout, and the medieval Kingdom of Hungary ends in an afternoon.
+  type: battle
+  status: built
+  built: 2026-09-12
