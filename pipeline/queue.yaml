@@ -249,3 +249,13 @@
   type: battle
   status: built
   built: 2026-09-12
+- slug: battle-of-qadisiyyah
+  title: Qadisiyyah
+  year: "636"
+  player: Sa'd ibn Abi Waqqas
+  lat: 31.0
+  lon: 44.0
+  brief: Sa'd commands from a fever-bed as the Arab army faces Persia's elephant line on the flat plain between the Euphrates and the Qa'qal canal. The battle that ended the Sassanid Empire and carried Islam into Persia.
+  type: battle
+  status: built
+  built: 2026-09-13
