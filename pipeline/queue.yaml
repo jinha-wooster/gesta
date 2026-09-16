@@ -269,3 +269,13 @@
   type: battle
   status: built
   built: 2026-09-15
+- slug: battle-of-austerlitz
+  title: Austerlitz
+  year: "2 December 1805"
+  player: Napoleon
+  lat: 49.15
+  lon: 16.88
+  brief: Napoleon thins his right flank to bait the Allied army off the Pratzen Heights, then sends Soult's corps up the empty plateau at the moment the fog lifts. The trap closes in four hours.
+  type: battle
+  status: built
+  built: 2026-09-16
