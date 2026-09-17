@@ -279,3 +279,13 @@
   type: battle
   status: built
   built: 2026-09-16
+- slug: battle-of-crecy
+  title: Crécy
+  year: "26 August 1346"
+  player: Edward III
+  lat: 50.25
+  lon: 1.90
+  brief: Edward III holds a ridge in northern France, his longbowmen break the Genoese crossbowmen and sixteen charges of French cavalry, and his teenage son earns his spurs in the bloodiest afternoon of the Hundred Years War.
+  type: battle
+  status: built
+  built: 2026-09-17
