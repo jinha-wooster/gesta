@@ -289,3 +289,13 @@
   type: battle
   status: built
   built: 2026-09-17
+- slug: battle-of-trafalgar
+  title: Trafalgar
+  year: "21 October 1805"
+  player: Nelson
+  lat: 36.17
+  lon: -6.03
+  brief: Nelson cuts the Franco-Spanish line in two perpendicular columns, takes fifty minutes of raking fire before the first British gun can reply, and is shot through the spine on his own quarterdeck. The battle that gave Britain command of the seas for a century.
+  type: battle
+  status: built
+  built: 2026-09-18

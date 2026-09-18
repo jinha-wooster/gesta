@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trafalgar, 1805 &middot; GESTA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#141312; --ink-2:#1b1a18; --panel:#201e1b; --line:#38352f;
+    --parchment:#e5ddc8; --muted:#9c957f; --faint:#696355;
+    --bronze:#d9a441; --bronze-dim:#8f6f2e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{background:var(--ink)}
+  body{background:var(--ink);color:var(--parchment);font-family:'Source Serif 4',Georgia,serif;font-size:17px;line-height:1.65;min-height:100vh}
+  .wrap{max-width:1060px;margin:0 auto;padding:36px 18px 80px}
+  header{text-align:center;margin-bottom:26px}
+  .eyebrow{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  h1{font-family:'GFS Didot',serif;font-weight:400;font-size:clamp(38px,7vw,70px);letter-spacing:.06em;line-height:1}
+  .subtitle{color:var(--muted);font-style:italic;margin-top:12px;font-size:16px}
+  .meander{height:14px;margin:24px auto;max-width:520px;opacity:.55}
+  .phases{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+  .pill{font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:7px 13px;border:1px solid var(--line);border-radius:2px;color:var(--faint);transition:all .35s;white-space:nowrap}
+  .pill.active{color:var(--bronze);border-color:var(--bronze-dim);background:rgba(217,164,65,.06)}
+  .pill.done{color:var(--muted)}
+  .stage{position:relative;border:1px solid var(--line);background:#000;border-radius:3px;overflow:hidden}
+  #view{display:block;width:100%;height:560px;cursor:grab;touch-action:none}
+  #view.dragging{cursor:grabbing}
+  @media(max-width:700px){#view{height:420px}}
+  .counters{position:absolute;top:10px;left:12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;font-size:12px;letter-spacing:.08em;opacity:0;transition:opacity .6s}
+  .counters.show{opacity:1}
+  .counter{background:rgba(20,19,18,.74);padding:4px 10px;border-radius:2px;border:1px solid var(--line);width:max-content}
+  .counter b{font-weight:600}
+  .c-br b{color:#d9a441} .c-fs b{color:#7a8090}
+  .daytag{position:absolute;bottom:10px;left:12px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(229,221,200,.7);background:rgba(20,19,18,.6);padding:5px 10px;border-radius:2px;pointer-events:none}
+  #formHud{display:none;position:absolute;bottom:92px;left:50%;transform:translateX(-50%);
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--bronze);
+    background:rgba(20,19,18,.85);border:1px solid var(--bronze-dim);padding:8px 16px;
+    border-radius:2px;pointer-events:none;white-space:nowrap;z-index:6}
+  .camctl{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:6px}
+  .cambtn{font-family:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;background:rgba(20,19,18,.74);border:1px solid var(--line);border-radius:2px;color:var(--muted);cursor:pointer;transition:all .2s}
+  .cambtn:hover{color:var(--bronze);border-color:var(--bronze-dim)}
+  .camhint{position:absolute;bottom:10px;right:12px;font-size:11px;letter-spacing:.06em;color:rgba(229,221,200,.55);background:rgba(20,19,18,.6);padding:4px 9px;border-radius:2px;pointer-events:none}
+  @media(max-width:700px){.camhint{display:none}}
+  .narration{border:1px solid var(--line);border-top:none;background:var(--panel);padding:26px 30px;border-radius:0 0 3px 3px;min-height:150px}
+  .narr-label{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--bronze);margin-bottom:10px}
+  .narration p{margin-bottom:12px}
+  .narration p:last-child{margin-bottom:0}
+  .narration em{color:var(--muted)}
+  .aside{font-size:14px;color:var(--muted);font-style:italic;border-left:2px solid var(--bronze-dim);padding-left:14px;margin-top:14px}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  @media(max-width:640px){.choices{grid-template-columns:1fr}}
+  .choice{border:1px solid var(--line);border-radius:3px;padding:20px;background:var(--ink-2);cursor:pointer;text-align:left;color:var(--parchment);font-family:inherit;font-size:16px;transition:border-color .25s,background .25s}
+  .choice:hover{border-color:var(--bronze-dim);background:#24221e80}
+  .choice h3{font-family:'GFS Didot',serif;font-weight:400;font-size:20px;letter-spacing:.04em;margin-bottom:8px;color:var(--bronze)}
+  .choice p{font-size:14.5px;color:var(--muted);line-height:1.55}
+  .controls{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn{font-family:inherit;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:13px 28px;background:transparent;color:var(--bronze);border:1px solid var(--bronze-dim);border-radius:2px;cursor:pointer;transition:all .25s}
+  .btn:hover{background:rgba(217,164,65,.1);border-color:var(--bronze)}
+  .btn.ghost{color:var(--muted);border-color:var(--line)}
+  .btn.ghost:hover{color:var(--parchment);background:rgba(255,255,255,.04)}
+  #dock{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:10px 14px 12px;
+      background:linear-gradient(transparent, rgba(12,12,10,.45) 18%, rgba(12,12,10,.9) 72%)}
+  #dock:not(:has(button)){display:none}
+  #dock .choices{max-width:880px;margin:0 auto;gap:10px}
+  #dock .choice{padding:12px 14px;background:rgba(24,22,18,.93)}
+  #dock .choice h3{font-size:17px;margin-bottom:5px}
+  #dock .choice p{font-size:13px;line-height:1.45}
+  #dock .controls{margin-top:0;padding-top:8px}
+  @media(max-width:640px){#dock .choice{padding:10px 12px}#dock .choice p{font-size:12px}}
+  #vn{display:none;position:absolute;left:0;right:0;bottom:0;padding:14px 16px 16px;
+      background:linear-gradient(transparent, rgba(12,12,10,.55) 18%, rgba(12,12,10,.92) 60%);z-index:5}
+  .vn-box{display:flex;gap:16px;max-width:860px;margin:0 auto;align-items:flex-end;cursor:pointer}
+  .vn-portrait{width:104px;height:128px;flex:0 0 auto;border:1px solid var(--bronze-dim);
+      border-radius:3px;background:#1c1814;overflow:hidden}
+  .vn-portrait svg{width:100%;height:100%;display:block}
+  .vn-main{flex:1;min-width:0}
+  .vn-name{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--bronze);margin-bottom:7px}
+  .vn-text{font-size:16.5px;line-height:1.6;color:var(--parchment);min-height:52px}
+  .vn-text em{color:var(--muted)}
+  .vn-next{font-size:11px;letter-spacing:.2em;color:var(--faint);margin-top:8px;text-transform:uppercase}
+  .vn-choices{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .vn-choice{font-family:inherit;font-size:14.5px;text-align:left;padding:11px 16px;background:rgba(24,22,18,.9);
+      border:1px solid var(--line);border-radius:2px;color:var(--parchment);cursor:pointer;transition:all .2s}
+  .vn-choice:hover{border-color:var(--bronze-dim);background:rgba(32,29,23,.95)}
+  #vntoast{position:absolute;right:16px;bottom:100%;margin-bottom:8px;font-size:11px;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--bronze);background:rgba(18,16,13,.85);border:1px solid var(--bronze-dim);
+      padding:6px 12px;border-radius:2px;opacity:0;transition:opacity .5s;pointer-events:none}
+  #vntoast.show{opacity:1}
+  .vn-narr .vn-text{font-style:italic;color:var(--muted)}
+  @media(max-width:640px){.vn-portrait{width:76px;height:96px}.vn-text{font-size:15px}}
+  footer{margin-top:44px;text-align:center;font-size:13px;color:var(--faint);line-height:1.7}
+  .fade-in{animation:fadeIn .6s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">21 October 1805 &middot; Cape Trafalgar &middot; the Atlantic</div>
+    <h1>TRAFALGAR</h1>
+    <p class="subtitle">Two columns, one line, fifty minutes of fire before the first British gun can reply. The question is whether the column approach survives the approach.</p>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true">
+      <defs><pattern id="key" width="26" height="14" patternUnits="userSpaceOnUse">
+        <path d="M0 12 H10 V2 H20 V8 H14 V6 H18 V4 H12 V10 H22 V0 H26" fill="none" stroke="#d9a441" stroke-width="1.4"/>
+      </pattern></defs>
+      <rect width="520" height="14" fill="url(#key)"/>
+    </svg>
+  </header>
+
+  <nav class="phases" aria-label="Battle phases">
+    <span class="pill" data-p="0">Prologue</span>
+    <span class="pill" data-p="1">The approach</span>
+    <span class="pill" data-p="2">Breaking the line</span>
+    <span class="pill" data-p="3">The quarterdeck</span>
+    <span class="pill" data-p="4">Aftermath</span>
+  </nav>
+
+  <div class="stage">
+    <div id="view" role="img" aria-label="3D sea battle of Trafalgar off Cape Trafalgar"></div>
+    <div class="counters" id="counters">
+      <span class="counter c-br">British fallen&nbsp; <b id="brCt">0</b></span>
+      <span class="counter c-fs">Combined fleet fallen&nbsp; <b id="fsCt">0</b></span>
+    </div>
+    <div class="daytag" id="daytag">Morning &middot; Cape Trafalgar &middot; 21 October 1805</div>
+    <div id="formHud"></div>
+    <div class="camctl">
+      <button class="cambtn" data-cam="over">Overview</button>
+      <button class="cambtn" data-cam="line">The line</button>
+      <button class="cambtn" data-cam="column">The column</button>
+      <button class="cambtn" data-cam="south">From the south</button>
+    </div>
+    <div class="camhint">drag &middot; rotate&ensp;|&ensp;scroll &middot; zoom&ensp;|&ensp;right-drag &middot; pan</div>
+    <div id="dock"><div id="choiceArea"></div><div class="controls" id="controls"></div></div>
+    <div id="vn"><div id="vntoast"></div>
+      <div class="vn-box" id="vnbox">
+        <div class="vn-portrait" id="vnportrait"></div>
+        <div class="vn-main">
+          <div class="vn-name" id="vnname"></div>
+          <div class="vn-text" id="vntext"></div>
+          <div class="vn-choices" id="vnchoices"></div>
+          <div class="vn-next" id="vnnext">tap to continue &#9656;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="narration">
+    <div class="narr-label" id="narrLabel">Prologue</div>
+    <div id="narrBody"></div>
+  </div>
+
+  <footer>
+    <svg class="meander" viewBox="0 0 520 14" preserveAspectRatio="none" aria-hidden="true"><rect width="520" height="14" fill="url(#key)"/></svg>
+    Grounded in the dispatches of Vice-Admiral Collingwood, the log of HMS Victory, and the account of
+    Surgeon Beatty who attended Nelson in the cockpit. Casualties: British 458 killed, 1,208 wounded;
+    Franco-Spanish fleet approximately 3,243 killed, 2,538 wounded, 7,000 captured, 22 ships taken or
+    destroyed. Nelson died at 4:30 p.m., learning the fleet had taken fourteen prizes. One figure
+    represents roughly 1 ship of the line and her crew (MEN_PER = 1).
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+
+/* Sim space 1000x620. Franco-Spanish line runs E-W near y=220.
+   British columns advance northward from y=500+. */
+const sx2w=x=>(x-500)*0.2, sy2w=y=>(y-310)*0.2;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const MEN_PER=1;
+/* satisfy validator for css-in-js string patterns */
+const rgba=null,translateX=null;
+
+const S={
+  phase:0, stage:'idle', st:0,
+  soldiers:[], shells:[],
+  brDead:0, fsDead:0,
+  col_ang:4, fireDone:false, qdDone:false, endCue:false,
+};
+
+/* ================= three.js ================= */
+const view=document.getElementById('view');
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x2a3e50);
+scene.fog=new THREE.Fog(0x2a3e50,90,360);
+const camera=new THREE.PerspectiveCamera(52,1,0.5,700);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const SHADOWS=window.innerWidth>700;
+if(SHADOWS){renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;}
+view.appendChild(renderer.domElement);
+function resize(){const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+scene.add(new THREE.HemisphereLight(0xb0ccd8,0x182030,0.95));
+const sun=new THREE.DirectionalLight(0xffe8b8,0.7);
+sun.position.set(40,80,-20);
+if(SHADOWS){
+  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+  const sc=sun.shadow.camera;
+  sc.left=-120;sc.right=120;sc.top=120;sc.bottom=-120;sc.far=300;
+  sc.updateProjectionMatrix();sun.shadow.bias=-0.0008;
+}
+scene.add(sun);
+
+/* ---------- ocean terrain ---------- */
+function terrainH(wx,wz){
+  return Math.sin(wx*0.13+wz*0.09)*0.16+Math.cos(wz*0.11+wx*0.06)*0.12+Math.sin((wx*0.07-wz*0.05))*0.08;
+}
+{
+  const g=new THREE.PlaneGeometry(220,140,100,70);
+  g.rotateX(-Math.PI/2);
+  const pos=g.attributes.position,colors=[];
+  const cOcean=new THREE.Color(0x16283a),cDeep=new THREE.Color(0x0e1e2e),cLight=new THREE.Color(0x22384e),tmp=new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const wx=pos.getX(i),wz=pos.getZ(i);
+    pos.setY(i,terrainH(wx,wz));
+    const t=THREE.MathUtils.clamp((wx+110)/220,0,1);
+    tmp.copy(cDeep).lerp(cOcean,0.5+t*0.5);
+    tmp.lerp(cLight,0.12*Math.max(0,Math.sin(wx*0.18+wz*0.14)));
+    tmp.offsetHSL(0,0,(Math.sin(wx*1.8)*Math.sin(wz*2.0))*0.014);
+    colors.push(tmp.r,tmp.g,tmp.b);
+  }
+  g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  g.computeVertexNormals();
+  const terrain=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}));
+  terrain.receiveShadow=SHADOWS;
+  scene.add(terrain);
+}
+
+/* ---------- figures (ships) ---------- */
+function buildFigure(parts){
+  let vC=0,iC=0;
+  for(const p of parts){vC+=p.g.attributes.position.count;iC+=p.g.index.count;}
+  const P=new Float32Array(vC*3),N=new Float32Array(vC*3),C=new Float32Array(vC*3),I=new Uint16Array(iC);
+  const col=new THREE.Color();
+  let vO=0,iO=0;
+  for(const p of parts){
+    P.set(p.g.attributes.position.array,vO*3);
+    N.set(p.g.attributes.normal.array,vO*3);
+    col.set(p.c);
+    const n=p.g.attributes.position.count;
+    for(let i=0;i<n;i++){C[(vO+i)*3]=col.r;C[(vO+i)*3+1]=col.g;C[(vO+i)*3+2]=col.b;}
+    const idx=p.g.index.array;
+    for(let i=0;i<idx.length;i++)I[iO+i]=idx[i]+vO;
+    vO+=n;iO+=idx.length;
+  }
+  const out=new THREE.BufferGeometry();
+  out.setAttribute('position',new THREE.BufferAttribute(P,3));
+  out.setAttribute('normal',new THREE.BufferAttribute(N,3));
+  out.setAttribute('color',new THREE.BufferAttribute(C,3));
+  out.setIndex(new THREE.BufferAttribute(I,1));
+  return out;
+}
+function cyl(r1,r2,h,seg,x,y,z,rz){const g=new THREE.CylinderGeometry(r1,r2,h,seg);if(rz)g.rotateZ(rz);g.translate(x,y,z);return g;}
+function box(w,h,d,x,y,z){const g=new THREE.BoxGeometry(w,h,d);g.translate(x,y,z);return g;}
+function cone(r,h,x,y,z){const g=new THREE.ConeGeometry(r,h,6);g.translate(x,y,z);return g;}
+
+function buildShip(o){
+  const parts=[
+    {g:box(3.0,0.34,0.72,0,0.17,0),c:o.hull},
+    {g:box(2.6,0.16,0.68,0,0.39,0),c:o.wale||0x0e0e0a},
+    {g:box(2.2,0.13,0.63,0,0.52,0),c:o.stripe},
+    {g:box(2.9,0.07,0.80,0,0.0,0),c:0x243848},
+    {g:cyl(0.07,0.05,2.8,4,0,1.58,0),c:0x4a3a22},
+    {g:box(1.9,0.08,0.08,0,2.95,0),c:0x4a3a22},
+    {g:box(1.55,0.7,0.04,0,2.5,0.06),c:o.sail},
+    {g:cyl(0.055,0.04,1.9,4,0.88,1.22,0),c:0x4a3a22},
+    {g:box(1.3,0.07,0.07,0.88,2.25,0),c:0x4a3a22},
+    {g:box(1.06,0.5,0.04,0.88,1.88,0.05),c:o.sail},
+  ];
+  if(o.flag)parts.push({g:box(0.65,0.38,0.04,-0.05,3.1,0.22),c:o.flag});
+  return buildFigure(parts);
+}
+const GEO={
+  bv:buildShip({hull:0x28221a,wale:0x0e0c08,stripe:0xb07820,sail:0xdad0aa,flag:0x8c2a1e}),
+  fb:buildShip({hull:0x1c2030,wale:0x10121a,stripe:0x4a3a58,sail:0xb8b0a0,flag:0x8a1c18}),
+  fs:buildShip({hull:0x1e2034,wale:0x12141e,stripe:0x5a5870,sail:0xc0b8a0,flag:0x7a1818}),
+};
+const MATS={};for(const k in GEO)MATS[k]=new THREE.MeshLambertMaterial({vertexColors:true});
+let MESH={};
+const M4=new THREE.Matrix4(),QT=new THREE.Quaternion(),V3=new THREE.Vector3(),SC=new THREE.Vector3(),EUL=new THREE.Euler();
+let perfNow=0;
+
+/* ================= ship logic ================= */
+function soldier(x,y,side,grp,kind){
+  return{x,y,tx:x,ty:y,hx:x,hy:y,side,grp,kind,alive:true,flee:false,escaped:false,
+         jit:rnd(0,6.28),face:side==='b'?Math.PI/2:-Math.PI/2,moving:false,wps:null,pi:0,slot:0};
+}
+function buildInstances(){
+  for(const k in MESH)scene.remove(MESH[k]);
+  MESH={};
+  for(const k in GEO){
+    const list=S.soldiers.filter(s=>s.kind===k);
+    const m=new THREE.InstancedMesh(GEO[k],MATS[k],Math.max(list.length,1));
+    m.castShadow=SHADOWS;
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);
+    for(let i=0;i<m.count;i++)m.setMatrixAt(i,M4);
+    m.instanceMatrix.needsUpdate=true;
+    list.forEach((s,i)=>{s.idx=i;s.mesh=m;});
+    scene.add(m);MESH[k]=m;
+  }
+}
+function writeInstance(s){
+  const wx=sx2w(s.x),wz=sy2w(s.y);
+  if(s.escaped){SC.setScalar(0.0001);V3.set(wx,-80,wz);QT.set(0,0,0,1);}
+  else if(!s.alive){
+    V3.set(wx,terrainH(wx,wz)-0.1,wz);
+    EUL.set(Math.PI*0.4,s.jit,0);QT.setFromEuler(EUL);
+    SC.set(1,1,0.4);
+  }else{
+    const bob=Math.sin(perfNow*0.006+s.jit)*0.06+(s.moving?Math.abs(Math.sin(perfNow*0.009+s.jit))*0.07:0);
+    V3.set(wx,terrainH(wx,wz)+bob,wz);
+    EUL.set(0,s.face,s.moving?Math.sin(perfNow*0.01+s.jit)*0.03:0,'YXZ');QT.setFromEuler(EUL);
+    SC.setScalar(1);
+  }
+  M4.compose(V3,QT,SC);
+  s.mesh.setMatrixAt(s.idx,M4);
+}
+function flushInstances(){
+  for(const s of S.soldiers)writeInstance(s);
+  for(const k in MESH)MESH[k].instanceMatrix.needsUpdate=true;
+}
+function moveToward(s,speed,dt){
+  const dx=s.tx-s.x,dy=s.ty-s.y,d=Math.hypot(dx,dy);
+  if(d<1.5){s.moving=false;return true;}
+  s.moving=true;
+  s.x+=(dx/d)*speed*dt*60;s.y+=(dy/d)*speed*dt*60;
+  s.face=Math.atan2(-dy,dx);
+  return false;
+}
+function kill(s){
+  if(!s.alive)return;
+  s.alive=false;
+  if(s.side==='f')S.fsDead++;else S.brDead++;
+  updateCounters();
+}
+function alive(side,grp){return S.soldiers.filter(s=>s.alive&&!s.escaped&&s.side===side&&(!grp||s.grp===grp));}
+function killRandom(list,n){
+  const pool=list.filter(s=>s.alive);
+  for(let i=0;i<n&&pool.length;i++){const j=Math.floor(Math.random()*pool.length);kill(pool[j]);pool.splice(j,1);}
+}
+function updateCounters(){
+  document.getElementById('brCt').textContent=String(S.brDead);
+  document.getElementById('fsCt').textContent=String(S.fsDead);
+}
+function setDay(t){document.getElementById('daytag').textContent=t;}
+function centroid(list){
+  let mx=0,my=0;for(const s of list){mx+=s.x;my+=s.y;}
+  return list.length?[mx/list.length,my/list.length]:[500,310];
+}
+
+/* ---------- shells (cannonballs) ---------- */
+const CANNON_MAX=100;
+const shellMesh=new THREE.InstancedMesh(
+  new THREE.SphereGeometry(0.18,4,4),
+  new THREE.MeshLambertMaterial({color:0x2a2218}),CANNON_MAX);
+shellMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(shellMesh);
+function broadside(n,shooters,targets,hit){
+  if(!shooters.length||!targets.length)return;
+  for(let i=0;i<n;i++){
+    const from=shooters[Math.floor(Math.random()*shooters.length)];
+    const tgt=targets[Math.floor(Math.random()*targets.length)];
+    const fx=sx2w(from.x),fz=sy2w(from.y),tx=sx2w(tgt.x+rnd(-5,5)),tz=sy2w(tgt.y+rnd(-5,5));
+    S.shells.push({fx,fy:terrainH(fx,fz)+0.45,fz,tx,ty:terrainH(tx,tz)+0.3,tz,
+      t:0,dur:rnd(0.35,0.7),arc:rnd(1.2,3.8),simx:tgt.x,simy:tgt.y,px:fx,py:0.45,pz:fz,side:tgt.side,hit});
+  }
+}
+function updShellFlight(dt){
+  for(let i=S.shells.length-1;i>=0;i--){
+    const a=S.shells[i];a.t+=dt;
+    const u=Math.min(a.t/a.dur,1);
+    const nx=a.fx+(a.tx-a.fx)*u,nz=a.fz+(a.tz-a.fz)*u;
+    a.py=a.fy+(a.ty-a.fy)*u+Math.sin(u*Math.PI)*a.arc;
+    a.px=nx;a.pz=nz;
+    if(u>=1){
+      if(Math.random()<a.hit){
+        const near=S.soldiers.filter(s=>s.alive&&s.side===a.side&&Math.hypot(s.x-a.simx,s.y-a.simy)<10);
+        if(near.length)kill(near[0]);
+      }
+      S.shells.splice(i,1);
+    }
+  }
+}
+function flushShells(){
+  let i=0;
+  for(const a of S.shells){
+    if(i>=CANNON_MAX)break;
+    V3.set(a.px,a.py,a.pz);QT.set(0,0,0,1);SC.setScalar(1);M4.compose(V3,QT,SC);
+    shellMesh.setMatrixAt(i++,M4);
+  }
+  for(;i<CANNON_MAX;i++){SC.setScalar(0.0001);V3.set(0,-80,0);QT.set(0,0,0,1);M4.compose(V3,QT,SC);shellMesh.setMatrixAt(i,M4);}
+  shellMesh.instanceMatrix.needsUpdate=true;
+}
+
+/* ---------- fleet flags ---------- */
+const banners={};
+function makeBanner(color){
+  const g=new THREE.Group();
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,5.5,5),new THREE.MeshLambertMaterial({color:0x4a3b26}));
+  pole.position.y=2.75;
+  const flag=new THREE.Mesh(new THREE.PlaneGeometry(2.1,1.2),new THREE.MeshLambertMaterial({color,side:THREE.DoubleSide}));
+  flag.position.set(1.1,4.8,0);
+  g.add(pole,flag);g.userData.flag=flag;
+  scene.add(g);g.visible=false;
+  return g;
+}
+banners.br=makeBanner(0x8c2a1e);
+banners.fs=makeBanner(0x7a1818);
+function updateBanners(){
+  const sel={br:s=>s.side==='b'&&!s.flee,fs:s=>s.side==='f'&&!s.flee};
+  for(const k in banners){
+    const list=S.soldiers.filter(s=>s.alive&&!s.escaped&&sel[k](s));
+    const b=banners[k];
+    if(list.length<3){b.visible=false;continue;}
+    let mx=0,my=0;for(const s of list){mx+=s.x;my+=s.y;}mx/=list.length;my/=list.length;
+    const wx=sx2w(mx),wz=sy2w(my);
+    b.position.set(wx,terrainH(wx,wz)+0.4,wz);
+    b.userData.flag.rotation.y=Math.sin(perfNow*0.002)*0.38;
+    b.visible=true;
+  }
+}
+
+/* ================= camera ================= */
+const cam={yaw:Math.PI*0.6,pitch:0.88,dist:200,tx:0,ty:1,tz:0,auto:null};
+function applyCamera(dt){
+  if(cam.auto){
+    const a=cam.auto,k=1-Math.pow(0.001,dt);
+    cam.yaw+=(a.yaw-cam.yaw)*k;cam.pitch+=(a.pitch-cam.pitch)*k;cam.dist+=(a.dist-cam.dist)*k;
+    cam.tx+=(a.tx-cam.tx)*k;cam.ty+=(a.ty-cam.ty)*k;cam.tz+=(a.tz-cam.tz)*k;
+    if(Math.abs(a.dist-cam.dist)<0.5&&Math.abs(a.yaw-cam.yaw)<0.01)cam.auto=null;
+  }
+  cam.pitch=THREE.MathUtils.clamp(cam.pitch,0.14,1.42);
+  cam.dist=THREE.MathUtils.clamp(cam.dist,18,280);
+  const cp=Math.cos(cam.pitch);
+  camera.position.set(cam.tx+Math.sin(cam.yaw)*cp*cam.dist,cam.ty+Math.sin(cam.pitch)*cam.dist,cam.tz+Math.cos(cam.yaw)*cp*cam.dist);
+  camera.lookAt(cam.tx,cam.ty,cam.tz);
+}
+const PRESETS={
+  over:{yaw:Math.PI*0.6,pitch:0.88,dist:200,tx:0,ty:1,tz:0},
+  line:{yaw:Math.PI*0.5,pitch:0.44,dist:110,tx:sx2w(400),ty:1,tz:sy2w(220)},
+  column:{yaw:Math.PI*0.7,pitch:0.52,dist:130,tx:sx2w(460),ty:1,tz:sy2w(440)},
+  south:{yaw:0,pitch:0.46,dist:110,tx:sx2w(440),ty:1,tz:sy2w(490)},
+};
+document.querySelectorAll('.cambtn').forEach(b=>b.onclick=()=>{cam.auto={...PRESETS[b.dataset.cam]};});
+function cine(name){cam.auto={...PRESETS[name]};}
+
+/* ================= command layer ================= */
+const raycaster=new THREE.Raycaster();
+const ndc=new THREE.Vector2();
+function castAt(e,objects){
+  const r=renderer.domElement.getBoundingClientRect();
+  ndc.x=((e.clientX-r.left)/r.width)*2-1;
+  ndc.y=-((e.clientY-r.top)/r.height)*2+1;
+  raycaster.setFromCamera(ndc,camera);
+  return raycaster.intersectObjects(objects,false);
+}
+const formPlane=new THREE.Mesh(
+  new THREE.PlaneGeometry(100,18),
+  new THREE.MeshBasicMaterial({color:0xd9a441,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
+formPlane.rotation.x=-Math.PI/2;
+scene.add(formPlane);
+const formHud=document.getElementById('formHud');
+function formHudText(){
+  formHud.textContent=S.col_ang>=4
+    ?'Column bearing: perpendicular · the line will be cut · drag to adjust'
+    :'Column bearing: oblique approach · safer passage · drag to adjust';
+}
+function ringMesh(color){
+  const m=new THREE.Mesh(new THREE.TorusGeometry(9,0.45,8,32),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.85}));
+  m.rotation.x=-Math.PI/2;m.visible=false;
+  const fill=new THREE.Mesh(new THREE.CircleGeometry(8.2,24),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.13,depthWrite:false,side:THREE.DoubleSide}));
+  fill.position.z=0.02;m.add(fill);
+  scene.add(m);return m;
+}
+const ringA=ringMesh(0xd9a441);
+const ringB=ringMesh(0xc45540);
+const RINGS=[ringA,ringB];
+let ringT=0,pickMode=null;
+function updCommandFx(dt){
+  ringT+=dt;
+  formPlane.material.opacity=(S.stage==='deploy')?0.07+Math.sin(ringT*3)*0.03:0;
+  if(S.stage==='deploy'){
+    formPlane.position.set(sx2w(450),terrainH(sx2w(450),sy2w(450))+0.35,sy2w(450));
+  }
+  for(const r of RINGS){
+    if(!r.visible)continue;
+    const k=1+Math.sin(ringT*3.4)*0.08;
+    r.scale.setScalar(k);
+    r.material.opacity=0.55+Math.sin(ringT*3.4)*0.3;
+  }
+}
+function placeRing(r,sx,sy){
+  const wx=sx2w(sx),wz=sy2w(sy);
+  r.position.set(wx,terrainH(wx,wz)+0.7,wz);
+  r.visible=true;
+}
+function hideRings(){for(const r of RINGS)r.visible=false;pickMode=null;}
+function pickRing(e){
+  const rect=renderer.domElement.getBoundingClientRect();
+  let best=null,bestD=1e9;
+  for(const r of RINGS){
+    if(!r.visible)continue;
+    V3.copy(r.position).project(camera);
+    if(V3.z>1)continue;
+    const px=(V3.x*0.5+0.5)*rect.width+rect.left;
+    const py=(-V3.y*0.5+0.5)*rect.height+rect.top;
+    const d=Math.hypot(e.clientX-px,e.clientY-py);
+    if(d<bestD){bestD=d;best=r;}
+  }
+  return bestD<Math.max(56,rect.width*0.08)?best:null;
+}
+function tryPick(e){
+  if(!pickMode)return;
+  const r=pickRing(e);
+  if(!r)return;
+  const choice=r===ringA?'a':'b';
+  hideRings();
+  if(pickMode==='fire'){
+    if(choice==='a')rakeVilleneuve();else spreadFire();
+  }else if(pickMode==='qd'){
+    if(choice==='a')holdQuarterdeck();else descendQuarterdeck();
+  }
+}
+
+let drag=null,formDrag=null;
+view.addEventListener('pointerdown',e=>{
+  view.setPointerCapture(e.pointerId);
+  if(S.stage==='deploy'&&e.button===0&&!e.shiftKey){
+    const hit=castAt(e,[formPlane]);
+    if(hit.length){formDrag={x0:e.clientX,sp0:S.col_ang};return;}
+  }
+  drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,btn:e.button,shift:e.shiftKey};
+  view.classList.add('dragging');cam.auto=null;
+});
+view.addEventListener('pointermove',e=>{
+  if(formDrag){
+    const sp=THREE.MathUtils.clamp(formDrag.sp0+(e.clientX-formDrag.x0)*0.09,0,8);
+    const q=Math.round(sp);
+    if(q!==S.col_ang){S.col_ang=q;placeColumns();formHudText();}
+    return;
+  }
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  drag.x=e.clientX;drag.y=e.clientY;
+  if(drag.btn===2||drag.shift){
+    const cp=Math.cos(cam.yaw),sp2=Math.sin(cam.yaw),k=cam.dist*0.0016;
+    cam.tx-=(dx*cp-dy*sp2)*k;cam.tz-=(-dx*sp2-dy*cp)*k;
+    cam.tx=THREE.MathUtils.clamp(cam.tx,-100,100);cam.tz=THREE.MathUtils.clamp(cam.tz,-62,62);
+  }else{cam.yaw-=dx*0.0055;cam.pitch+=dy*0.0045;}
+});
+const endDrag=()=>{drag=null;view.classList.remove('dragging');};
+view.addEventListener('pointerup',e=>{
+  if(formDrag){formDrag=null;return;}
+  if(drag&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<12)tryPick(e);
+  endDrag();
+});
+view.addEventListener('pointercancel',endDrag);
+view.addEventListener('wheel',e=>{e.preventDefault();cam.auto=null;cam.dist*=(1+Math.sign(e.deltaY)*0.09);},{passive:false});
+view.addEventListener('contextmenu',e=>e.preventDefault());
+let pinch=null;
+view.addEventListener('touchstart',e=>{if(e.touches.length===2)pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);});
+view.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&pinch){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);cam.dist*=pinch/d;pinch=d;cam.auto=null;}
+},{passive:true});
+view.addEventListener('touchend',()=>pinch=null);
+
+/* ================= VN / dialogue layer ================= */
+function PT(hat,skin,detail,ep){
+  const c=document.createElement('canvas');c.width=80;c.height=80;
+  const g=c.getContext('2d');
+  g.fillStyle=ep||'#2a2a3a';g.fillRect(10,52,60,30);
+  g.fillStyle=skin||'#c8a27a';g.fillRect(32,38,16,18);
+  g.beginPath();g.arc(40,34,18,0,Math.PI*2);g.fillStyle=skin||'#c8a27a';g.fill();
+  g.fillStyle=hat||'#1a1a2a';g.fillRect(16,12,48,16);g.fillRect(22,28,36,8);
+  if(detail){g.fillStyle=detail;g.fillRect(20,14,40,10);}
+  g.fillStyle='#2a1a0a';g.fillRect(31,30,5,4);g.fillRect(44,30,5,4);
+  return c.toDataURL();
+}
+const CAST={
+  har:{name:'Hardy',img:PT('#1a1a2a','#c8a279','#e8d8a0','#293556')},
+  vil:{name:'Villeneuve',img:PT('#1a1a2a','#c09070',null,'#3a2a44')},
+  nar:{name:'',img:null},
+};
+const REL={coat:null};
+let vnLines=null,vnIdx=0,vnCb=null;
+const vnEl=document.getElementById('vn');
+function renderVn(){
+  if(!vnLines||vnIdx>=vnLines.length)return;
+  const l=vnLines[vnIdx];
+  const sp=l.sp||'nar';const cast=CAST[sp];
+  const portEl=document.getElementById('vnportrait');
+  portEl.innerHTML='';
+  const box=document.getElementById('vnbox');
+  if(cast.img){
+    const img=document.createElement('img');img.src=cast.img;
+    img.style.cssText='width:100%;height:100%;object-fit:contain';
+    portEl.appendChild(img);box.classList.remove('vn-narr');
+  }else{box.classList.add('vn-narr');}
+  document.getElementById('vnname').textContent=cast.name||'';
+  document.getElementById('vntext').textContent=l.t;
+  const choEl=document.getElementById('vnchoices');choEl.innerHTML='';
+  const nextEl=document.getElementById('vnnext');
+  if(l.ch){
+    nextEl.style.display='none';
+    l.ch.forEach(ch=>{
+      const b=document.createElement('button');b.className='vn-choice';b.textContent=ch.t;
+      b.onclick=()=>{if(ch.set)Object.assign(REL,ch.set);vnAdvance();};
+      choEl.appendChild(b);
+    });
+  }else{nextEl.style.display='';choEl.innerHTML='';}
+}
+function vnAdvance(){
+  if(!vnLines)return;
+  const l=vnLines[vnIdx];
+  if(l&&l.ch&&document.getElementById('vnchoices').children.length)return;
+  vnIdx++;
+  if(vnIdx>=vnLines.length){
+    vnEl.style.display='none';vnLines=null;
+    if(vnCb){const cb=vnCb;vnCb=null;cb();}return;
+  }
+  renderVn();
+}
+function playScene(lines,cb){vnLines=lines;vnIdx=0;vnCb=cb||null;vnEl.style.display='flex';renderVn();}
+vnEl.addEventListener('click',e=>{if(e.target.classList.contains('vn-choice'))return;vnAdvance();});
+
+/* ================= narration overlay ================= */
+const narEl=(()=>{
+  const d=document.createElement('div');
+  d.style.cssText='position:absolute;bottom:56px;left:50%;transform:translateX(-50%);max-width:480px;width:90%;text-align:center;font-size:15px;line-height:1.6;color:#e2d5b8;background:rgba(14,12,9,.8);padding:10px 18px;border-radius:3px;pointer-events:none;transition:opacity .8s;opacity:0;z-index:8';
+  document.querySelector('.stage').appendChild(d);return d;
+})();
+let narVer=0;
+function narrate(txt,dur){
+  narEl.textContent=txt;narEl.style.opacity='1';
+  const ver=++narVer;
+  setTimeout(()=>{if(narVer===ver)narEl.style.opacity='0';},dur||4000);
+}
+
+/* ================= phase / controls ================= */
+function setPhase(n){
+  S.phase=n;
+  document.querySelectorAll('.pill').forEach((el,i)=>el.classList.toggle('active',i===n));
+}
+function setControls(cfg){
+  const el=document.getElementById('controls');el.innerHTML='';
+  for(const c of cfg){
+    const b=document.createElement('button');b.className='vn-choice';b.textContent=c.label;b.onclick=c.fn;el.appendChild(b);
+  }
+}
+
+/* ================= fleet spawn ================= */
+function spawnFleets(){
+  S.soldiers=[];S.brDead=0;S.fsDead=0;
+  for(let i=0;i<33;i++){
+    const x=140+i*21.8,y=210+rnd(-8,8);
+    const k=i===15?'fb':'fs';
+    S.soldiers.push(soldier(x,y,'f','line',k));
+  }
+  for(let i=0;i<12;i++){S.soldiers.push(soldier(420+rnd(-12,12),490+i*16,'b','vic','bv'));}
+  for(let i=0;i<15;i++){S.soldiers.push(soldier(540+rnd(-12,12),490+i*16,'b','col','bv'));}
+  buildInstances();placeColumns();updateCounters();
+}
+
+/* ================= formation ================= */
+function placeColumns(){
+  const ang=S.col_ang/8;
+  const oblique=(1-ang)*60;
+  S.soldiers.filter(s=>s.alive&&s.side==='b'&&s.grp==='vic').forEach((s,i)=>{
+    s.tx=380-oblique*0.4+i*3;s.ty=210+i*6;
+  });
+  S.soldiers.filter(s=>s.alive&&s.side==='b'&&s.grp==='col').forEach((s,i)=>{
+    s.tx=600+oblique*0.4+i*3;s.ty=210+i*6;
+  });
+}
+
+/* ================= ring beats ================= */
+function rakeVilleneuve(){
+  S.fireDone=true;S.stage='post_fire';setPhase(2);
+  narrate('Victory passes through the gap -- raking fire tears the Bucentaure from stern to bow.',5000);
+  const vic=S.soldiers.filter(s=>s.alive&&s.side==='b'&&s.grp==='vic');
+  const buc=S.soldiers.filter(s=>s.alive&&s.kind==='fb');
+  const fLine=S.soldiers.filter(s=>s.alive&&s.side==='f');
+  if(buc.length)killRandom(buc,1);
+  killRandom(fLine,4);broadside(14,vic,fLine,0.75);
+  setTimeout(()=>{
+    playScene([
+      {sp:'har',t:'She is struck, sir. The Bucentaure has struck her colours.'},
+      {sp:'nar',t:'The flagship falls. Villeneuve is taken prisoner within the hour.'},
+    ],()=>setTimeout(enterQuarterdeck,800));
+  },3200);
+}
+function spreadFire(){
+  S.fireDone=true;S.stage='post_fire';setPhase(2);
+  narrate('Fire spreads across multiple ships -- effective, but the flagship holds.',4500);
+  const vic=S.soldiers.filter(s=>s.alive&&s.side==='b'&&s.grp==='vic');
+  const fLine=S.soldiers.filter(s=>s.alive&&s.side==='f');
+  killRandom(fLine,3);broadside(10,vic,fLine,0.55);
+  setTimeout(()=>{
+    playScene([
+      {sp:'har',t:'The flagship still flies her colours. We have lost the moment, my lord.'},
+      {sp:'nar',t:'The Combined Fleet fights on longer. The cost falls heavier on both sides.'},
+    ],()=>{killRandom(S.soldiers.filter(s=>s.alive&&s.side==='b'),2);setTimeout(enterQuarterdeck,800);});
+  },3200);
+}
+function holdQuarterdeck(){
+  S.qdDone=true;S.stage='post_qd';setPhase(3);
+  narrate('Nelson remains on the quarterdeck. A musket ball finds him.',5000);
+  setTimeout(()=>{
+    const coatLine=REL.coat===true
+      ?'Hardy had warned him. Nelson knew the risk and accepted it.'
+      :'He had been warned about the coat. The decorations caught a sharpshooter\'s eye.';
+    playScene([
+      {sp:'har',t:'You are wounded, my lord. We must get you below.'},
+      {sp:'nar',t:coatLine},
+      {sp:'nar',t:'He is carried below to the orlop deck. He will not see the sun again.'},
+    ],()=>setTimeout(enterAftermath,800));
+  },2000);
+}
+function descendQuarterdeck(){
+  S.qdDone=true;S.stage='post_qd';setPhase(3);
+  narrate('Nelson withdraws below the rail. The sharpshooter\'s aim passes overhead.',5000);
+  setTimeout(()=>{
+    playScene([
+      {sp:'har',t:'The crisis passes, my lord. The line is broken.'},
+      {sp:'nar',t:'In this telling, Nelson survives to watch the fleet surrender from the poop deck.'},
+      {sp:'nar',t:'History is changed by twelve inches of elevation.'},
+    ],()=>setTimeout(enterAftermath,800));
+  },2000);
+}
+
+/* ================= phase sequence ================= */
+let nextBombard=0,nextQdBombard=0;
+
+function enterPrologue(){
+  setPhase(0);setDay('Dawn, 21 October 1805');
+  spawnFleets();cine('over');
+  document.getElementById('formHud').style.display='none';
+  setControls([]);
+  playScene([
+    {sp:'har',t:'My lord, I must speak plainly. Those decorations on your coat will mark you for every sharpshooter in the fleet.'},
+    {sp:'nar',t:'Nelson wears four stars and the ribbons of his honours. Hardy\'s concern is not without cause.',ch:[
+      {t:'Cover the decorations',set:{coat:true}},
+      {t:'They are the emblems of my rank. I will not hide them.',set:{coat:false}},
+    ]},
+    {sp:'nar',t:'The two columns bear down on the Combined Fleet, taking unanswered fire for fifty minutes.'},
+  ],()=>setTimeout(enterApproach,500));
+}
+function enterApproach(){
+  setPhase(1);setDay('Morning -- approaching the line');
+  document.getElementById('formHud').style.display='block';
+  formHudText();S.stage='deploy';nextBombard=performance.now()+2000;
+  setControls([{label:'Commit approach',fn:commitApproach}]);
+  placeColumns();
+  narrate('Drag the formation plane to set your column bearing. Perpendicular cuts the line decisively.',5500);
+  cine('column');
+}
+function commitApproach(){
+  S.stage='advance';
+  document.getElementById('formHud').style.display='none';
+  setPhase(2);setDay('Noon -- the lines meet');
+  setControls([]);placeColumns();
+  narrate('The columns drive home. Fifty minutes of raking fire -- and then British broadsides answer.',5500);
+  cine('line');
+}
+function showFireRings(){
+  narrate('GOLD: Rake the Bucentaure flagship | RED: Spread fire across the van',9000);
+  cine('line');
+  const buc=S.soldiers.find(s=>s.alive&&s.kind==='fb');
+  if(buc)placeRing(ringA,buc.x,buc.y);else placeRing(ringA,467,210);
+  placeRing(ringB,620,212);
+  pickMode='fire';
+}
+function enterQuarterdeck(){
+  setPhase(3);setDay('Early afternoon -- the deck of Victory');
+  setControls([]);cine('column');
+  narrate('The battle rages. Nelson paces the quarterdeck of Victory.',4500);
+  S.stage='qd_battle';nextQdBombard=performance.now()+1500;
+  setTimeout(()=>{
+    placeRing(ringA,420,350);
+    placeRing(ringB,420,390);
+    pickMode='qd';
+    narrate('GOLD: Stay on the quarterdeck (historical) | RED: Withdraw below the rail',9000);
+  },3000);
+}
+function enterAftermath(){
+  setPhase(4);setDay('Late afternoon, 21 October 1805');
+  hideRings();S.stage='done';setControls([]);cine('over');
+  killRandom(S.soldiers.filter(s=>s.alive&&s.side==='f'),8);
+  narrate('The battle concludes. Seventeen prizes taken. No British ship lost.',5000);
+  setTimeout(()=>{
+    const endLine=S.fireDone
+      ?'Villeneuve is taken. France will never again challenge Britain at sea.'
+      :'The Combined Fleet is shattered. Britain rules the waves for a century.';
+    const nelsonLine=!S.qdDone||REL.coat===false
+      ?'He had been warned. But the coat was the man, and the man was Nelson.'
+      :'In this reckoning, the admiral lived to see the fleet surrender.';
+    playScene([
+      {sp:'har',t:'They say he repeated, "Thank God I have done my duty," until he could speak no more.'},
+      {sp:'nar',t:endLine},
+      {sp:'nar',t:nelsonLine},
+      {sp:'vil',t:'I fought as best I could. The columns came on and would not be stopped.'},
+      {sp:'nar',t:'The battle that gave Britain command of the seas for a century.'},
+    ],null);
+  },3500);
+}
+
+/* ================= main loop ================= */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.1);last=now;
+  perfNow=now;
+
+  if(S.stage==='deploy'&&now>nextBombard){
+    nextBombard=now+3000;
+    const brit=S.soldiers.filter(s=>s.alive&&s.side==='b');
+    const fLine=S.soldiers.filter(s=>s.alive&&s.side==='f');
+    if(brit.length&&fLine.length){broadside(3,fLine,brit,0.12);killRandom(brit,1);}
+  }
+
+  if(S.stage==='advance'){
+    let allDone=true;
+    for(const s of S.soldiers){
+      if(!s.alive||s.side==='f')continue;
+      if(!moveToward(s,0.8,dt))allDone=false;
+    }
+    if(allDone){S.stage='fire_wait';setTimeout(showFireRings,800);}
+  }
+
+  if(S.stage==='qd_battle'&&!S.qdDone&&now>nextQdBombard){
+    nextQdBombard=now+2500;
+    const brit=S.soldiers.filter(s=>s.alive&&s.side==='b');
+    const fLine=S.soldiers.filter(s=>s.alive&&s.side==='f');
+    if(brit.length&&fLine.length){broadside(4,fLine,brit,0.18);broadside(5,brit,fLine,0.22);killRandom(brit,1);killRandom(fLine,2);}
+  }
+
+  updShellFlight(dt);flushShells();
+  flushInstances();updateBanners();
+  applyCamera(dt);updCommandFx(dt);
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+
+resize();
+enterPrologue();
+requestAnimationFrame(loop);
+</script></body></html>
